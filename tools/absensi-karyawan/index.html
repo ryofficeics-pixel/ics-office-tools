@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <meta name="theme-color" content="#f0efe9">
-<title>Absensi ICS â€“ Portal Karyawan</title>
+<title>Absensi ICS – Portal Karyawan</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f0efe9;--surface:#fff;--surface2:#e8e7e0;--surface3:#dddcd5;--dark:#1a1a1a;--amber:#8a7a5a;--rose:#c0392b;--violet:#4a4a6a;--success:#2d7a4a;--text:#1a1a1a;--muted:#7a7a6a;--border:rgba(26,26,26,0.12);--glow:0 4px 24px rgba(0,0,0,0.08);--teal:#1a1a1a;--teal2:#333}
@@ -21,7 +21,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* AUTH */
 .auth-screen{flex:1;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;gap:28px;display:none}
 .auth-logo{text-align:center}
-.auth-brand-logo{width:88px;height:88px;object-fit:contain;padding:12px;border-radius:20px;background:var(--dark);margin:0 auto 12px;display:block}
 .auth-logo h1{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-1px}
 .auth-logo p{color:var(--muted);font-size:13px;margin-top:4px}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:28px;width:100%;box-shadow:var(--glow)}
@@ -62,7 +61,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .main-app{flex:1;display:none;flex-direction:column}
 .header{padding:14px 20px;background:rgba(240,239,233,.95);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .header-brand{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
-.header-logo{width:30px;height:30px;object-fit:contain;padding:5px;border-radius:9px;background:var(--dark);flex:0 0 auto}
 .hdr{display:flex;align-items:center;gap:10px}
 .clock-pill{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--dark);background:var(--surface2);border:1px solid var(--border);padding:7px 14px;border-radius:20px}
 .btn-out{background:none;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
@@ -80,7 +78,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sbadge.belum{background:rgba(192,57,43,.08);color:var(--rose);border:1px solid rgba(192,57,43,.15)}
 
 /* GPS BAR */
-.gps-bar{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.gps-bar{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px}.btn-gps-refresh{background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--dark);font-size:12px;font-weight:700;padding:8px 10px;white-space:nowrap;cursor:pointer}.btn-gps-refresh:disabled{opacity:.55;cursor:not-allowed}
 .gps-dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all .3s}
 .gps-dot.on{background:var(--success);box-shadow:0 0 8px rgba(45,122,74,.4);animation:gp 2s infinite}
 .gps-dot.srch{background:var(--amber);animation:gp .8s infinite}
@@ -89,7 +87,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .gt{font-size:12px;font-weight:700;color:var(--text)}
 .gc{font-size:13px;color:var(--dark);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* ATTENDANCE CARDS â€” LARGER */
+/* ATTENDANCE CARDS — LARGER */
 .att-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.att-card.siang-card{grid-column:1/-1}
 .att-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px;position:relative;overflow:hidden;transition:border-color .3s}
 .att-card.done{border-color:rgba(45,122,74,.35)}
@@ -277,7 +275,6 @@ canvas{display:none}
 <!-- AUTH -->
 <div class="auth-screen" id="auth-screen">
   <div class="auth-logo">
-    <img class="auth-brand-logo" src="../../assets/logo.png" alt="ICS">
     <h1>ABSENSI ICS</h1>
     <p>INNOVATIVE CONSTRUCTION SOLUTIONS</p>
   </div>
@@ -291,20 +288,20 @@ canvas{display:none}
     <div class="fg">
       <label class="fl">Password</label>
       <div style="position:relative">
-        <input class="fi" id="inp-pw" type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password" style="padding-right:46px">
-        <button type="button" onclick="togglePw('inp-pw','eye-k')" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;line-height:1" id="eye-k">ðŸ‘ï¸</button>
+        <input class="fi" id="inp-pw" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:46px">
+        <button type="button" onclick="togglePw('inp-pw','eye-k')" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;line-height:1" id="eye-k">👁️</button>
       </div>
     </div>
-    <button class="btn-primary" id="btn-login" onclick="doLogin()">Masuk â†’</button>
+    <button class="btn-primary" id="btn-login" onclick="doLogin()">Masuk →</button>
     <div class="err-msg" id="err-msg"></div>
   </div>
-  <div class="admin-link"><a href="../absensi-admin/index.html">ðŸ”§ Admin Panel</a></div>
+  <div class="admin-link"><a href="admin.html">🔧 Admin Panel</a></div>
 </div>
 
 <!-- MAIN APP -->
 <div class="main-app" id="main-app">
   <div class="header">
-    <div class="header-brand"><img class="header-logo" src="../../assets/logo.png" alt="ICS">ABSENSI <span style="color:var(--amber)">ICS</span></div>
+    <div class="header-brand">ABSENSI <span style="color:var(--amber)">ICS</span></div>
     <div class="hdr">
       <div class="clock-pill" id="hclock">--:--:--</div>
       <button class="btn-out" onclick="doLogout()">Keluar</button>
@@ -315,9 +312,9 @@ canvas{display:none}
     <div class="profile-card">
       <div class="av" id="av">?</div>
       <div class="pi">
-        <div class="pname" id="pname">â€“</div>
-        <div class="pdept" id="pdept">â€“</div>
-        <div class="pid" id="pid">â€“</div>
+        <div class="pname" id="pname">–</div>
+        <div class="pdept" id="pdept">–</div>
+        <div class="pid" id="pid">–</div>
       </div>
       <div class="sbadge belum" id="status-badge">Belum Hadir</div>
     </div>
@@ -328,34 +325,35 @@ canvas{display:none}
         <div class="gt" id="gTitle">Mengakses GPS...</div>
         <div class="gc" id="gCoord">Aktifkan lokasi di perangkat</div>
       </div>
+      <button class="btn-gps-refresh" id="btnRefreshGPS" type="button" onclick="refreshGPS()">Refresh Lokasi</button>
     </div>
     <!-- Attendance Cards -->
     <div class="att-grid">
       <div class="att-card" id="card-in">
-        <div class="ac-lbl">ðŸŒ… Absen Masuk</div>
+        <div class="ac-lbl">🌅 Absen Masuk</div>
         <div class="ac-time empty" id="t-in">--:--</div>
         <div class="ac-loc" id="l-in">Belum absen</div>
       </div>
       <div class="att-card" id="card-out">
-        <div class="ac-lbl">ðŸŒ† Absen Pulang</div>
+        <div class="ac-lbl">🌆 Absen Pulang</div>
         <div class="ac-time empty" id="t-out">--:--</div>
         <div class="ac-loc" id="l-out">Belum absen</div>
       </div>
       <div class="att-card siang-card" id="card-siang">
-        <div class="ac-lbl">â˜€ï¸ Absen Siang <span style="font-size:10px;font-weight:400;color:var(--muted)">12:45â€“13:15</span></div>
+        <div class="ac-lbl">☀️ Absen Siang <span style="font-size:10px;font-weight:400;color:var(--muted)">12:45–13:15</span></div>
         <div class="ac-time empty" id="t-siang">--:--</div>
         <div class="ac-loc" id="l-siang">Belum absen</div>
       </div>
     </div>
     <!-- Buttons -->
     <div class="act-col">
-      <button class="btn-absen btn-masuk" id="btnIn" onclick="startAbsen('masuk')">ðŸ‘† &nbsp;Absen Masuk</button>
-      <button class="btn-absen btn-siang" id="btnSiang" onclick="startAbsen('siang')" disabled>â˜€ï¸ &nbsp;Absen Siang</button>
-      <button class="btn-absen btn-pulang" id="btnOut" onclick="startAbsen('pulang')" disabled>ðŸƒ &nbsp;Absen Pulang</button>
+      <button class="btn-absen btn-masuk" id="btnIn" onclick="startAbsen('masuk')">👆 &nbsp;Absen Masuk</button>
+      <button class="btn-absen btn-siang" id="btnSiang" onclick="startAbsen('siang')" disabled>☀️ &nbsp;Absen Siang</button>
+      <button class="btn-absen btn-pulang" id="btnOut" onclick="startAbsen('pulang')" disabled>🏃 &nbsp;Absen Pulang</button>
     </div>
     <!-- History -->
     <div>
-      <div class="sec-hd">ðŸ“‹ Riwayat Hari Ini</div>
+      <div class="sec-hd">📋 Riwayat Hari Ini</div>
       <div class="hist-list" id="hist-list">
         <div style="text-align:center;color:var(--muted);font-size:13px;padding:16px">Belum ada riwayat</div>
       </div>
@@ -367,15 +365,15 @@ canvas{display:none}
 <div class="modal" id="cam-modal">
   <div class="mhd">
     <div class="mhd-info">
-      <h3 id="modal-title">ðŸ“¸ Absen Masuk</h3>
-      <p>Foto real-time Â· GPS + Waktu Server terverifikasi</p>
+      <h3 id="modal-title">📸 Absen Masuk</h3>
+      <p>Foto real-time · GPS + Waktu Server terverifikasi</p>
     </div>
-    <button class="btn-x" onclick="closeModal()">âœ•</button>
+    <button class="btn-x" onclick="closeModal()">✕</button>
   </div>
   <div class="mbody">
     <!-- Device tamper warning -->
     <div class="tamper-warn" id="tamper-warn">
-      <div class="tamper-icon">âš ï¸</div>
+      <div class="tamper-icon">⚠️</div>
       <div class="tamper-body">
         <div class="tamper-title">Jam Perangkat Tidak Akurat</div>
         <div class="tamper-msg" id="tamper-msg">Jam perangkat berbeda dari server. Waktu absensi menggunakan jam server.</div>
@@ -391,7 +389,7 @@ canvas{display:none}
     </div>
     <!-- GPS address in modal -->
     <div class="gps-modal-box" id="gps-modal-box">
-      <div class="gps-modal-icon" id="gps-modal-icon">ðŸ“</div>
+      <div class="gps-modal-icon" id="gps-modal-icon">📍</div>
       <div class="gps-modal-info">
         <div class="gps-modal-title" id="gps-modal-title">Lokasi GPS</div>
         <div class="gps-modal-addr" id="gps-modal-addr">Mendapatkan lokasi...</div>
@@ -404,15 +402,15 @@ canvas{display:none}
         <div class="vc tl"></div><div class="vc tr"></div>
         <div class="vc bl"></div><div class="vc br"></div>
         <!-- FACE INDICATOR -->
-        <div id="face-warn" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(220,38,38,.85);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;display:none;z-index:25;pointer-events:none;white-space:nowrap">ðŸ‘¤ Wajah tidak terdeteksi</div>
+        <div id="face-warn" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(220,38,38,.85);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;display:none;z-index:25;pointer-events:none;white-space:nowrap">👤 Wajah tidak terdeteksi</div>
         <!-- LIVENESS CHALLENGE -->
         <div class="lv-box" id="lv-box">
-          <div class="lv-arrow left" id="lv-arrow">ðŸ‘ˆ</div>
+          <div class="lv-arrow left" id="lv-arrow">👈</div>
           <div class="lv-text" id="lv-text">Toleh Kiri</div>
           <div class="lv-bar"><div class="lv-fill" id="lv-fill"></div></div>
         </div>
         <div class="vbt">
-          <span class="live-dot">â— LIVE</span>
+          <span class="live-dot">● LIVE</span>
           <span class="vts" id="vfts">--:--:--</span>
         </div>
       </div>
@@ -425,16 +423,16 @@ canvas{display:none}
           <span class="ps-type" id="ps-type">ABSEN MASUK</span>
           <span class="ps-time" id="ps-time">--:--:--</span>
         </div>
-        <div class="ps-addr" id="ps-addr">â€“</div>
+        <div class="ps-addr" id="ps-addr">–</div>
         <div class="ps-hash" id="ps-hash">HASH: ...</div>
       </div>
     </div>
     <canvas id="cvs"></canvas>
     <!-- Controls -->
     <div id="cap-ctrls">
-      <button class="btn-cap" id="btnCap" onclick="snap()" disabled>ðŸ“· &nbsp;Ambil Foto Selfie</button>
+      <button class="btn-cap" id="btnCap" onclick="snap()" disabled>📷 &nbsp;Ambil Foto Selfie</button>
       <div style="height:8px"></div>
-      <button class="btn-bio" onclick="useBio()">ðŸ‘† &nbsp;Sidik Jari / Face ID</button>
+      <button class="btn-bio" onclick="useBio()">👆 &nbsp;Sidik Jari / Face ID</button>
     </div>
     <!-- Upload bar -->
     <div class="upload-bar" id="upload-bar">
@@ -443,15 +441,15 @@ canvas{display:none}
     </div>
     <!-- Preview actions -->
     <div class="prev-acts" id="prev-acts" style="display:none">
-      <button class="btn-retake" onclick="retake()">ðŸ”„ Ulangi</button>
-      <button class="btn-confirm" id="btn-confirm" onclick="submitAbsen()">âœ… Kirim Absensi</button>
+      <button class="btn-retake" onclick="retake()">🔄 Ulangi</button>
+      <button class="btn-confirm" id="btn-confirm" onclick="submitAbsen()">✅ Kirim Absensi</button>
     </div>
   </div>
 </div>
 
 <!-- FP SCREEN -->
 <div class="fp-screen" id="fp-screen">
-  <div class="fp-icon">ðŸ”</div>
+  <div class="fp-icon">🔐</div>
   <h3>Verifikasi Biometrik</h3>
   <p>Tempelkan jari pada sensor<br>atau arahkan wajah ke kamera</p>
   <button class="btn-fpcancel" onclick="cancelBio()">Batal</button>
@@ -459,16 +457,16 @@ canvas{display:none}
 
 <!-- SUCCESS -->
 <div class="suc-screen" id="suc-screen">
-  <div class="suc-anim">âœ…</div>
+  <div class="suc-anim">✅</div>
   <h2 id="suc-title">Absen Berhasil!</h2>
   <p>Data tersimpan ke server dan tidak dapat dimanipulasi</p>
   <div class="receipt" id="suc-receipt"></div>
-  <button class="btn-done" onclick="closeSuc()">Selesai â†’</button>
+  <button class="btn-done" onclick="closeSuc()">Selesai →</button>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- Fallback: berjalan di luar ES module â€” aktif meski Firebase CDN gagal load -->
+<!-- Fallback: berjalan di luar ES module — aktif meski Firebase CDN gagal load -->
 <script>
 (function(){
   var t = setTimeout(function(){
@@ -503,16 +501,16 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// Firebase init berhasil â€” batalkan fallback eksternal
+// Firebase init berhasil — batalkan fallback eksternal
 if (window._fbFallback) { clearTimeout(window._fbFallback); window._fbFallback = null; }
 
-// â”€â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── STATE ───────────────────────────────────────────────────────────────
 let me = null, gps = null, gpsOk = false, stream = null, mode = null;
 let _gpsSpoofSuspect = false; // true jika GPS terindikasi di-spoof
-// â”€â”€ GPS LOCK STATE â”€â”€ once a detail address is confirmed, stop all re-fetches
+// ── GPS LOCK STATE ── once a detail address is confirmed, stop all re-fetches
 let _gpsWatchId = null;   // ID from watchPosition so we can clearWatch() on lock
-let _gpsLocked  = false;  // true after first good lock â€” prevents any re-trigger
-// MODIFIED: multi-sample GPS state â€” declared here, initialised in GPS section below
+let _gpsLocked  = false;  // true after first good lock — prevents any re-trigger
+// MODIFIED: multi-sample GPS state — declared here, initialised in GPS section below
 let _gpsSamples = [], _gpsPhase = 'sampling', _gpsSampleTimer = null;
 let captImg = null, captTs = null, captHash = null, bioCancel = false;
 let streamStartTime = null, serverTimeOffset = null, syncInterval = null;
@@ -520,13 +518,13 @@ let countdownTimer = null, cdMode = null;
 // Liveness
 let livenessPassed = false, lvChallenge = null, lvProgress = 0;
 let lvPrevFrame = null, lvAnimId = null, lvSmallCanvas = null, lvSmallCtx = null;
-let lvDirEma = 0; // â† MODIFIED: exponential moving average of directional confidence
+let lvDirEma = 0; // ← MODIFIED: exponential moving average of directional confidence
 const LV_W = 80, LV_H = 60;
 let snapExpiryTimer = null;
 let _waitCancelled = false;
 let _siangIntervalId = null;
 
-// â”€â”€â”€ CLOCK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── CLOCK ───────────────────────────────────────────────────────────────
 setInterval(() => {
   const now = new Date(Date.now() + (serverTimeOffset || 0));
   const t = now.toLocaleTimeString('id-ID', { hour12: false });
@@ -534,7 +532,7 @@ setInterval(() => {
   const v = document.getElementById('vfts');   if (v) v.textContent = t;
 }, 1000);
 
-// â”€â”€â”€ SERVER TIME SYNC â€” 3 SOURCES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── SERVER TIME SYNC — 3 SOURCES ────────────────────────────────────────
 let _syncBusy=false,_lastSync=0;
 let _clockTampered = false; // true jika jam device beda >60s dari server
 async function syncServerTime() {
@@ -553,14 +551,14 @@ async function syncServerTime() {
   if (r3.status === 'fulfilled' && r3.value !== null) results.push({ src: 'TimeAPI',   offset: r3.value });
 
   if (results.length === 0) {
-    // Semua sumber gagal (offline/airplane mode) â€” jangan fallback ke device time.
+    // Semua sumber gagal (offline/airplane mode) — jangan fallback ke device time.
     // Device time bisa dimanipulasi. Blokir sampai minimal 1 sumber berhasil.
     serverTimeOffset = null;
     updateSrvUI(false, 0, 0);
     const dot = document.getElementById('srv-dot');
     const val = document.getElementById('srv-val');
     if (dot) dot.style.background = 'var(--rose)';
-    if (val) { val.textContent = 'â›” Server waktu tidak tersedia â€” aktifkan koneksi internet'; val.style.color = 'var(--rose)'; }
+    if (val) { val.textContent = '⛔ Server waktu tidak tersedia — aktifkan koneksi internet'; val.style.color = 'var(--rose)'; }
     _lastSync = Date.now() - 25000; _syncBusy = false;
     return;
   }
@@ -569,7 +567,7 @@ async function syncServerTime() {
   const offsets = results.map(r => r.offset).sort((a, b) => a - b);
   serverTimeOffset = offsets[Math.floor(offsets.length / 2)];
 
-  // â”€â”€ DEVICE CLOCK INTEGRITY CHECK â”€â”€
+  // ── DEVICE CLOCK INTEGRITY CHECK ──
   const diffSecs = Math.round(Math.abs(serverTimeOffset) / 1000);
   if (diffSecs > 60) {
     _clockTampered = true;
@@ -578,7 +576,7 @@ async function syncServerTime() {
     const warn = document.getElementById('tamper-warn');
     const msg  = document.getElementById('tamper-msg');
     if (warn) warn.style.display = 'flex';
-    if (msg)  msg.textContent = `â›” Jam perangkat ${direction} Â±${diffText} dari server. Sesuaikan jam perangkat Anda.`;
+    if (msg)  msg.textContent = `⛔ Jam perangkat ${direction} ±${diffText} dari server. Sesuaikan jam perangkat Anda.`;
     checkReady();
   } else {
     _clockTampered = false;
@@ -592,7 +590,7 @@ async function syncServerTime() {
 }
 
 async function syncFromFirebase() {
-  if (!auth.currentUser) throw new Error('Not authenticated â€” skipping Firebase sync');
+  if (!auth.currentUser) throw new Error('Not authenticated — skipping Firebase sync');
   const t0 = Date.now();
   const tmpRef = doc(db, '_timesync', 'probe');
   await setDoc(tmpRef, { ts: serverTimestamp() });
@@ -619,7 +617,7 @@ async function syncFromTimeApi() {
   const t1 = Date.now();
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const d = await res.json();
-  // Build UTC epoch from explicit fields â€” avoids browser locale parsing bugs
+  // Build UTC epoch from explicit fields — avoids browser locale parsing bugs
   const sMs = Date.UTC(d.year, d.month - 1, d.day, d.hour, d.minute, d.seconds, d.milliSeconds || 0);
   return sMs - ((t0 + t1) / 2);
 }
@@ -631,11 +629,11 @@ function updateSrvUI(ok, sMs, srcCount) {
   if (ok) {
     const d = new Date(sMs);
     dot.style.background = 'var(--success)';
-    val.textContent = d.toLocaleTimeString('id-ID') + ` âœ“  Â·  ${srcCount}/3 server`;
+    val.textContent = d.toLocaleTimeString('id-ID') + ` ✓  ·  ${srcCount}/3 server`;
     val.style.color = 'var(--success)';
   } else {
     dot.style.background = 'var(--amber)';
-    val.textContent = 'Semua server waktu gagal â€“ hubungi admin';
+    val.textContent = 'Semua server waktu gagal – hubungi admin';
     val.style.color = 'var(--amber)';
   }
 }
@@ -644,9 +642,29 @@ function getServerNow() {
   return new Date(Date.now() + (serverTimeOffset || 0));
 }
 
-// â”€â”€â”€ REVERSE GEOCODING â€” 3 parallel sources, fastest wins â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// â”€â”€â”€ ADDRESS QUALITY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Level minimum: kelurahan â€” tidak perlu nama jalan, tapi harus ada sub-wilayah
+// ─── REVERSE GEOCODING — 3 parallel sources, fastest wins ────────────────
+// ─── ADDRESS QUALITY ─────────────────────────────────────────────────────
+// Level minimum: kelurahan — tidak perlu nama jalan, tapi harus ada sub-wilayah
+function isCoordinateLike(v) {
+  return /^\s*(lat(?:itude)?\s*[:=])?\s*-?\d{1,2}\.\d+\s*,\s*(lng|lon|longitude)?\s*[:=]?\s*-?\d{1,3}\.\d+\s*$/i.test(String(v || ''));
+}
+function normalizeDisplayAddress(raw) {
+  if (!raw || isCoordinateLike(raw)) return 'Nama jalan belum terbaca, lokasi tersimpan';
+  const clean = String(raw).replace(/\s+/g, ' ').trim();
+  const parts = clean.split(',').map(s => s.trim()).filter(Boolean).filter(p => !isCoordinateLike(p));
+  if (!parts.length) return 'Nama jalan belum terbaca, lokasi tersimpan';
+  const street = parts.find(p => /^(jl\.?|jalan|gg\.?|gang)\b/i.test(p)) || parts[0];
+  const city = parts.find(p => /^(kota|kabupaten|kab\.)\b/i.test(p)) ||
+    parts.find(p => /semarang|jakarta|surabaya|bandung|medan|yogyakarta|surakarta|solo|bekasi|depok|tangerang|bogor|malang/i.test(p)) ||
+    parts[parts.length - 1];
+  if (street && city && street !== city) return `${street}, ${city}`;
+  if (street) return `${street}, kota belum terbaca`;
+  return 'Nama jalan belum terbaca, lokasi tersimpan';
+}
+function recordDisplayAddress(r) {
+  return normalizeDisplayAddress(r.displayAddress || r.gps_display_address || r.gps_address || r.rawAddress || '');
+}
+
 function isDetailAddress(addr) {
   if (!addr) return false;
   if (addr === 'Alamat tidak tersedia') return false;
@@ -674,7 +692,7 @@ function _dist(a1,o1,a2,o2){const R=6371000,dA=(a2-a1)*Math.PI/180,dO=(o2-o1)*Ma
 async function reverseGeocode(lat, lng) {
   if (_geoCache && _dist(+_geoCache.lat,+_geoCache.lng,+lat,+lng)<15 && Date.now()-_geoCache.ts<300000) return _geoCache.addr;
 
-  // â”€â”€ Round 1: all 3 in parallel (5 s each) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Round 1: all 3 in parallel (5 s each) ────────────────────────────────
   const r1 = await Promise.allSettled([
     geocodeNominatim(lat,lng,18,5000),
     geocodeBigDataCloud(lat,lng),
@@ -692,8 +710,8 @@ async function reverseGeocode(lat, lng) {
     return best.addr;
   }
 
-  // â”€â”€ Round 2: retry only the ones that failed + Nominatim zoom=17 (7 s) â”€â”€
-  // MODIFIED: removed ||true â€” was forcing Nominatim to always double-fire
+  // ── Round 2: retry only the ones that failed + Nominatim zoom=17 (7 s) ──
+  // MODIFIED: removed ||true — was forcing Nominatim to always double-fire
   const failedSources = r1.map((r,i)=>i).filter(i=>r1[i].status!=='fulfilled'||!r1[i].value);
   const retries = [];
   if (failedSources.includes(0)) retries.push(geocodeNominatim(lat,lng,17,7000)); // zoom out 1 level
@@ -709,7 +727,7 @@ async function reverseGeocode(lat, lng) {
     best = best2 || best; // keep whichever has any result
   }
 
-  // â”€â”€ Accept partial result if it has at least 2 parts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Accept partial result if it has at least 2 parts ─────────────────────
   if (best?.addr) {
     const parts = best.addr.split(',').map(s=>s.trim()).filter(Boolean);
     if (parts.length >= 2) {
@@ -718,7 +736,7 @@ async function reverseGeocode(lat, lng) {
     }
   }
 
-  return null; // truly nothing â€” caller will retry on next watchPosition tick
+  return null; // truly nothing — caller will retry on next watchPosition tick
 }
 
 async function geocodeNominatim(lat, lng, zoom=18, timeoutMs=5000) {
@@ -799,45 +817,49 @@ async function geocodePhoton(lat, lng) {
   return null;
 }
 
-// â”€â”€â”€ GPS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ─── GPS ─────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
 // REFACTORED: 3-layer architecture
-//   LAYER 1 â€“ GPS LOCK LAYER   : acquire lat/lng/accuracy â†’ lock signal ONLY
-//   LAYER 2 â€“ VALIDATION LAYER : anti-spoof checks run in background
-//   LAYER 3 â€“ ADDRESS LAYER    : reverse geocoding AFTER lock, non-blocking
+//   LAYER 1 – GPS LOCK LAYER   : acquire lat/lng/accuracy → lock signal ONLY
+//   LAYER 2 – VALIDATION LAYER : anti-spoof checks run in background
+//   LAYER 3 – ADDRESS LAYER    : reverse geocoding AFTER lock, non-blocking
 //
 // GPS lock is now based solely on coordinate quality, NOT address detail.
 // Address resolves asynchronously and updates the UI when ready.
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════════
 
-// â”€â”€ GPS CONFIG â€” MODERATE MODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const GPS_TARGET_SAMPLES   = 2;      // MODIFIED: 3â†’2  â€” fewer samples for faster lock
-const GPS_ACC_THRESHOLD    = 80;     // MODIFIED: 50â†’80 â€” accept urban/indoor fixes
-const GPS_PREFERRED_ACC    = 35;     // MODIFIED: 25â†’35 â€” realistic excellent-signal bar
+// ── GPS CONFIG — MODERATE MODE ───────────────────────────────────────────
+const GPS_TARGET_SAMPLES   = 2;      // MODIFIED: 3→2  — fewer samples for faster lock
+const GPS_ACC_THRESHOLD    = 80;     // MODIFIED: 50→80 — accept urban/indoor fixes
+const GPS_PREFERRED_ACC    = 35;     // MODIFIED: 25→35 — realistic excellent-signal bar
 const GPS_MAX_JUMP_METRES  = 200;    // UNCHANGED: reject coordinate jumps > this
-const GPS_SAMPLE_WINDOW_MS = 3000;   // MODIFIED: 4000â†’3000ms â€” tighter hard cap
+const GPS_SAMPLE_WINDOW_MS = 3000;   // MODIFIED: 4000→3000ms — tighter hard cap
 
-// â”€â”€ NEW: EARLY LOCK THRESHOLD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// If ANY single sample beats this accuracy â†’ lock immediately, skip further sampling
-const GPS_EARLY_LOCK_ACC   = 40;     // NEW: â‰¤40m â†’ excellent signal, lock right away
+// ── NEW: EARLY LOCK THRESHOLD ─────────────────────────────────────────────
+// If ANY single sample beats this accuracy → lock immediately, skip further sampling
+const GPS_EARLY_LOCK_ACC   = 40;     // NEW: ≤40m → excellent signal, lock right away
 
-// â”€â”€ NEW: ADAPTIVE MODE THRESHOLDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const GPS_FAST_MODE_ACC    = 100;    // NEW: accuracy > 100m  â†’ FAST mode (indoor/poor)
-const GPS_SECURE_MODE_ACC  = 50;     // NEW: accuracy â‰¤ 50m   â†’ SECURE mode (outdoor/good)
+// ── NEW: ADAPTIVE MODE THRESHOLDS ────────────────────────────────────────
+const GPS_FAST_MODE_ACC    = 100;    // NEW: accuracy > 100m  → FAST mode (indoor/poor)
+const GPS_SECURE_MODE_ACC  = 50;     // NEW: accuracy ≤ 50m   → SECURE mode (outdoor/good)
 
-// â”€â”€ NEW: SPEED ANTI-SPOOF â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── NEW: SPEED ANTI-SPOOF ─────────────────────────────────────────────────
 const GPS_MAX_REALISTIC_SPEED_MS = 55; // NEW: >55 m/s (~200 km/h) = suspicious movement
 
-// â”€â”€ NEW: ADAPTIVE MODE STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── NEW: ADAPTIVE MODE STATE ─────────────────────────────────────────────
 // 'fast' = poor signal / indoor  |  'secure' = good signal / outdoor  |  'normal' = default
 let _gpsAdaptMode = 'normal';  // NEW: current adaptive mode
-let _lastValidSample = null;   // NEW: previous accepted sample â€” used for speed/jump checks
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let _lastValidSample = null;   // NEW: previous accepted sample — used for speed/jump checks
+// ─────────────────────────────────────────────────────────────────────────
 
 function startGPS() {
   if (!navigator.geolocation) { setGPSErr('GPS tidak didukung'); return; }
+  if (_gpsWatchId !== null) { navigator.geolocation.clearWatch(_gpsWatchId); _gpsWatchId = null; }
+  if (_gpsSampleTimer) { clearTimeout(_gpsSampleTimer); _gpsSampleTimer = null; }
+  _gpsLocked = false; gpsOk = false; _gpsSamples = []; _lastValidSample = null; _gpsSpoofSuspect = false; _gpsAdaptMode = 'normal';
+  const refreshBtn = document.getElementById('btnRefreshGPS'); if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = 'Mengambil...'; }
 
-  // LAYER 1: GPS LOCK LAYER â€” only acquires coordinates.
+  // LAYER 1: GPS LOCK LAYER — only acquires coordinates.
   // watchPosition gives us a continuous stream; we stop it as soon as we lock.
   // maximumAge:0 forces fresh signal on every callback (no cached fix).
   _gpsWatchId = navigator.geolocation.watchPosition(
@@ -849,32 +871,32 @@ function startGPS() {
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
 
-  // Hard-cap: GPS_SAMPLE_WINDOW_MS (3s) â€” lock with whatever best sample we have.
+  // Hard-cap: GPS_SAMPLE_WINDOW_MS (3s) — lock with whatever best sample we have.
   // ADAPTIVE: FAST mode can trigger an earlier 2s timeout if accuracy > 100m after first sample.
   _gpsSampleTimer = setTimeout(() => {
     if (!_gpsLocked) {
-      console.log('[GPS] Sample window expired â€” locking with best available');
+      console.log('[GPS] Sample window expired — locking with best available');
       _lockBestSample();
     }
   }, GPS_SAMPLE_WINDOW_MS);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// LAYER 1 (GPS LOCK) + LAYER 2 (VALIDATION) â€” primary GPS callback
+// ─────────────────────────────────────────────────────────────────────────
+// LAYER 1 (GPS LOCK) + LAYER 2 (VALIDATION) — primary GPS callback
 // Runs on every watchPosition tick. Accumulates samples, applies anti-spoof
 // checks (LAYER 2), then locks once signal quality is sufficient (LAYER 1).
-// Does NOT touch address resolution â€” that belongs to LAYER 3.
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Does NOT touch address resolution — that belongs to LAYER 3.
+// ─────────────────────────────────────────────────────────────────────────
 function _onGPSSample(pos) {
-  if (_gpsLocked) return;  // already locked â€” ignore all further callbacks
+  if (_gpsLocked) return;  // already locked — ignore all further callbacks
 
   const rawLat = pos.coords.latitude;
   const rawLng = pos.coords.longitude;
   const rawAcc = pos.coords.accuracy;
   const rawTs  = Date.now();
 
-  // â”€â”€ LAYER 2: SPOOF DETECTION â€” zero/perfect accuracy or suspiciously round coords â”€â”€
-  // UNCHANGED from original â€” these are reliable heuristics for mock location apps.
+  // ── LAYER 2: SPOOF DETECTION — zero/perfect accuracy or suspiciously round coords ──
+  // UNCHANGED from original — these are reliable heuristics for mock location apps.
   const _suspiciousAcc    = rawAcc === 0 || rawAcc === 1;
   const _tooRoundCoord    = (Math.round(rawLat * 1000) === rawLat * 1000) &&
                             (Math.round(rawLng * 1000) === rawLng * 1000);
@@ -892,39 +914,36 @@ function _onGPSSample(pos) {
     return;
   }
 
-  // â”€â”€ NEW LAYER 2: ADAPTIVE MODE SWITCH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── NEW LAYER 2: ADAPTIVE MODE SWITCH ─────────────────────────────────
   // Dynamically adjust behavior based on current signal quality.
-  // FAST mode: poor signal (indoor) â†’ relax requirements, timeout faster.
-  // SECURE mode: good signal (outdoor) â†’ allow more samples, stricter checks.
+  // FAST mode: poor signal (indoor) → relax requirements, timeout faster.
+  // SECURE mode: good signal (outdoor) → allow more samples, stricter checks.
   const prevMode = _gpsAdaptMode;
   if (rawAcc > GPS_FAST_MODE_ACC) {
-    _gpsAdaptMode = 'fast';    // poor signal â€” accept lower accuracy, exit sooner
+    _gpsAdaptMode = 'fast';    // poor signal — accept lower accuracy, exit sooner
   } else if (rawAcc <= GPS_SECURE_MODE_ACC) {
-    _gpsAdaptMode = 'secure';  // good signal â€” allow extra sampling, tighter validation
+    _gpsAdaptMode = 'secure';  // good signal — allow extra sampling, tighter validation
   } else {
     _gpsAdaptMode = 'normal';
   }
   if (_gpsAdaptMode !== prevMode) {
-    console.log(`[GPS] Adaptive mode â†’ ${_gpsAdaptMode} (accuracy Â±${Math.round(rawAcc)}m)`);
+    console.log(`[GPS] Adaptive mode → ${_gpsAdaptMode} (accuracy ±${Math.round(rawAcc)}m)`);
   }
 
-  // â”€â”€ LAYER 2: ACCURACY FILTER â€” discard readings above threshold â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── LAYER 2: ACCURACY FILTER — discard readings above threshold ────────
   // FAST mode uses a relaxed threshold (accept up to GPS_ACC_THRESHOLD).
   // In all modes, readings above GPS_ACC_THRESHOLD are discarded.
   if (rawAcc > GPS_ACC_THRESHOLD) {
     console.log(`[GPS] Sample discarded: accuracy ${Math.round(rawAcc)}m > ${GPS_ACC_THRESHOLD}m`);
     const acc = Math.round(rawAcc);
     document.getElementById('gDot').className     = 'gps-dot srch';
-    document.getElementById('gTitle').textContent = `â³ GPS mencari sinyal... (Â±${acc}m)`;
-    document.getElementById('gCoord').textContent = `Menunggu akurasi â‰¤${GPS_ACC_THRESHOLD}m`;
-
-    // NEW ADAPTIVE: FAST MODE â€” if indoor, force lock after ~2s with best sample so far
-    // This prevents infinite wait when GPS is stuck at 100â€“200m indoors.
+    document.getElementById('gTitle').textContent = 'GPS mencari sinyal...';
+    document.getElementById('gCoord').textContent = 'Menunggu akurasi GPS membaik';
     if (_gpsAdaptMode === 'fast' && _gpsSamples.length >= 1) {
       if (_gpsSampleTimer) { clearTimeout(_gpsSampleTimer); _gpsSampleTimer = null; }
       _gpsSampleTimer = setTimeout(() => {
         if (!_gpsLocked) {
-          console.log('[GPS] FAST mode timeout â€” accepting best available fix');
+          console.log('[GPS] FAST mode timeout — accepting best available fix');
           // Accept the discarded sample directly (accuracy > threshold but all we have)
           const forcedSample = { lat: rawLat, lng: rawLng, acc: rawAcc, ts: rawTs };
           if (!_gpsSamples.find(s => s.ts === rawTs)) _gpsSamples.push(forcedSample);
@@ -935,7 +954,7 @@ function _onGPSSample(pos) {
     return;
   }
 
-  // â”€â”€ LAYER 2: STABILITY CHECK â€” reject coordinate jumps from median â”€â”€â”€â”€â”€
+  // ── LAYER 2: STABILITY CHECK — reject coordinate jumps from median ─────
   // UNCHANGED logic, SECURE mode uses stricter threshold (half of normal).
   if (_gpsSamples.length >= 2) {
     const medLat = _median(_gpsSamples.map(s => s.lat));
@@ -950,7 +969,7 @@ function _onGPSSample(pos) {
     }
   }
 
-  // â”€â”€ NEW LAYER 2: SPEED CHECK â€” detect teleportation-style spoofing â”€â”€â”€â”€â”€
+  // ── NEW LAYER 2: SPEED CHECK — detect teleportation-style spoofing ─────
   // Calculates speed between last valid sample and this one.
   // If speed > 55 m/s (~200 km/h) and accuracy is good, flag as suspicious.
   if (_lastValidSample && _gpsAdaptMode !== 'fast') {
@@ -959,7 +978,7 @@ function _onGPSSample(pos) {
       const distM = _dist(_lastValidSample.lat, _lastValidSample.lng, rawLat, rawLng);
       const speedMs = distM / timeDeltaS;
       if (speedMs > GPS_MAX_REALISTIC_SPEED_MS) {
-        console.warn(`[GPS LAYER 2] Speed anomaly: ${Math.round(speedMs)} m/s between samples â€” possible spoof`);
+        console.warn(`[GPS LAYER 2] Speed anomaly: ${Math.round(speedMs)} m/s between samples — possible spoof`);
         _gpsSpoofSuspect = true;
         gpsOk = false;
         updateGPSUI(null); checkReady(); updateCountdownGPS();
@@ -968,7 +987,7 @@ function _onGPSSample(pos) {
     }
   }
 
-  // â”€â”€ NEW LAYER 2: STATIC DEVICE ANOMALY â€” GPS drift on stationary device â”€
+  // ── NEW LAYER 2: STATIC DEVICE ANOMALY — GPS drift on stationary device ─
   // If we already have 3+ samples and the device appears stationary (all
   // previous samples within 5m of each other), but the new reading is >50m
   // away, that's a red flag for a switched mock-location.
@@ -979,7 +998,7 @@ function _onGPSSample(pos) {
     const medLng = _median(prevLngs);
     const maxSpread = Math.max(..._gpsSamples.map(s => _dist(s.lat, s.lng, medLat, medLng)));
     if (maxSpread < 5 && _dist(medLat, medLng, rawLat, rawLng) > 50) {
-      console.warn('[GPS LAYER 2] Static device anomaly â€” sudden large shift on stable device');
+      console.warn('[GPS LAYER 2] Static device anomaly — sudden large shift on stable device');
       _gpsSpoofSuspect = true;
       gpsOk = false;
       updateGPSUI(null); checkReady(); updateCountdownGPS();
@@ -987,27 +1006,25 @@ function _onGPSSample(pos) {
     }
   }
 
-  // â”€â”€ LAYER 1: ACCUMULATE SAMPLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── LAYER 1: ACCUMULATE SAMPLE ────────────────────────────────────────
   const sample = { lat: rawLat, lng: rawLng, acc: rawAcc, ts: rawTs };
   _gpsSamples.push(sample);
   _lastValidSample = sample; // NEW: track for speed check
-  console.log(`[GPS] Sample #${_gpsSamples.length} [${_gpsAdaptMode}]: Â±${Math.round(rawAcc)}m @ (${rawLat.toFixed(5)}, ${rawLng.toFixed(5)})`);
+  console.log(`[GPS] Sample #${_gpsSamples.length} [${_gpsAdaptMode}]: ±${Math.round(rawAcc)}m @ (${rawLat.toFixed(5)}, ${rawLng.toFixed(5)})`);
 
-  // Update UI while sampling â€” show "GPS searching" but NOT "locked" yet
+  // Update UI while sampling — show "GPS searching" but NOT "locked" yet
   const bestSoFar = _bestSample();
   if (bestSoFar) {
     gpsOk = true; // coordinates available, even if lock not yet committed
     const displayAcc = Math.round(bestSoFar.acc);
     document.getElementById('gDot').className     = 'gps-dot srch';
-    document.getElementById('gTitle').textContent = `â³ GPS aktif... (${_gpsSamples.length}/${GPS_TARGET_SAMPLES}, Â±${displayAcc}m)`;
-    document.getElementById('gCoord').textContent = `Memilih fix terbaik...`;
+    document.getElementById('gTitle').textContent = 'GPS aktif...';
+    document.getElementById('gCoord').textContent = 'Memilih fix terbaik...';
   }
-
-  // â”€â”€ LAYER 1: LOCK CONDITION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const best = _bestSample();
   const hasEnough = _gpsSamples.length >= GPS_TARGET_SAMPLES;
 
-  // NEW: EARLY LOCK â€” single sample with â‰¤40m accuracy is excellent; lock immediately.
+  // NEW: EARLY LOCK — single sample with ≤40m accuracy is excellent; lock immediately.
   // This is the primary optimization: don't waste time collecting more samples if
   // the very first reading is already high-quality.
   const isEarlyLock = best && best.acc <= GPS_EARLY_LOCK_ACC;
@@ -1037,12 +1054,12 @@ function _median(arr) {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 // LAYER 1: Commit the best collected sample as the final GPS lock.
 // CRITICAL CHANGE: Does NOT wait for reverse geocoding.
 // GPS lock = coordinates accepted + watch stopped.
 // Address resolution (LAYER 3) fires in background after this returns.
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 async function _lockBestSample() {
   if (_gpsLocked) return;
 
@@ -1052,7 +1069,7 @@ async function _lockBestSample() {
     return;
   }
 
-  // â”€â”€ LAYER 1: STOP WATCH â€” no more samples needed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── LAYER 1: STOP WATCH — no more samples needed ──────────────────────
   if (_gpsWatchId !== null) {
     navigator.geolocation.clearWatch(_gpsWatchId);
     _gpsWatchId = null;
@@ -1062,9 +1079,9 @@ async function _lockBestSample() {
   const lng = best.lng.toFixed(6);
   const acc = Math.round(best.acc);
 
-  console.log(`[GPS LAYER 1] Locked: Â±${acc}m [${_gpsAdaptMode}] from ${_gpsSamples.length} sample(s) @ (${lat}, ${lng})`);
+  console.log(`[GPS LAYER 1] Locked: ±${acc}m [${_gpsAdaptMode}] from ${_gpsSamples.length} sample(s) @ (${lat}, ${lng})`);
 
-  // â”€â”€ LAYER 1: COMMIT GPS LOCK â€” immediately update state & UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── LAYER 1: COMMIT GPS LOCK — immediately update state & UI ──────────
   // GPS is valid the moment we have coordinates with acceptable accuracy.
   // Address detail is NOT required for GPS to be considered locked.
   gpsOk = acc <= GPS_ACC_THRESHOLD;
@@ -1072,37 +1089,41 @@ async function _lockBestSample() {
   _gpsLocked = true;             // MODIFIED: set lock flag BEFORE address lookup
   gps.street = '';               // will be populated by LAYER 3
 
-  // Update UI: "GPS Locked" â€” separate from address
+  // Update UI: "GPS Locked" — separate from address
   updateGPSUI(null);             // shows locked coords, "Fetching address..." separately
   checkReady();                  // unblocks capture button if other conditions met
   updateCountdownGPS();
 
-  // â”€â”€ LAYER 3: ADDRESS RESOLUTION â€” fires in background, non-blocking â”€â”€â”€
+  // ── LAYER 3: ADDRESS RESOLUTION — fires in background, non-blocking ───
   // Reverse geocoding is intentionally NOT awaited here.
   // The UI will update asynchronously when/if the address arrives.
   _resolveAddressBackground(lat, lng);
+  const refreshBtn = document.getElementById('btnRefreshGPS'); if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = 'Refresh Lokasi'; }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 // LAYER 3: Resolve address in background after GPS lock.
 // Updates gps.address and refreshes UI when result arrives.
 // Does NOT affect GPS lock status or capture button availability.
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 async function _resolveAddressBackground(lat, lng) {
   console.log('[GPS LAYER 3] Starting background address resolution...');
   const addr = await reverseGeocode(lat, lng);
-  if (!gps || gps.lat !== lat || gps.lng !== lng) return; // GPS changed â€” discard stale result
+  if (!gps || gps.lat !== lat || gps.lng !== lng) return; // GPS changed — discard stale result
 
-  gps.address = addr || 'Alamat tidak tersedia';
+  gps.rawAddress = addr || '';
+  gps.address = normalizeDisplayAddress(addr);
+  gps.displayAddress = gps.address;
+  gps.locationStatus = addr ? 'resolved' : 'address_unavailable';
   if (addr) gps.street = _extractStreet(addr);
 
   console.log('[GPS LAYER 3] Address resolved:', addr || '(none)');
-  updateGPSUI(addr);            // update UI: show address if available
+  updateGPSUI(gps.address);    // update UI: show normalized display address
   updateCountdownGPS();         // update countdown overlay GPS row
-  // NOT calling checkReady() here â€” address does not affect button state
+  // NOT calling checkReady() here — address does not affect button state
 }
 
-// â”€â”€ MODIFIED: extract the street-name component from a full address string â”€â”€
+// ── MODIFIED: extract the street-name component from a full address string ──
 // Returns the first comma-segment (which geocoders consistently put the road first).
 // Stored as gps.street and sent to Firestore/photo so admins can filter by street.
 function _extractStreet(addr) {
@@ -1110,66 +1131,65 @@ function _extractStreet(addr) {
   return addr.split(',')[0].trim(); // e.g. "Jl. Merdeka No.5" from full address
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 // LAYER 1: Update UI and ready-state after GPS lock.
-// MODIFIED: GPS lock condition is coordinate quality ONLY â€” address does NOT gate lock.
+// MODIFIED: GPS lock condition is coordinate quality ONLY — address does NOT gate lock.
 // This function is kept for backward-compatibility but is now simplified.
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 function _checkAndLockGPS() {
   updateGPSUI(gps?.address || null);
   checkReady();
   updateCountdownGPS();
   // NOTE: _gpsLocked is now set in _lockBestSample() before this is called.
-  // Address-based locking removed â€” gps.street cached when LAYER 3 resolves.
+  // Address-based locking removed — gps.street cached when LAYER 3 resolves.
   if (gpsOk && gps?.address && !gps.street) {
     gps.street = _extractStreet(gps.address);
     console.log('[GPS] Street cached on address update:', gps.street);
   }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 // MODIFIED: updateGPSUI now shows TWO independent states:
-//   1. GPS lock status   â†’ based on gpsOk + _gpsLocked (coordinates only)
-//   2. Address status    â†’ based on gps.address (shown separately, non-blocking)
+//   1. GPS lock status   → based on gpsOk + _gpsLocked (coordinates only)
+//   2. Address status    → based on gps.address (shown separately, non-blocking)
 // User sees "GPS Locked" as soon as coordinates are confirmed.
 // "Fetching address..." is a secondary status that never blocks interaction.
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 function updateGPSUI(addr) {
   const el = document.getElementById('gDot'); if (!el) return;
 
   // GPS lock state is determined by coordinate quality (_gpsLocked + gpsOk)
-  // NOT by address detail â€” this is the core architectural change.
+  // NOT by address detail — this is the core architectural change.
   const isLocked  = _gpsLocked && gpsOk;
   const hasAddr   = addr && addr !== 'Alamat tidak tersedia';
   const isDetail  = hasAddr && isDetailAddress(addr);
 
-  // Display address: if locked but no address yet â†’ show "Fetching address..."
-  // This is informational only â€” it does NOT block any user action.
-  const displayAddr = isDetail  ? addr
-                    : hasAddr   ? addr + ' â³'         // address exists but not detailed yet
-                    : isLocked  ? 'â³ Memuat alamat...' // locked coords, address pending (LAYER 3)
-                    :             'â³ Sedang mencari sinyal GPS...';
+  // Display address: if locked but no address yet → show "Fetching address..."
+  // This is informational only — it does NOT block any user action.
+  const displayAddr = hasAddr ? normalizeDisplayAddress(addr)
+                    : isLocked ? 'Lokasi terkunci, nama jalan sedang dimuat'
+                    : 'Sedang mencari sinyal GPS...';
 
   // Dot: green-pulsing = locked, amber-pulsing = searching
   document.getElementById('gDot').className = isLocked ? 'gps-dot on' : 'gps-dot srch';
 
-  // Title: "GPS Locked" once coordinates are confirmed â€” no longer waits for address
+  // Title: "GPS Locked" once coordinates are confirmed — no longer waits for address
   document.getElementById('gTitle').textContent =
-      isLocked && isDetail  ? 'ðŸ”’ Lokasi Terkunci'
-    : isLocked              ? 'âœ… GPS Terkunci Â· Memuat alamat...'  // NEW: locked without address
-    : gpsOk                 ? `â³ Mengunci GPS... (Â±${gps?.acc||'?'}m)`
-    :                         `â³ GPS lemah (Â±${gps?.acc||'?'}m)`;
+      isLocked && hasAddr  ? 'Lokasi Terkunci'
+    : isLocked             ? 'GPS Terkunci · Memuat nama jalan'
+    : gpsOk                ? 'Mengunci GPS...'
+    :                        'GPS lemah';
 
   document.getElementById('gCoord').textContent = displayAddr;
 
   // Modal GPS box (inside camera modal)
   const mi = document.getElementById('gps-modal-icon');
   if (mi) {
-    document.getElementById('gps-modal-icon').textContent  = isLocked ? 'ðŸ”’' : 'ðŸ“';
+    document.getElementById('gps-modal-icon').textContent  = isLocked ? '🔒' : '📍';
     document.getElementById('gps-modal-title').textContent =
-        isLocked && isDetail ? 'Lokasi Terkunci âœ“'
-      : isLocked             ? 'GPS Terkunci Â· Alamat dimuat...'  // NEW
-      :                        'Mencari lokasi...';
+        isLocked && hasAddr ? 'Lokasi Terkunci'
+      : isLocked            ? 'GPS Terkunci · Memuat nama jalan'
+      :                       'Mencari lokasi...';
     document.getElementById('gps-modal-addr').textContent  = displayAddr;
   }
 }
@@ -1178,9 +1198,21 @@ function setGPSErr(m) {
   const el = document.getElementById('gDot'); if (!el) return;
   document.getElementById('gDot').className     = 'gps-dot';
   document.getElementById('gTitle').textContent = m;
+  document.getElementById('gCoord').textContent = 'Lokasi belum tersedia, coba ambil ulang';
+  const refreshBtn = document.getElementById('btnRefreshGPS'); if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = 'Refresh Lokasi'; }
 }
 
-// â”€â”€â”€ COUNTDOWN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+window.refreshGPS = function() {
+  if (!me) return;
+  if (_gpsWatchId !== null) { navigator.geolocation.clearWatch(_gpsWatchId); _gpsWatchId = null; }
+  if (_gpsSampleTimer) { clearTimeout(_gpsSampleTimer); _gpsSampleTimer = null; }
+  gps = null; gpsOk = false; _gpsLocked = false; _gpsSamples = []; _lastValidSample = null; _gpsSpoofSuspect = false;
+  document.getElementById('gTitle').textContent = 'Mengambil ulang lokasi...';
+  document.getElementById('gCoord').textContent = 'Sedang mencari nama jalan';
+  startGPS();
+};
+
+// ─── COUNTDOWN ───────────────────────────────────────────────────────────
 window.startAbsen = async function(m) {
   // Cegah double-tap: batalkan countdown yang sedang berjalan dulu
   if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
@@ -1191,13 +1223,16 @@ window.startAbsen = async function(m) {
   syncServerTime().then(updateCountdownTime);
 
   // LAYER 3: If GPS is locked but address not yet resolved, kick off background fetch.
-  // This is purely informational â€” it does NOT block the countdown or modal opening.
+  // This is purely informational — it does NOT block the countdown or modal opening.
   if (gps && !gps.address) {
     reverseGeocode(gps.lat, gps.lng).then(addr => {
       if (gps && addr) {
-        gps.address = addr;
+        gps.rawAddress = addr || '';
+        gps.address = normalizeDisplayAddress(addr);
+        gps.displayAddress = gps.address;
+        gps.locationStatus = addr ? 'resolved' : 'address_unavailable';
         gps.street  = _extractStreet(addr);
-        updateGPSUI(addr);
+        updateGPSUI(gps.address);
         updateCountdownGPS();
       }
     });
@@ -1216,10 +1251,10 @@ window.startAbsen = async function(m) {
       clearInterval(countdownTimer);
       countdownTimer = null;
 
-      // MODIFIED: GPS lock (coordinates) is the only gate â€” NOT address detail.
+      // MODIFIED: GPS lock (coordinates) is the only gate — NOT address detail.
       // If GPS is locked, proceed immediately regardless of address status.
       if (!gps || !gpsOk || !_gpsLocked) {
-        el.textContent = 'â³';
+        el.textContent = '⏳';
         el.style.fontSize = '40px';
         const hint = document.getElementById('cd-hint');
         if (hint) hint.textContent = 'Menunggu GPS terkunci...';
@@ -1237,12 +1272,12 @@ window.startAbsen = async function(m) {
   }, 1000);
 };
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// MODIFIED: _waitForGPSLock â€” waits for GPS coordinate lock only.
+// ─────────────────────────────────────────────────────────────────────────
+// MODIFIED: _waitForGPSLock — waits for GPS coordinate lock only.
 // Previously "waitForAddress" which blocked on detailed address.
 // Now unblocks as soon as gpsOk + _gpsLocked, regardless of address status.
 // Address is resolved in background by LAYER 3 independently.
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 function _waitForGPSLock() {
   _waitCancelled = false;
 
@@ -1250,7 +1285,7 @@ function _waitForGPSLock() {
     updateCountdownGPS();
     if (_waitCancelled) { clearInterval(check); return; }
 
-    // MODIFIED: proceed as soon as GPS lock is achieved â€” no address requirement
+    // MODIFIED: proceed as soon as GPS lock is achieved — no address requirement
     if (gps && gpsOk && _gpsLocked) {
       clearInterval(check);
       document.getElementById('cd-overlay').classList.remove('open');
@@ -1258,14 +1293,14 @@ function _waitForGPSLock() {
     }
   }, 300);
 
-  // Hard timeout 15s â€” if GPS still not locked, show error and bail
-  // MODIFIED: was 40s (for address); GPS lock should happen in 2â€“6s, 15s is generous
+  // Hard timeout 15s — if GPS still not locked, show error and bail
+  // MODIFIED: was 40s (for address); GPS lock should happen in 2–6s, 15s is generous
   setTimeout(() => {
     clearInterval(check);
     if (_waitCancelled) return;
     document.getElementById('cd-overlay').classList.remove('open');
     if (!gps || !gpsOk) {
-      toast('âš ï¸ GPS tidak terkunci. Pastikan GPS aktif di luar ruangan.', 'err');
+      toast('⚠️ GPS tidak terkunci. Pastikan GPS aktif di luar ruangan.', 'err');
       return;
     }
     // If gps exists but somehow _gpsLocked is false, open modal anyway
@@ -1273,7 +1308,7 @@ function _waitForGPSLock() {
   }, 15000);
 }
 
-// UNCHANGED: kept for reference â€” original waitForAddress is replaced above
+// UNCHANGED: kept for reference — original waitForAddress is replaced above
 // The address-background-retry logic now lives in _resolveAddressBackground (LAYER 3)
 
 window.cancelCountdown = function() {
@@ -1282,7 +1317,7 @@ window.cancelCountdown = function() {
   document.getElementById('cd-overlay').classList.remove('open');
 };
 
-// MODIFIED: updateCountdownGPS â€” shows GPS lock status (LAYER 1) and address
+// MODIFIED: updateCountdownGPS — shows GPS lock status (LAYER 1) and address
 // (LAYER 3) as separate, independent states. GPS lock = green dot immediately.
 function updateCountdownGPS() {
   const dot = document.getElementById('cd-gps-dot');
@@ -1294,22 +1329,22 @@ function updateCountdownGPS() {
   if (isLocked && gps?.address && isDetailAddress(gps.address)) {
     // Best case: GPS locked + detailed address available
     dot.className = 'cd-dot ok';
-    val.textContent = gps.address;
+    val.textContent = normalizeDisplayAddress(gps.address);
     val.style.color = 'var(--success)';
   } else if (isLocked && gps?.address) {
     // GPS locked, partial address
     dot.className = 'cd-dot ok';
-    val.textContent = `âœ… GPS Â±${gps.acc}m Â· ${gps.address}`;
+    val.textContent = `Lokasi terkunci · ${normalizeDisplayAddress(gps.address)}`;
     val.style.color = 'var(--success)';
   } else if (isLocked) {
-    // NEW: GPS locked but address still loading â€” show locked, not blocked
+    // NEW: GPS locked but address still loading — show locked, not blocked
     dot.className = 'cd-dot ok';
-    val.textContent = `âœ… GPS Terkunci Â±${gps.acc}m Â· Memuat alamat...`;
-    val.style.color = 'var(--success)'; // green â€” GPS lock is what matters
+    val.textContent = 'GPS terkunci · memuat nama jalan';
+    val.style.color = 'var(--success)'; // green — GPS lock is what matters
   } else if (gps) {
     // GPS active but not yet locked
     dot.className = 'cd-dot spin';
-    val.textContent = `Mengunci GPS... Â±${gps.acc}m`;
+    val.textContent = `Mengunci GPS... ±${gps.acc}m`;
     val.style.color = 'var(--amber)';
   } else {
     dot.className = 'cd-dot spin';
@@ -1325,7 +1360,7 @@ function updateCountdownTime() {
   if (serverTimeOffset !== null) {
     const now = getServerNow();
     dot.className = 'cd-dot ok';
-    val.textContent = now.toLocaleTimeString('id-ID') + ' âœ“';
+    val.textContent = now.toLocaleTimeString('id-ID') + ' ✓';
     val.style.color = 'var(--success)';
   } else {
     dot.className = 'cd-dot spin';
@@ -1334,7 +1369,7 @@ function updateCountdownTime() {
   }
 }
 
-// â”€â”€â”€ AUTH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── AUTH ─────────────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
   document.getElementById('loading').style.display = 'none';
   if (user) {
@@ -1347,11 +1382,11 @@ onAuthStateChanged(auth, async user => {
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('main-app').style.display    = 'flex';
         startGPS();
-        // Gate tombol siang: aktif hanya 12:45â€“13:15, cek tiap 30 detik
+        // Gate tombol siang: aktif hanya 12:45–13:15, cek tiap 30 detik
         if (_siangIntervalId) clearInterval(_siangIntervalId);
         _siangIntervalId = setInterval(updateSiangButtonState, 30000);
         const btn = document.getElementById('btn-login');
-        if (btn) { btn.disabled = false; btn.textContent = 'Masuk â†’'; }
+        if (btn) { btn.disabled = false; btn.textContent = 'Masuk →'; }
       } else {
         await signOut(auth);
         showAuth();
@@ -1360,7 +1395,7 @@ onAuthStateChanged(auth, async user => {
     } catch(e) {
       await signOut(auth);
       showAuth();
-      toast('âŒ Gagal memuat: ' + e.message, 'err');
+      toast('❌ Gagal memuat: ' + e.message, 'err');
     }
   } else {
     showAuth();
@@ -1382,9 +1417,9 @@ window.doLogin = async function() {
   try {
     await signInWithEmailAndPassword(auth, email, pw);
   } catch(e) {
-    btn.disabled = false; btn.textContent = 'Masuk â†’';
+    btn.disabled = false; btn.textContent = 'Masuk →';
     err.style.display = 'block';
-    err.textContent = e.code === 'auth/invalid-credential' ? 'âŒ Email atau password salah' : 'âŒ ' + e.message;
+    err.textContent = e.code === 'auth/invalid-credential' ? '❌ Email atau password salah' : '❌ ' + e.message;
   }
 };
 
@@ -1403,7 +1438,7 @@ function renderProfile() {
   const init = me.nama.split(' ').map(w => w[0]).slice(0, 2).join('');
   document.getElementById('av').textContent    = init;
   document.getElementById('pname').textContent = me.nama;
-  document.getElementById('pdept').textContent = me.divisi || 'â€“';
+  document.getElementById('pdept').textContent = me.divisi || '–';
   document.getElementById('pid').textContent   = me.nip || me.uid.slice(0, 12);
 }
 
@@ -1422,14 +1457,14 @@ async function loadTodayRecords() {
 }
 
 function applyRecord(r) {
-  const addr = r.gps_address || 'Lokasi tersimpan';
+  const addr = recordDisplayAddress(r);
   if (r.tipe === 'masuk') {
     document.getElementById('t-in').textContent  = (r.jam||'').replace(/[.\\-]/g, ':');
     document.getElementById('t-in').className    = 'ac-time';
     document.getElementById('l-in').textContent  = addr;
     document.getElementById('card-in').classList.add('done');
     document.getElementById('btnIn').disabled    = true;
-    document.getElementById('btnIn').innerHTML   = 'âœ… &nbsp;Sudah Absen Masuk';
+    document.getElementById('btnIn').innerHTML   = '✅ &nbsp;Sudah Absen Masuk';
     updateSiangButtonState();
     document.getElementById('btnOut').disabled   = false;
     document.getElementById('status-badge').textContent = 'Hadir';
@@ -1441,7 +1476,7 @@ function applyRecord(r) {
     document.getElementById('l-siang').textContent = addr;
     document.getElementById('card-siang').classList.add('done');
     document.getElementById('btnSiang').disabled   = true;
-    document.getElementById('btnSiang').innerHTML  = 'âœ… &nbsp;Sudah Absen Siang';
+    document.getElementById('btnSiang').innerHTML  = '✅ &nbsp;Sudah Absen Siang';
     addHistItem(r);
   } else if (r.tipe === 'pulang') {
     document.getElementById('t-out').textContent = (r.jam||'').replace(/[.\\-]/g, ':');
@@ -1449,29 +1484,29 @@ function applyRecord(r) {
     document.getElementById('l-out').textContent = addr;
     document.getElementById('card-out').classList.add('done');
     document.getElementById('btnOut').disabled   = true;
-    document.getElementById('btnOut').innerHTML  = 'âœ… &nbsp;Sudah Absen Pulang';
+    document.getElementById('btnOut').innerHTML  = '✅ &nbsp;Sudah Absen Pulang';
     addHistItem(r);
   }
 }
 
-// â”€â”€â”€ CAMERA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── CAMERA ───────────────────────────────────────────────────────────────
 async function openModal(m) {
   mode = m;
-  const titleMap = { masuk:'ðŸ“¸ Absen Masuk', siang:'â˜€ï¸ Absen Siang', pulang:'ðŸ“¸ Absen Pulang' };
-  document.getElementById('modal-title').textContent = titleMap[m] || 'ðŸ“¸ Absen';
+  const titleMap = { masuk:'📸 Absen Masuk', siang:'☀️ Absen Siang', pulang:'📸 Absen Pulang' };
+  document.getElementById('modal-title').textContent = titleMap[m] || '📸 Absen';
   retake();
   document.getElementById('cam-modal').classList.add('open');
   syncServerTime();
   if (syncInterval) { clearInterval(syncInterval); syncInterval = null; }
   syncInterval = setInterval(syncServerTime, 120000);
 
-  // Update modal GPS â€” MODIFIED: shows lock status independent of address
+  // Update modal GPS — shows lock status independent of address
   if (gps) {
     const isLocked = gpsOk && _gpsLocked;
-    document.getElementById('gps-modal-icon').textContent  = isLocked ? 'ðŸ”’' : 'ðŸ“';
-    document.getElementById('gps-modal-title').textContent = isLocked ? 'Lokasi Terkunci âœ“' : 'GPS aktif';
-    document.getElementById('gps-modal-addr').textContent  =
-      gps.address || (isLocked ? 'â³ Memuat alamat...' : 'â³ Mencari lokasi...');
+    const modalAddr = gps.displayAddress || gps.address || (isLocked ? 'Lokasi terkunci, nama jalan sedang dimuat' : 'Mencari lokasi...');
+    document.getElementById('gps-modal-icon').textContent  = isLocked ? '🔒' : '📍';
+    document.getElementById('gps-modal-title').textContent = isLocked ? 'Lokasi Terkunci' : 'GPS aktif';
+    document.getElementById('gps-modal-addr').textContent  = modalAddr;
   }
 
   try {
@@ -1482,12 +1517,12 @@ async function openModal(m) {
     document.getElementById('vid').srcObject = stream;
     streamStartTime = Date.now();
     checkReady();
-    toast('ðŸ“· Kamera aktif', 'info');
+    toast('📷 Kamera aktif', 'info');
     // Start liveness challenge after brief camera warmup
-    // MODIFIED: 1800â†’800ms â€” camera initialises quickly on modern phones
+    // MODIFIED: 1800→800ms — camera initialises quickly on modern phones
     setTimeout(initLiveness, 800);
   } catch(e) {
-    toast('âš ï¸ Izin kamera diperlukan', 'err');
+    toast('⚠️ Izin kamera diperlukan', 'err');
   }
 }
 
@@ -1504,15 +1539,15 @@ function stopCam() {
   streamStartTime = null;
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// MODIFIED: checkReady â€” GPS lock (coordinates) is sufficient to enable capture.
+// ─────────────────────────────────────────────────────────────────────────
+// MODIFIED: checkReady — GPS lock (coordinates) is sufficient to enable capture.
 // Address detail is NO LONGER a prerequisite for the capture button.
 // This is the core UX change: user can proceed once GPS lock is achieved.
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────
 function checkReady() {
   const live      = stream && streamStartTime && (Date.now() - streamStartTime > 2000);
   // MODIFIED: was "gps && gps.address && isDetailAddress(gps.address)"
-  // Now only requires gpsOk â€” address resolves in background (LAYER 3)
+  // Now only requires gpsOk — address resolves in background (LAYER 3)
   const gpsLocked  = gpsOk && _gpsLocked;
   const timeSynced = serverTimeOffset !== null;
   const clockOk   = !_clockTampered;
@@ -1521,32 +1556,32 @@ function checkReady() {
   const btn       = document.getElementById('btnCap');
   btn.disabled    = !ready;
   if (!timeSynced) {
-    btn.textContent = 'â›”  Aktifkan internet untuk sinkronisasi waktu';
+    btn.textContent = '⛔  Aktifkan internet untuk sinkronisasi waktu';
   } else if (_clockTampered) {
-    btn.textContent = 'â›”  Jam perangkat tidak sesuai server';
+    btn.textContent = '⛔  Jam perangkat tidak sesuai server';
   } else if (!gpsClean) {
-    btn.textContent = 'â›”  GPS tidak valid â€” nonaktifkan emulasi lokasi';
+    btn.textContent = '⛔  GPS tidak valid — nonaktifkan emulasi lokasi';
   } else if (!gpsLocked) {
-    btn.textContent = 'â³  Mengunci GPS...';
+    btn.textContent = '⏳  Mengunci GPS...';
   } else if (!livenessPassed && stream && live) {
-    btn.textContent = 'ðŸ‘ï¸  Lakukan Tantangan Liveness Dulu';
+    btn.textContent = '👁️  Lakukan Tantangan Liveness Dulu';
   } else if (ready) {
-    btn.innerHTML = 'ðŸ“· &nbsp;Ambil Foto Selfie';
+    btn.innerHTML = '📷 &nbsp;Ambil Foto Selfie';
   }
   if (stream && !live) setTimeout(checkReady, 500);
-  // MODIFIED: removed "if (stream && live && !hasAddr)" â€” address no longer gates readiness
+  // MODIFIED: removed "if (stream && live && !hasAddr)" — address no longer gates readiness
 }
 
-// â”€â”€â”€ SHA-256 HASH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── SHA-256 HASH ─────────────────────────────────────────────────────────
 async function sha256(msg) {
   const buf  = new TextEncoder().encode(msg);
   const hash = await crypto.subtle.digest('SHA-256', buf);
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-// â”€â”€â”€ SNAP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── SNAP ─────────────────────────────────────────────────────────────────
 
-// â”€â”€â”€ FACE DETECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── FACE DETECTION ───────────────────────────────────────────────────────
 // Skin-tone detection in center of frame to ensure face is visible
 let _faceCanvas=null,_faceCtx=null;
 function detectFaceInCenter() {
@@ -1570,21 +1605,21 @@ function detectFaceInCenter() {
         (Math.max(r,g,b) - Math.min(r,g,b)) > 15 &&
         Math.abs(r - g) > 15 && r > g && r > b) skinPixels++;
   }
-  return (skinPixels / (FC * FC)) > 0.08; // need â‰¥8% skin pixels in center
+  return (skinPixels / (FC * FC)) > 0.08; // need ≥8% skin pixels in center
 }
 window.snap = async function() {
-  if (!livenessPassed) { toast('âš ï¸ Lakukan tantangan liveness dulu', 'err'); return; }
-  if (!gpsOk || !_gpsLocked) { toast('âš ï¸ GPS belum terkunci â€” tunggu sebentar', 'err'); return; }
-  // MODIFIED: address check REMOVED â€” address may still be loading (LAYER 3 background).
+  if (!livenessPassed) { toast('⚠️ Lakukan tantangan liveness dulu', 'err'); return; }
+  if (!gpsOk || !_gpsLocked) { toast('⚠️ GPS belum terkunci — tunggu sebentar', 'err'); return; }
+  // MODIFIED: address check REMOVED — address may still be loading (LAYER 3 background).
   // GPS lock (coordinates) is sufficient to proceed. Address stored when available.
-  if (!stream) { toast('âš ï¸ Kamera tidak aktif', 'err'); return; }
+  if (!stream) { toast('⚠️ Kamera tidak aktif', 'err'); return; }
   if (!detectFaceInCenter()) {
-    toast('âš ï¸ Wajah tidak terdeteksi â€“ pastikan wajah di tengah kamera', 'err');
+    toast('⚠️ Wajah tidak terdeteksi – pastikan wajah di tengah kamera', 'err');
     return;
   }
   const vid = document.getElementById('vid');
   if (!streamStartTime || Date.now() - streamStartTime < 2000) {
-    toast('âš ï¸ Tunggu sebentar â€“ kamera inisialisasi', 'err'); return;
+    toast('⚠️ Tunggu sebentar – kamera inisialisasi', 'err'); return;
   }
 
   const cvs = document.getElementById('cvs');
@@ -1606,27 +1641,27 @@ window.snap = async function() {
   captTs     = now.toISOString();
   const tstr = now.toLocaleTimeString('id-ID', { hour12: false });
   const dstr = now.toLocaleDateString('id-ID', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
-  // Address ONLY â€” never show coordinates in watermark
-  const addr = gps.address || 'Alamat sedang diproses';
+  // Address ONLY — never show coordinates in watermark
+  const addr = normalizeDisplayAddress(gps?.displayAddress || gps?.address || '');
 
-  // â”€â”€ WATERMARK: large, readable even at 100KB â”€â”€
+  // ── WATERMARK: large, readable even at 100KB ──
   const wh = Math.round(cvs.height * 0.20); // 20% height for watermark
   ctx.fillStyle = 'rgba(0,0,0,0.80)';
   ctx.fillRect(0, cvs.height - wh, cvs.width, wh);
 
-  // Time â€” very large
+  // Time — very large
   const timeFontSize = Math.round(wh * 0.36);
   ctx.fillStyle = '#FFB800';
   ctx.font = `bold ${timeFontSize}px "IBM Plex Mono", monospace`;
   ctx.fillText(tstr, 10, cvs.height - Math.round(wh * 0.60));
 
-  // Date â€” medium
+  // Date — medium
   const dateFontSize = Math.round(wh * 0.22);
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.font = `${dateFontSize}px "IBM Plex Mono", monospace`;
   ctx.fillText(dstr, 10, cvs.height - Math.round(wh * 0.38));
 
-  // Address â€” medium (NEVER coordinates)
+  // Address — medium (NEVER coordinates)
   const addrFontSize = Math.round(wh * 0.20);
   const maxAddrW = cvs.width - 20;
   let addrText = addr;
@@ -1642,7 +1677,7 @@ window.snap = async function() {
   captHash = 'AP2-' + captHash.slice(0, 16).toUpperCase();
 
   document.getElementById('prev-img').src  = captImg;
-  document.getElementById('ps-type').textContent = mode === 'masuk' ? 'ðŸŒ… ABSEN MASUK' : mode === 'siang' ? 'â˜€ï¸ ABSEN SIANG' : 'ðŸŒ† ABSEN PULANG';
+  document.getElementById('ps-type').textContent = mode === 'masuk' ? '🌅 ABSEN MASUK' : mode === 'siang' ? '☀️ ABSEN SIANG' : '🌆 ABSEN PULANG';
   document.getElementById('ps-time').textContent = tstr;
   document.getElementById('ps-addr').textContent = addr; // address only, no coordinates
   document.getElementById('ps-hash').textContent = 'HASH: ' + captHash;
@@ -1652,17 +1687,17 @@ window.snap = async function() {
   document.getElementById('cap-ctrls').style.display = 'none';
   document.getElementById('prev-acts').style.display = 'flex';
 
-  // â”€â”€ 60-second submit window â”€â”€
+  // ── 60-second submit window ──
   if (snapExpiryTimer) clearInterval(snapExpiryTimer);
   let secsLeft = 60;
   const confirmBtn = document.getElementById('btn-confirm');
   snapExpiryTimer = setInterval(() => {
     secsLeft--;
     if (secsLeft > 0) {
-      confirmBtn.innerHTML = `âœ… Kirim Absensi <span style="font-size:11px;opacity:.7">(${secsLeft}s)</span>`;
+      confirmBtn.innerHTML = `✅ Kirim Absensi <span style="font-size:11px;opacity:.7">(${secsLeft}s)</span>`;
     } else {
       clearInterval(snapExpiryTimer); snapExpiryTimer = null;
-      toast('â±ï¸ Waktu habis! Silakan ambil foto ulang.', 'err');
+      toast('⏱️ Waktu habis! Silakan ambil foto ulang.', 'err');
       retake();
     }
   }, 1000);
@@ -1672,7 +1707,7 @@ window.retake = function() {
   captImg = null; captTs = null; captHash = null;
   if (snapExpiryTimer) { clearInterval(snapExpiryTimer); snapExpiryTimer = null; }
   const bc = document.getElementById('btn-confirm');
-  bc.innerHTML = 'âœ… Kirim Absensi';
+  bc.innerHTML = '✅ Kirim Absensi';
   bc.disabled  = false; // reset after masuk submission left it disabled
   stopLiveness();
   document.getElementById('vf-wrap').style.display   = 'block';
@@ -1682,14 +1717,14 @@ window.retake = function() {
   document.getElementById('upload-bar').style.display = 'none';
   checkReady();
   // Restart liveness challenge for retake
-  // MODIFIED: 600â†’300ms â€” start detection sooner after retake
+  // MODIFIED: 600→300ms — start detection sooner after retake
   if (stream) setTimeout(initLiveness, 300);
 };
 
-// â”€â”€â”€ LIVENESS CHALLENGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── LIVENESS CHALLENGE ───────────────────────────────────────────────────
 function initLiveness() {
   livenessPassed = false; lvProgress = 0; lvPrevFrame = null;
-  lvDirEma = 0; // â† MODIFIED: reset EMA state on each new challenge
+  lvDirEma = 0; // ← MODIFIED: reset EMA state on each new challenge
   if (lvAnimId) { clearTimeout(lvAnimId); cancelAnimationFrame(lvAnimId); lvAnimId = null; }
 
   lvSmallCanvas = document.createElement('canvas');
@@ -1704,14 +1739,14 @@ function initLiveness() {
   const fill  = document.getElementById('lv-fill');
 
   arrow.className = `lv-arrow ${lvChallenge}`;
-  arrow.textContent = lvChallenge === 'left' ? 'ðŸ‘ˆ' : 'ðŸ‘‰';
+  arrow.textContent = lvChallenge === 'left' ? '👈' : '👉';
   text.textContent  = lvChallenge === 'left' ? 'Toleh Kiri' : 'Toleh Kanan';
   fill.style.width  = '0%';
   fill.className    = 'lv-fill';
   box.className     = 'lv-box';
   box.style.display = 'block';
 
-  // MODIFIED: 1200â†’500ms â€” instruction visible immediately, detection starts sooner
+  // MODIFIED: 1200→500ms — instruction visible immediately, detection starts sooner
   lvAnimId = setTimeout(() => { lvAnimId = requestAnimationFrame(lvDetectLoop); }, 500);
 }
 
@@ -1727,18 +1762,18 @@ function lvDetectLoop() {
   const curr = lvSmallCtx.getImageData(0, 0, LV_W, LV_H).data;
 
   if (lvPrevFrame) {
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    // MODIFIED LIVENESS v3 â€” ultra-sensitive, micro-movement friendly
+    // ═══════════════════════════════════════════════════════════════════════
+    // MODIFIED LIVENESS v3 — ultra-sensitive, micro-movement friendly
     //
     // Changes vs v2:
-    //   â€¢ Motion gate       : 600 â†’ 300  (fires on micro head shifts)
-    //   â€¢ EMA alpha         : 0.40 â†’ 0.55 (heavier weight on new frame â€” faster response)
-    //   â€¢ EMA threshold     : 0.10 â†’ 0.06 (minimal directional bias â†’ passes naturally)
-    //   â€¢ EMA idle decay    : 0.75Ã— â†’ 0.85Ã— (gentler fade-out between micro-movements)
-    //   â€¢ Progress step     : 14 â†’ 18 per qualifying frame (~6 frames â‰ˆ 200ms to pass)
-    //   â€¢ Regression        : none (bar is strictly monotone-increasing, unchanged)
-    //   â€¢ Frame interval    : 50ms â†’ 35ms (~28fps â€” catches faster micro-movements)
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    //   • Motion gate       : 600 → 300  (fires on micro head shifts)
+    //   • EMA alpha         : 0.40 → 0.55 (heavier weight on new frame — faster response)
+    //   • EMA threshold     : 0.10 → 0.06 (minimal directional bias → passes naturally)
+    //   • EMA idle decay    : 0.75× → 0.85× (gentler fade-out between micro-movements)
+    //   • Progress step     : 14 → 18 per qualifying frame (~6 frames ≈ 200ms to pass)
+    //   • Regression        : none (bar is strictly monotone-increasing, unchanged)
+    //   • Frame interval    : 50ms → 35ms (~28fps — catches faster micro-movements)
+    // ═══════════════════════════════════════════════════════════════════════
     let leftScore = 0, rightScore = 0;
     const midX = LV_W / 2;
     const y1 = Math.floor(LV_H * 0.15), y2 = Math.floor(LV_H * 0.85);
@@ -1757,30 +1792,30 @@ function lvDetectLoop() {
 
     const total = leftScore + rightScore;
 
-    if (total > 300) { // MODIFIED: 600â†’300 â€” micro head shift triggers detection
+    if (total > 300) { // MODIFIED: 600→300 — micro head shift triggers detection
       const rawDir = (lvChallenge === 'left')
         ? (rightScore - leftScore) / total
         : (leftScore - rightScore) / total;
 
-      // MODIFIED: alpha 0.40â†’0.55 â€” faster response to directional movement
+      // MODIFIED: alpha 0.40→0.55 — faster response to directional movement
       lvDirEma = 0.55 * rawDir + 0.45 * lvDirEma;
     } else {
-      // MODIFIED: decay 0.75â†’0.85 â€” gentler fade, preserves momentum from micro-moves
+      // MODIFIED: decay 0.75→0.85 — gentler fade, preserves momentum from micro-moves
       lvDirEma *= 0.85;
     }
 
-    // MODIFIED: threshold 0.10â†’0.06 â€” minimal bias sufficient to advance bar
+    // MODIFIED: threshold 0.10→0.06 — minimal bias sufficient to advance bar
     if (lvDirEma > 0.06) {
-      // MODIFIED: step 14â†’18 â€” ~6 qualifying frames to reach 100%
+      // MODIFIED: step 14→18 — ~6 qualifying frames to reach 100%
       lvProgress = Math.min(lvProgress + 18, 100);
       const fill = document.getElementById('lv-fill');
       if (fill) fill.style.width = lvProgress + '%';
       if (lvProgress >= 100) { livenessPassed = true; lvOnSuccess(); return; }
     }
-    // No else branch â€” zero regression, bar only moves forward
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // No else branch — zero regression, bar only moves forward
+    // ═══════════════════════════════════════════════════════════════════════
     // END LIVENESS v3
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ═══════════════════════════════════════════════════════════════════════
   }
 
   lvPrevFrame = new Uint8ClampedArray(curr);
@@ -1794,7 +1829,7 @@ function lvDetectLoop() {
     fw.style.display=(sk/tot>0.08)?'none':'block';
   }
 
-  lvAnimId = setTimeout(() => { lvAnimId = requestAnimationFrame(lvDetectLoop); }, 35); // MODIFIED: 50â†’35ms (~28fps)
+  lvAnimId = setTimeout(() => { lvAnimId = requestAnimationFrame(lvDetectLoop); }, 35); // MODIFIED: 50→35ms (~28fps)
 }
 
 function lvOnSuccess() {
@@ -1802,11 +1837,11 @@ function lvOnSuccess() {
   const arrow = document.getElementById('lv-arrow');
   const text  = document.getElementById('lv-text');
   const fill  = document.getElementById('lv-fill');
-  arrow.textContent = 'âœ…'; arrow.className = 'lv-arrow';
-  text.textContent  = 'Live Terverifikasi âœ“';
+  arrow.textContent = '✅'; arrow.className = 'lv-arrow';
+  text.textContent  = 'Live Terverifikasi ✓';
   fill.className    = 'lv-fill done'; fill.style.width = '100%';
   if (box) box.className = 'lv-box ok';
-  // Auto-capture setelah âœ… singkat
+  // Auto-capture setelah ✅ singkat
   setTimeout(async () => {
     if (box) box.style.display = 'none';
     if (livenessPassed) await window.snap();
@@ -1816,16 +1851,16 @@ function lvOnSuccess() {
 function stopLiveness() {
   if (lvAnimId) { clearTimeout(lvAnimId); cancelAnimationFrame(lvAnimId); lvAnimId = null; }
   livenessPassed = false; lvPrevFrame = null; lvProgress = 0;
-  lvDirEma = 0; // â† MODIFIED: clear EMA on stop
+  lvDirEma = 0; // ← MODIFIED: clear EMA on stop
   const box = document.getElementById('lv-box');
   if (box) box.style.display = 'none';
 }
 
-// â”€â”€â”€ BIOMETRIC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── BIOMETRIC ────────────────────────────────────────────────────────────
 window.useBio = async function() {
-  if (!window.PublicKeyCredential) { toast('âš ï¸ Biometrik tidak didukung', 'err'); return; }
+  if (!window.PublicKeyCredential) { toast('⚠️ Biometrik tidak didukung', 'err'); return; }
   const avail = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-  if (!avail) { toast('âš ï¸ Sidik jari tidak tersedia', 'err'); return; }
+  if (!avail) { toast('⚠️ Sidik jari tidak tersedia', 'err'); return; }
   document.getElementById('fp-screen').classList.add('open');
   bioCancel = false;
   try {
@@ -1836,19 +1871,19 @@ window.useBio = async function() {
     });
     document.getElementById('fp-screen').classList.remove('open');
     if (!bioCancel && cred) {
-      toast('âœ… Biometrik terverifikasi!', 'ok');
+      toast('✅ Biometrik terverifikasi!', 'ok');
       setTimeout(() => { livenessPassed = true; window.snap(); }, 600);
     }
   } catch(e) {
     document.getElementById('fp-screen').classList.remove('open');
-    if (!bioCancel) toast(e.name === 'NotAllowedError' ? 'âŒ Dibatalkan' : 'â„¹ï¸ Daftarkan biometrik dulu', 'info');
+    if (!bioCancel) toast(e.name === 'NotAllowedError' ? '❌ Dibatalkan' : 'ℹ️ Daftarkan biometrik dulu', 'info');
   }
 };
 window.cancelBio = () => { bioCancel = true; document.getElementById('fp-screen').classList.remove('open'); };
 
-// â”€â”€â”€ SUBMIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── SUBMIT ───────────────────────────────────────────────────────────────
 window.submitAbsen = async function() {
-  if (!captImg) { toast('âš ï¸ Foto belum diambil', 'err'); return; }
+  if (!captImg) { toast('⚠️ Foto belum diambil', 'err'); return; }
   const btn   = document.getElementById('btn-confirm');
   const ub    = document.getElementById('upload-bar');
   const fill  = document.getElementById('ub-fill');
@@ -1864,10 +1899,10 @@ window.submitAbsen = async function() {
   const docId   = `${me.uid}_${tanggal}_${mode}`;
 
   try {
-    // â”€â”€ SECURITY: Re-sync hanya jika sync terakhir lebih lama dari captTs â”€â”€
+    // ── SECURITY: Re-sync hanya jika sync terakhir lebih lama dari captTs ──
     // Menutup race condition airplane mode tanpa memperlambat flow normal.
-    // Jika _lastSync > captTs: sync sudah baru, nilai serverTimeOffset valid â†’ skip.
-    // Jika _lastSync < captTs: foto diambil sebelum sync diketahui â†’ paksa re-sync.
+    // Jika _lastSync > captTs: sync sudah baru, nilai serverTimeOffset valid → skip.
+    // Jika _lastSync < captTs: foto diambil sebelum sync diketahui → paksa re-sync.
     const capturedAtMs = new Date(captTs).getTime();
     if (_lastSync < capturedAtMs || serverTimeOffset === null) {
       setP(3, 'Memverifikasi waktu server...');
@@ -1883,7 +1918,7 @@ window.submitAbsen = async function() {
       throw new Error('Lokasi GPS tidak valid. Nonaktifkan aplikasi emulasi lokasi.');
     }
 
-    // â”€â”€ SECURITY: Validate capture timestamp is fresh â”€â”€
+    // ── SECURITY: Validate capture timestamp is fresh ──
     setP(5, 'Memverifikasi waktu absensi...');
     const serverNow = getServerNow();
     const capturedAt = new Date(captTs);
@@ -1895,7 +1930,7 @@ window.submitAbsen = async function() {
       throw new Error('Waktu tidak valid. Periksa pengaturan jam perangkat Anda.');
     }
 
-    // â”€â”€ SECURITY: Check if record already exists (prevent overwrite attack) â”€â”€
+    // ── SECURITY: Check if record already exists (prevent overwrite attack) ──
     const existSnap = await getDoc(doc(db, 'absensi', docId));
     if (existSnap.exists()) {
       throw new Error(`Absen ${mode} hari ini sudah tercatat. Tidak dapat diubah.`);
@@ -1923,7 +1958,7 @@ window.submitAbsen = async function() {
           else { best = d; break; }
         }
         const finalData = best || c.toDataURL('image/jpeg', 0.50);
-        // Always use the binary-search quality result â€” skip c.toBlob() which ignores it
+        // Always use the binary-search quality result — skip c.toBlob() which ignores it
         const byteStr = atob(finalData.split(',')[1]);
         const arr = new Uint8Array(byteStr.length);
         for (let i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
@@ -1934,9 +1969,9 @@ window.submitAbsen = async function() {
     });
 
     const kb = Math.round(blob.size / 1024);
-    setP(25, `Foto ${kb}KB â€“ mengupload ke Cloudinary...`);
+    setP(25, `Foto ${kb}KB – mengupload ke Cloudinary...`);
 
-    // â”€â”€ Upload to Cloudinary â”€â”€
+    // ── Upload to Cloudinary ──
     let fotoUrl = null;
     const CLOUD  = 'dfkcmpedh';
     const PRESET = 'absensi_unsigned';
@@ -1968,71 +2003,75 @@ window.submitAbsen = async function() {
       nip: me.nip || '', tipe: mode, jam, hari, tanggal,
       timestamp: captTs, server_ts: serverTimestamp(),
       gps_lat: gps.lat, gps_lng: gps.lng, gps_acc: gps.acc,
-      gps_address: gps.address || 'Alamat tidak tersedia',
-      gps_street: gps.street || _extractStreet(gps.address || ''), // â† MODIFIED: street name field
+      gps_address: normalizeDisplayAddress(gps.displayAddress || gps.address || ''),
+      gps_street: gps.street || _extractStreet(gps.rawAddress || gps.address || ''),
+      latitude: Number(gps.lat), longitude: Number(gps.lng), accuracy: Number(gps.acc),
+      rawAddress: gps.rawAddress || '', displayAddress: normalizeDisplayAddress(gps.displayAddress || gps.address || ''),
+      locationStatus: gps.locationStatus || (gps.rawAddress ? 'resolved' : 'address_pending'),
+      locationUpdatedAt: serverTimestamp(),
       gps_spoof_suspect: _gpsSpoofSuspect || false,
       foto_url: fotoUrl, hash: captHash, hash_version: 'SHA256-AP2',
       created_at: new Date().toISOString()
     };
 
     await setDoc(doc(db, 'absensi', docId), data);
-    setP(100, 'Tersimpan! âœ“');
+    setP(100, 'Tersimpan! ✓');
     setTimeout(() => { ub.style.display = 'none'; }, 1200);
     applyRecord(data);
     closeModal();
     showSuccess(data);
 
   } catch(e) {
-    btn.disabled = false; btn.textContent = 'âœ… Kirim Absensi';
+    btn.disabled = false; btn.textContent = '✅ Kirim Absensi';
     ub.style.display = 'none';
-    toast('âŒ Gagal: ' + (e.message || 'Unknown error'), 'err');
+    toast('❌ Gagal: ' + (e.message || 'Unknown error'), 'err');
     console.error('submitAbsen error:', e);
   }
 };
 
-// â”€â”€â”€ SIANG BUTTON GATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Tombol absen siang hanya aktif 12:45â€“13:15 (menit 765â€“795) server time
+// ─── SIANG BUTTON GATE ────────────────────────────────────────────────────
+// Tombol absen siang hanya aktif 12:45–13:15 (menit 765–795) server time
 function updateSiangButtonState() {
   const btn = document.getElementById('btnSiang');
   if (!btn) return;
-  // Jika sudah absen siang â†’ biarkan (teks "Sudah Absen Siang")
+  // Jika sudah absen siang → biarkan (teks "Sudah Absen Siang")
   if (btn.innerHTML.includes('Sudah Absen')) return;
-  // Jika belum absen masuk â†’ tetap disabled
+  // Jika belum absen masuk → tetap disabled
   const btnIn = document.getElementById('btnIn');
   if (!btnIn || !btnIn.disabled) { btn.disabled = true; return; }
 
   const now  = getServerNow();
   const mins = now.getHours() * 60 + now.getMinutes();
-  const inWindow = mins >= 765 && mins <= 795; // 12:45â€“13:15
+  const inWindow = mins >= 765 && mins <= 795; // 12:45–13:15
 
   btn.disabled = !inWindow;
   if (inWindow) {
-    btn.innerHTML = 'â˜€ï¸ &nbsp;Absen Siang';
+    btn.innerHTML = '☀️ &nbsp;Absen Siang';
   } else if (mins < 765) {
-    btn.innerHTML = 'â˜€ï¸ &nbsp;Absen Siang <span style="font-size:12px;font-weight:400;opacity:.6">(mulai 12:45)</span>';
+    btn.innerHTML = '☀️ &nbsp;Absen Siang <span style="font-size:12px;font-weight:400;opacity:.6">(mulai 12:45)</span>';
   } else {
-    btn.innerHTML = 'â˜€ï¸ &nbsp;Absen Siang <span style="font-size:12px;font-weight:400;opacity:.6">(waktu habis)</span>';
+    btn.innerHTML = '☀️ &nbsp;Absen Siang <span style="font-size:12px;font-weight:400;opacity:.6">(waktu habis)</span>';
   }
 }
 
-// â”€â”€â”€ HISTORY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── HISTORY ──────────────────────────────────────────────────────────────
 function getStatusChip(r) {
   const [h, m2] = (r.jam || '00:00').replace(/[.\-]/g, ':').split(':').map(Number);
   const mins = h * 60 + m2;
   const day  = new Date(r.timestamp || '').getDay();
   if (r.tipe === 'masuk') {
-    if (mins < 480)        return { cls: 'ok',   label: 'âœ“ Tepat Waktu' };
-    if (mins <= 495)       return { cls: 'warn', label: 'âš  Agak Terlambat' };
-    return                        { cls: 'late', label: 'âŒ Terlambat' };
+    if (mins < 480)        return { cls: 'ok',   label: '✓ Tepat Waktu' };
+    if (mins <= 495)       return { cls: 'warn', label: '⚠ Agak Terlambat' };
+    return                        { cls: 'late', label: '❌ Terlambat' };
   } else if (r.tipe === 'siang') {
-    // Tombol hanya aktif 12:45â€“13:15 â†’ jika berhasil absen = selalu tepat waktu
-    return { cls: 'ok', label: 'âœ“ Tepat Waktu' };
+    // Tombol hanya aktif 12:45–13:15 → jika berhasil absen = selalu tepat waktu
+    return { cls: 'ok', label: '✓ Tepat Waktu' };
   } else {
     const earlyLim = day === 6 ?  900 :  960;
     const lateLim  = day === 6 ?  960 : 1020;
-    if (mins < earlyLim) return { cls: 'warn', label: 'âš  Pulang Awal' };
-    if (mins > lateLim)  return { cls: 'late', label: 'â° Pulang Terlambat' };
-    return                      { cls: 'ok',   label: 'âœ“ Tepat Waktu' };
+    if (mins < earlyLim) return { cls: 'warn', label: '⚠ Pulang Awal' };
+    if (mins > lateLim)  return { cls: 'late', label: '⏰ Pulang Terlambat' };
+    return                      { cls: 'ok',   label: '✓ Tepat Waktu' };
   }
 }
 
@@ -2041,7 +2080,7 @@ function addHistItem(r) {
   const emp  = list.querySelector('div[style]');
   if (emp) emp.remove();
   const tipeColor = r.tipe==='masuk' ? '#1a7a4a' : r.tipe==='siang' ? '#c47c2b' : '#4a4a6a';
-  const tipeLabel = r.tipe==='masuk' ? 'ðŸŒ… Absen Masuk' : r.tipe==='siang' ? 'â˜€ï¸ Absen Siang' : 'ðŸŒ† Absen Pulang';
+  const tipeLabel = r.tipe==='masuk' ? '🌅 Absen Masuk' : r.tipe==='siang' ? '☀️ Absen Siang' : '🌆 Absen Pulang';
   const st   = getStatusChip(r);
   const el   = document.createElement('div');
   el.className = 'hist-item';
@@ -2050,7 +2089,7 @@ function addHistItem(r) {
     <div class="hi">
       <div class="htype" style="color:${tipeColor}">${tipeLabel}</div>
       <div class="htime">${(r.jam||'').replace(/[.\\-]/g, ':')}</div>
-      <div class="hloc">ðŸ“ ${r.gps_address || 'Lokasi tersimpan'}</div>
+      <div class="hloc">&#128205; ${recordDisplayAddress(r)}</div>
     </div>
     <span class="vchip ${st.cls}">${st.label}</span>`;
   list.insertBefore(el, list.firstChild);
@@ -2062,19 +2101,19 @@ function showSuccess(r) {
     r.tipe === 'siang'  ? 'Absen Siang Berhasil!'  :
                           'Absen Pulang Berhasil!';
   document.getElementById('suc-receipt').innerHTML = `
-    <div class="rrow"><span class="rk">ðŸ‘¤ Nama</span><span class="rv">${r.nama}</span></div>
-    <div class="rrow"><span class="rk">ðŸ• Waktu</span><span class="rv">${(r.jam||'').replace(/[.\\-]/g, ':')}</span></div>
-    <div class="rrow"><span class="rk">ðŸ“… Tanggal</span><span class="rv">${r.tanggal}</span></div>
-    <div class="rrow"><span class="rk">ðŸ“ Lokasi</span><span class="rv">${r.gps_address}</span></div>
-    <div class="rrow"><span class="rk">ðŸŽ¯ Akurasi GPS</span><span class="rv">Â±${r.gps_acc}m</span></div>
-    <div class="rrow"><span class="rk">ðŸ” Hash</span><span class="rv" style="font-size:10px">${r.hash}</span></div>
-    <div class="rrow"><span class="rk">â˜ï¸ Status</span><span class="rv" style="color:#00d68f">TERSIMPAN âœ“</span></div>`;
+    <div class="rrow"><span class="rk">👤 Nama</span><span class="rv">${r.nama}</span></div>
+    <div class="rrow"><span class="rk">🕐 Waktu</span><span class="rv">${(r.jam||'').replace(/[.\\-]/g, ':')}</span></div>
+    <div class="rrow"><span class="rk">📅 Tanggal</span><span class="rv">${r.tanggal}</span></div>
+    <div class="rrow"><span class="rk">&#128205; Lokasi</span><span class="rv">${recordDisplayAddress(r)}</span></div>
+    <div class="rrow"><span class="rk">🎯 Akurasi GPS</span><span class="rv">±${r.gps_acc}m</span></div>
+    <div class="rrow"><span class="rk">🔐 Hash</span><span class="rv" style="font-size:10px">${r.hash}</span></div>
+    <div class="rrow"><span class="rk">☁️ Status</span><span class="rv" style="color:#00d68f">TERSIMPAN ✓</span></div>`;
   document.getElementById('suc-screen').classList.add('open');
 }
 
 window.closeSuc = () => document.getElementById('suc-screen').classList.remove('open');
 
-// â”€â”€â”€ UTILS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── UTILS ────────────────────────────────────────────────────────────────
 function toast(msg, type = 'info') {
   const el = document.getElementById('toast');
   el.textContent = msg; el.className = `toast ${type} show`;
@@ -2085,7 +2124,7 @@ function toast(msg, type = 'info') {
 window.togglePw = function(iId, bId) {
   const i = document.getElementById(iId), b = document.getElementById(bId);
   i.type = i.type === 'password' ? 'text' : 'password';
-  b.textContent = i.type === 'password' ? 'ðŸ‘ï¸' : 'ðŸ™ˆ';
+  b.textContent = i.type === 'password' ? '👁️' : '🙈';
 };
 
 document.addEventListener('contextmenu', e => e.preventDefault());
@@ -2093,5 +2132,3 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 </div><!-- end .app -->
 </body>
 </html>
-
-
