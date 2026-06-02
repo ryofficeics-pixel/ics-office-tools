@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kalkulator Pembesian ICS v3.2</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    select{-webkit-appearance:none;}
+    input[type=number]::-webkit-inner-spin-button{opacity:.4;}
+    ::-webkit-scrollbar{width:4px;}
+    ::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px;}
+    body{background:#f0efe9;color:#1a1a1a;font-size:13px;font-family:system-ui,-apple-system,sans-serif;}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useCallback, useEffect, useRef } = React;
+
+const BAR_DIA=[8,10,12,13,16,19,22,25,32];
+const BAR_WT={8:0.395,10:0.617,12:0.888,13:1.042,16:1.578,19:2.226,22:2.984,25:3.853,32:6.313};
+const WM_TYPES=["M4","M5","M6","M7","M8","M10"];
+const WM_WT={M4:1.32,M5:2.06,M6:2.96,M7:4.03,M8:5.27,M10:8.23};
+const JENIS=["Ulir","Polos"];
+const META={
+  A:{label:"Sloof",  color:"#4a4a6a",bg:"rgba(74,74,106,0.1)",  bd:"rgba(74,74,106,0.3)"},
+  B:{label:"Balok",  color:"#2d7a4a",bg:"rgba(45,122,74,0.1)",  bd:"rgba(45,122,74,0.3)"},
+  C:{label:"Kolom",  color:"#8a7a5a",bg:"rgba(138,122,90,0.1)", bd:"rgba(138,122,90,0.3)"},
+  D:{label:"Plat",   color:"#2d7a9a",bg:"rgba(45,122,154,0.1)", bd:"rgba(45,122,154,0.3)"},
+};
+
+const mkGrp=(id,label,dia,jenis,jml)=>({id,label,dia,jenis,jml});
+const mkSloof=id=>({id,panjang:6,lebar:0.3,tinggi:0.5,qty:1,
+  tulanganGroups:[mkGrp(Date.now(),"Tulangan Utama",16,"Ulir",4)],
+  sengkang:{dia:10,jenis:"Ulir",jarak:0.15}});
+const mkBalok=id=>({id,panjang:6,lebar:0.3,tinggi:0.5,qty:1,
+  tulanganGroups:[mkGrp(Date.now(),"Tulangan Utama",16,"Ulir",4)],
+  sengkang:{dia:10,jenis:"Ulir",jarak:0.15}});
+const mkKolom=id=>({id,lebar:0.4,dalam:0.4,tinggi:3.5,qty:1,
+  tulanganGroups:[mkGrp(Date.now(),"Tulangan Utama",16,"Ulir",8)],
+  sengkang:{dia:10,jenis:"Ulir",jarak:0.15}});
+const mkPlat=id=>({id,panjang:4,lebar:4,tebal:0.12,qty:1,mode:"batang",
+  atas:{dia:12,jenis:"Ulir",jarakX:0.15,jarakY:0.15},
+  bawah:{dia:12,jenis:"Ulir",jarakX:0.15,jarakY:0.15},
+  wm:{tipe:"M6",lapis:1,overlapX:0.1,overlapY:0.1}});
+
+function upd(setter,id,path,val){
+  setter(prev=>prev.map(it=>{
+    if(it.id!==id)return it;
+    const k=path.split(".");
+    if(k.length===1)return{...it,[k[0]]:val};
+    if(k.length===2)return{...it,[k[0]]:{...it[k[0]],[k[1]]:val}};
+    if(k.length===3)return{...it,[k[0]]:{...it[k[0]],[k[1]]:{...it[k[0]][k[1]],[k[2]]:val}}};
+    return it;
+  }));
+}
+function remI(setter,id){setter(p=>p.filter(x=>x.id!==id));}
+
+function updGrp(setter,itemId,gid,field,val){
+  setter(prev=>prev.map(it=>{
+    if(it.id!==itemId)return it;
+    return{...it,tulanganGroups:it.tulanganGroups.map(g=>g.id===gid?{...g,[field]:val}:g)};
+  }));
+}
+function addGrp(setter,itemId){
+  setter(prev=>prev.map(it=>{
+    if(it.id!==itemId)return it;
+    const n=it.tulanganGroups.length+1;
+    return{...it,tulanganGroups:[...it.tulanganGroups,mkGrp(Date.now(),`Tulangan Tambahan ${n}`,16,"Ulir",2)]};
+  }));
+}
+function remGrp(setter,itemId,gid){
+  setter(prev=>prev.map(it=>{
+    if(it.id!==itemId||it.tulanganGroups.length<=1)return it;
+    return{...it,tulanganGroups:it.tulanganGroups.filter(g=>g.id!==gid)};
+  }));
+}
+
+function calcLinGroups(it,L,q){
+  return(it.tulanganGroups||[]).map(g=>{
+    const lap=40*(+g.dia/1000)*2; // lap splice kedua ujung
+    const bLen=L+lap,bQty=+g.jml*q,wt=BAR_WT[+g.dia]||0;
+    return{lb:g.label||"Tulangan",gid:g.id,dia:+g.dia,jenis:g.jenis,n:bQty,ln:bLen,tot:bLen*bQty,wt,totWt:bLen*bQty*wt};
+  });
+}
+function calcLin(it){
+  const l=+it.panjang||0,w=+it.lebar||0,h=+it.tinggi||0,q=+it.qty||0;
+  const vol=l*w*h*q,form=(2*h+w)*l*q; // 3 sisi (bawah menyatu pelat/tanah)
+  const sp=Math.max(+it.sengkang.jarak||0.15,0.05);
+  const stN=l>0?(Math.ceil(l/sp)+1)*q:0; // guard: elemen panjang=0 tidak punya sengkang
+  const stL=2*Math.max(w-0.08,0.05)+2*Math.max(h-0.08,0.05)+0.1;
+  const sWt=BAR_WT[+it.sengkang.dia]||0;
+  const groups=calcLinGroups(it,l,q);
+  return{vol,form,groups,stN,stL,stTot:stN*stL,sWt};
+}
+function calcKol(it){
+  const w=+it.lebar||0,d=+it.dalam||0,h=+it.tinggi||0,q=+it.qty||0;
+  const vol=w*d*h*q,form=2*(w+d)*h*q; // 4 sisi keliling × tinggi
+  const sp=Math.max(+it.sengkang.jarak||0.15,0.05);
+  const stN=h>0?(Math.ceil(h/sp)+1)*q:0; // guard: kolom tinggi=0 tidak punya sengkang
+  const stL=2*Math.max(w-0.08,0.05)+2*Math.max(d-0.08,0.05)+0.1;
+  const sWt=BAR_WT[+it.sengkang.dia]||0;
+  const groups=calcLinGroups(it,h,q);
+  return{vol,form,groups,stN,stL,stTot:stN*stL,sWt};
+}
+function calcPlat(it){
+  const l=+it.panjang||0,w=+it.lebar||0,t=+it.tebal||0.12,q=+it.qty||0;
+  const vol=l*w*t*q,form=l*w*q;
+  if(it.mode==="wiremesh"){
+    const eL=Math.max(5.4-(+it.wm.overlapX||0.1), 0.5);  // guard: overlap tidak boleh >= lebar sheet
+    const eW=Math.max(2.1-(+it.wm.overlapY||0.1), 0.3);  // guard: overlap tidak boleh >= panjang sheet
+    const sh=Math.ceil(l/eL)*Math.ceil(w/eW)*(+it.wm.lapis||1)*q;
+    return{vol,form,mode:"wm",sheets:sh,wmWt:(WM_WT[it.wm.tipe]||2.96)*l*w*(+it.wm.lapis||1)*q};
+  }
+  const dirs=[
+    {lb:"T.Atas X", dia:+it.atas.dia,jenis:it.atas.jenis, sp:+it.atas.jarakX,L:l,W:w},
+    {lb:"T.Atas Y", dia:+it.atas.dia,jenis:it.atas.jenis, sp:+it.atas.jarakY,L:w,W:l},
+    {lb:"T.Bawah X",dia:+it.bawah.dia,jenis:it.bawah.jenis,sp:+it.bawah.jarakX,L:l,W:w},
+    {lb:"T.Bawah Y",dia:+it.bawah.dia,jenis:it.bawah.jenis,sp:+it.bawah.jarakY,L:w,W:l},
+  ];
+  const rows=dirs.map(d=>{
+    const sp=Math.max(d.sp||0.15,0.05); // guard: jarak minimum 5cm
+    const n=d.L>0?(Math.ceil(d.L/sp)+1)*q:0; // guard: dimensi=0 tidak punya tulangan
+    const ln=d.W+0.3,tot=n*ln,wt=BAR_WT[d.dia]||0;
+    return{lb:d.lb,dia:d.dia,jenis:d.jenis,n,ln,tot,wt,totWt:tot*wt};
+  });
+  return{vol,form,mode:"bar",rows};
+}
+
+const CX=Math.cos(Math.PI/6),SX=0.5;
+function toS(x,y,z,sc,ox,oy){return[(x-z)*CX*sc+ox,(x+z)*SX*sc-y*sc+oy];}
+function hexRGB(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function isoFace(ctx,verts,sc,ox,oy,fill,stroke){
+  const p=verts.map(v=>toS(v[0],v[1],v[2],sc,ox,oy));
+  ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);p.slice(1).forEach(q=>ctx.lineTo(q[0],q[1]));ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=0.5;ctx.stroke();}
+}
+function isoBox(ctx,x,y,z,W,H,D,sc,ox,oy,hex,alpha){
+  const[r,g,b]=hexRGB(hex),e="rgba(0,0,0,0.18)";
+  const f=(k,a)=>`rgba(${Math.round(r*k)},${Math.round(g*k)},${Math.round(b*k)},${a})`;
+  isoFace(ctx,[[x,y,z],[x,y,z+D],[x,y+H,z+D],[x,y+H,z]],sc,ox,oy,f(0.7,alpha*0.7),e);
+  isoFace(ctx,[[x,y,z],[x+W,y,z],[x+W,y+H,z],[x,y+H,z]],sc,ox,oy,f(0.85,alpha*0.85),e);
+  isoFace(ctx,[[x,y+H,z],[x+W,y+H,z],[x+W,y+H,z+D],[x,y+H,z+D]],sc,ox,oy,f(1,alpha),e);
+}
+function isoLine(ctx,x1,y1,z1,x2,y2,z2,sc,ox,oy,color,lw){
+  const[ax,ay]=toS(x1,y1,z1,sc,ox,oy),[bx,by]=toS(x2,y2,z2,sc,ox,oy);
+  ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.strokeStyle=color;ctx.lineWidth=lw||1;ctx.stroke();
+}
+function isoText(ctx,x,y,z,text,color,size,sc,ox,oy){
+  if(sc===undefined||ox===undefined||oy===undefined)return;
+  const[sx,sy]=toS(x,y,z,sc,ox,oy);
+  ctx.save();ctx.fillStyle=color||"#333";ctx.font=`bold ${size||11}px sans-serif`;
+  ctx.shadowColor="rgba(255,255,255,0.9)";ctx.shadowBlur=3;ctx.fillText(text,sx+4,sy-2);ctx.restore();
+}
+function drawKolomIso(ctx,cx,cz,W,D,H,nBar,stSp,sc,ox,oy){
+  isoBox(ctx,cx,0,cz,W,H,D,sc,ox,oy,"#c4b89a",0.38);
+  const cv=0.045,corners=[[cv,cv],[W-cv,cv],[W-cv,D-cv],[cv,D-cv]];
+  for(let i=0;i<Math.min(nBar,8);i++)
+    isoLine(ctx,cx+corners[i%4][0],0,cz+corners[i%4][1],cx+corners[i%4][0],H,cz+corners[i%4][1],sc,ox,oy,"#b07020",1.8);
+  const step=Math.max(stSp*2,0.2);
+  for(let yi=stSp;yi<H;yi+=step){const sq=[...corners,corners[0]];for(let i=0;i<4;i++)isoLine(ctx,cx+sq[i][0],yi,cz+sq[i][1],cx+sq[i+1][0],yi,cz+sq[i+1][1],sc,ox,oy,"#d49030",0.85);}
+}
+function drawBeamXIso(ctx,px,py,pz,L,H,BW,nBar,stSp,sc,ox,oy,hexC,hexB,hexS){
+  isoBox(ctx,px,py,pz,L,H,BW,sc,ox,oy,hexC,0.38);
+  const cv=0.04,barPos=[[cv,cv],[cv,H-cv],[BW-cv,cv],[BW-cv,H-cv]].slice(0,Math.min(nBar,4));
+  barPos.forEach(([bz,by])=>isoLine(ctx,px+cv,py+by,pz+bz,px+L-cv,py+by,pz+bz,sc,ox,oy,hexB,1.6));
+  const step=Math.max(stSp*2,0.15);
+  for(let xi=stSp;xi<L;xi+=step){const sq=[[cv,cv],[BW-cv,cv],[BW-cv,H-cv],[cv,H-cv],[cv,cv]];for(let i=0;i<4;i++)isoLine(ctx,px+xi,py+sq[i][1],pz+sq[i][0],px+xi,py+sq[i+1][1],pz+sq[i+1][0],sc,ox,oy,hexS,0.85);}
+}
+function drawScene(ctx,CW,CH,{sloofs,baloks,koloms,plats}){
+  ctx.clearRect(0,0,CW,CH);
+  const grad=ctx.createLinearGradient(0,0,0,CH);grad.addColorStop(0,"#f5f4ef");grad.addColorStop(1,"#ece9e0");ctx.fillStyle=grad;ctx.fillRect(0,0,CW,CH);
+  const ko=koloms[0]||mkKolom(0),sl=sloofs[0]||mkSloof(0),ba=baloks[0]||mkBalok(0),pl=plats[0]||mkPlat(0);
+  const kW=+ko.lebar||0.4,kD=+ko.dalam||0.4,kH=+ko.tinggi||3.5;
+  const bL=+ba.panjang||6,bW=+ba.lebar||0.3,bH=+ba.tinggi||0.5;
+  const sL=+sl.panjang||6,sW=+sl.lebar||0.3,sH=+sl.tinggi||0.5;
+  const pT=+pl.tebal||0.12;
+  const firstBarJml=g=>+(g.tulanganGroups?.[0]?.jml||4);
+  const spanX=Math.max(bL,3),depth=Math.max(sL,3),colH=Math.max(kH,2);
+  const extX=spanX+kW,extZ=depth+kD;
+  const scW=(extX+extZ)*CX,scH=(extX+extZ)*SX+colH+bH+pT+0.5;
+  const sc=Math.min(CW*0.72/scW,CH*0.72/scH);
+  const ox=CW*0.5+(extZ-extX)*CX*sc*0.5,oy=CH-(extX+extZ)*SX*sc-CH*0.06;
+  ctx.globalAlpha=0.07;
+  for(let xi=0;xi<=Math.ceil(spanX+kW);xi++){const[ax,ay]=toS(xi,0,0,sc,ox,oy),[bx,by]=toS(xi,0,depth+kD,sc,ox,oy);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.strokeStyle="#666";ctx.lineWidth=0.5;ctx.stroke();}
+  for(let zi=0;zi<=Math.ceil(depth+kD);zi++){const[ax,ay]=toS(0,0,zi,sc,ox,oy),[bx,by]=toS(spanX+kW,0,zi,sc,ox,oy);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.strokeStyle="#666";ctx.lineWidth=0.5;ctx.stroke();}
+  ctx.globalAlpha=1;
+  const szBack=depth+kD/2-sW/2,szFront=kD/2-sW/2;
+  drawBeamXIso(ctx,0,0,szBack,spanX+kW,sH,sW,firstBarJml(sl),+sl.sengkang.jarak,sc,ox,oy,"#7a6a9a","#5a4a8a","#9a8aba");
+  drawBeamXIso(ctx,0,0,szFront,spanX+kW,sH,sW,firstBarJml(sl),+sl.sengkang.jarak,sc,ox,oy,"#7a6a9a","#5a4a8a","#9a8aba");
+  [[spanX,depth],[0,depth],[spanX,0],[0,0]].forEach(([cx,cz])=>drawKolomIso(ctx,cx,cz,kW,kD,colH,firstBarJml(ko),+ko.sengkang.jarak,sc,ox,oy));
+  const baY=colH-bH,bzBack=depth+kD/2-bW/2,bzFront=kD/2-bW/2;
+  drawBeamXIso(ctx,0,baY,bzBack,spanX+kW,bH,bW,firstBarJml(ba),+ba.sengkang.jarak,sc,ox,oy,"#3a7a5a","#2a5a3a","#5aaa7a");
+  drawBeamXIso(ctx,0,baY,bzFront,spanX+kW,bH,bW,firstBarJml(ba),+ba.sengkang.jarak,sc,ox,oy,"#3a7a5a","#2a5a3a","#5aaa7a");
+  const plX=kW/2,plZ=kD/2;
+  isoBox(ctx,plX,colH,plZ,spanX,pT,depth,sc,ox,oy,"#3a7a9a",0.35);
+  if(pl.mode==="wiremesh"){const sp=0.2;for(let xi=sp;xi<spanX;xi+=sp)isoLine(ctx,plX+xi,colH+pT*0.7,plZ,plX+xi,colH+pT*0.7,plZ+depth,sc,ox,oy,"#2a8aaa",0.9);for(let zi=sp;zi<depth;zi+=sp)isoLine(ctx,plX,colH+pT*0.7,plZ+zi,plX+spanX,colH+pT*0.7,plZ+zi,sc,ox,oy,"#2a8aaa",0.9);}
+  else{const spX=Math.max(+pl.atas.jarakX,0.1),spZ=Math.max(+pl.atas.jarakY,0.1);for(let xi=spX;xi<spanX;xi+=spX)isoLine(ctx,plX+xi,colH+pT*0.65,plZ,plX+xi,colH+pT*0.65,plZ+depth,sc,ox,oy,"#2a6a8a",0.85);for(let zi=spZ;zi<depth;zi+=spZ)isoLine(ctx,plX,colH+pT*0.65,plZ+zi,plX+spanX,colH+pT*0.65,plZ+zi,sc,ox,oy,"#2a6a8a",0.85);}
+  isoText(ctx,spanX/2+kW,colH+pT+0.4,depth/2,"D — Plat","#2d7a9a",11,sc,ox,oy);
+  isoText(ctx,spanX+kW+0.15,baY+bH/2,bzFront,"B — Balok","#2d7a4a",11,sc,ox,oy);
+  isoText(ctx,spanX+kW+0.15,sH/2,szFront,"A — Sloof","#4a4a6a",11,sc,ox,oy);
+  isoText(ctx,spanX+kW/2+0.1,colH*0.5,-0.2,"C — Kolom","#8a7a5a",11,sc,ox,oy);
+  ctx.save();ctx.font="10px monospace";ctx.fillStyle="#999";ctx.shadowColor="rgba(255,255,255,0.8)";ctx.shadowBlur=2;
+  const dA=(x,y,z,t)=>{const[sx,sy]=toS(x,y,z,sc,ox,oy);ctx.fillText(t,sx,sy);};
+  dA(spanX/2,-0.25,0,`span ${spanX.toFixed(1)}m`);dA(-0.2,colH/2,0,`h ${colH.toFixed(1)}m`);ctx.restore();
+  [{lbl:`A — ${sloofs.length} Sloof`,c:"#4a4a6a"},{lbl:`B — ${baloks.length} Balok`,c:"#2d7a4a"},{lbl:`C — ${koloms.length} Kolom`,c:"#8a7a5a"},{lbl:`D — ${plats.length} Plat`,c:"#2d7a9a"}].forEach((d,i)=>{
+    const x=12,y=CH-16-i*18;ctx.save();ctx.font="bold 11px sans-serif";ctx.fillStyle=d.c;ctx.shadowColor="rgba(255,255,255,0.9)";ctx.shadowBlur=3;ctx.fillText(d.lbl,x,y);ctx.restore();
+  });
+}
+
+function VisualisasiCanvas({sloofs,baloks,koloms,plats}){
+  const ref=useRef(null);
+  useEffect(()=>{const cv=ref.current;if(!cv)return;const ctx=cv.getContext("2d");drawScene(ctx,800,480,{sloofs,baloks,koloms,plats});},[sloofs,baloks,koloms,plats]);
+  return(
+    <div style={{background:"#f0efe9",borderRadius:14,padding:16,border:"1px solid rgba(26,26,26,0.08)"}}>
+      <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#7a7a6a",marginBottom:10}}>Visualisasi Axonometrik — Frame Representatif (Elemen Pertama Per Seksi)</div>
+      <canvas ref={ref} width={800} height={480} style={{width:"100%",height:"auto",display:"block",borderRadius:10,border:"1px solid rgba(26,26,26,0.07)"}}/>
+      <div style={{display:"flex",gap:16,marginTop:12,flexWrap:"wrap"}}>
+        {[["A","Sloof","#4a4a6a","rgba(74,74,106,0.1)"],["B","Balok","#2d7a4a","rgba(45,122,74,0.1)"],["C","Kolom","#8a7a5a","rgba(138,122,90,0.1)"],["D","Plat","#2d7a9a","rgba(45,122,154,0.1)"]].map(([l,n,c,bg])=>(
+          <div key={l} style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:c}}>
+            <div style={{width:12,height:12,borderRadius:3,background:bg,border:`1.5px solid ${c}`}}/>
+            <span style={{fontWeight:700}}>{l}</span> — {n}
+          </div>
+        ))}
+        <div style={{marginLeft:"auto",fontSize:10,color:"#9a9a8a",fontFamily:"monospace"}}>beton: semi-transparan · besi: solid</div>
+      </div>
+    </div>
+  );
+}
+
+function Inp({label,val,onChange,step,min,unit,w}){
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:2,minWidth:w||0}}>
+      {label&&<label style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#7a7a6a"}}>
+        {label}{unit&&<span style={{fontWeight:400,textTransform:"none",color:"#bbb",marginLeft:3}}>{unit}</span>}
+      </label>}
+      <input type="number" value={val} step={step||"any"} min={min!=null?min:0}
+        onChange={e=>onChange(+e.target.value)}
+        style={{background:"#e8e7e0",border:"1px solid rgba(26,26,26,0.12)",borderRadius:8,padding:"6px 8px",fontSize:12,fontFamily:"monospace",color:"#1a1a1a",outline:"none",width:"100%",boxSizing:"border-box"}}
+        onFocus={e=>e.target.style.boxShadow="0 0 0 3px rgba(26,26,26,0.09)"}
+        onBlur={e=>e.target.style.boxShadow="none"}/>
+    </div>
+  );
+}
+function Sel({label,val,onChange,opts}){
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:2}}>
+      {label&&<label style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#7a7a6a"}}>{label}</label>}
+      <select value={val} onChange={e=>onChange(e.target.value)}
+        style={{background:"#e8e7e0",border:"1px solid rgba(26,26,26,0.12)",borderRadius:8,padding:"6px 8px",fontSize:12,fontFamily:"monospace",color:"#1a1a1a",outline:"none",cursor:"pointer",width:"100%"}}>
+        {opts.map(o=><option key={o} value={o}>{o}</option>)}
+      </select>
+    </div>
+  );
+}
+function TxtInp({val,onChange,placeholder}){
+  return(
+    <input type="text" value={val} placeholder={placeholder||""} onChange={e=>onChange(e.target.value)}
+      style={{background:"#e8e7e0",border:"1px solid rgba(26,26,26,0.12)",borderRadius:8,padding:"6px 8px",fontSize:11,fontFamily:"sans-serif",color:"#1a1a1a",outline:"none",width:"100%",boxSizing:"border-box"}}
+      onFocus={e=>e.target.style.boxShadow="0 0 0 3px rgba(26,26,26,0.09)"}
+      onBlur={e=>e.target.style.boxShadow="none"}/>
+  );
+}
+
+function Badge({letter,sub,sz=30}){
+  const m=META[letter];
+  return(
+    <div style={{width:sz,height:sz,borderRadius:Math.round(sz*0.28),background:m.bg,border:`1.5px solid ${m.bd}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:Math.round(sz*0.44),color:m.color,flexShrink:0,position:"relative",letterSpacing:"-0.5px"}}>
+      {letter}
+      {sub!=null&&<span style={{position:"absolute",bottom:1,right:3,fontSize:Math.round(sz*0.28),fontWeight:700,color:m.color,lineHeight:1}}>{sub}</span>}
+    </div>
+  );
+}
+
+function RBar({rows}){
+  const tot=rows.reduce((s,r)=>s+(r.totWt||0),0);
+  const th={padding:"4px 7px",fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.4px",color:"#7a7a6a",borderBottom:"1px solid rgba(26,26,26,0.1)",textAlign:"left",whiteSpace:"nowrap"};
+  return(
+    <div style={{overflowX:"auto",marginTop:10,borderRadius:8,border:"1px solid rgba(26,26,26,0.07)"}}>
+      <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,fontFamily:"monospace"}}>
+        <thead><tr style={{background:"#e8e7e0"}}>{["Peran","∅","Jenis","Qty","Pjg/Btg","Tot Pjg","kg/m","Tot (kg)"].map(h=><th key={h} style={th}>{h}</th>)}</tr></thead>
+        <tbody>
+          {rows.map((r,i)=>(
+            <tr key={i} style={{borderBottom:"1px solid rgba(26,26,26,0.05)",background:i%2?"#fafaf7":"#fff"}}>
+              <td style={{padding:"4px 7px",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.lb}</td>
+              <td style={{padding:"4px 7px",fontWeight:600}}>D{r.dia}</td>
+              <td style={{padding:"4px 7px",color:"#7a7a6a"}}>{r.jenis}</td>
+              <td style={{padding:"4px 7px",textAlign:"right"}}>{r.n}</td>
+              <td style={{padding:"4px 7px",textAlign:"right"}}>{(r.ln||0).toFixed(3)}</td>
+              <td style={{padding:"4px 7px",textAlign:"right"}}>{(r.tot||0).toFixed(2)}</td>
+              <td style={{padding:"4px 7px",textAlign:"right",color:"#7a7a6a"}}>{(r.wt||0).toFixed(3)}</td>
+              <td style={{padding:"4px 7px",textAlign:"right",fontWeight:600,color:"#2d7a4a"}}>{(r.totWt||0).toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot><tr style={{background:"#f0efe9"}}>
+          <td colSpan={7} style={{padding:"4px 7px",fontWeight:700,fontSize:9,textTransform:"uppercase"}}>Total</td>
+          <td style={{padding:"4px 7px",fontWeight:700,textAlign:"right",color:"#2d7a4a"}}>{tot.toFixed(2)}</td>
+        </tr></tfoot>
+      </table>
+    </div>
+  );
+}
+
+function SecRekap({rows,color}){
+  if(!rows.length)return null;
+  const map={};
+  rows.forEach(r=>{const k=`${r.dia}-${r.jenis}`;if(!map[k])map[k]={dia:r.dia,jenis:r.jenis,qty:0,totLen:0,totWt:0};map[k].qty+=(r.n||0);map[k].totLen+=(r.tot||0);map[k].totWt+=(r.totWt||0);});
+  const gs=Object.values(map).sort((a,b)=>a.dia-b.dia);
+  const tot=gs.reduce((s,g)=>s+g.totWt,0);
+  const th={padding:"4px 9px",fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.4px",color:"#7a7a6a",borderBottom:"1px solid rgba(26,26,26,0.08)",textAlign:"left"};
+  return(
+    <div style={{marginTop:12,borderRadius:10,overflow:"hidden",border:`1px solid ${color}44`}}>
+      <div style={{padding:"5px 11px",background:`${color}12`,fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color}}>Rekap Per Diameter</div>
+      <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,fontFamily:"monospace"}}>
+        <thead><tr style={{background:"#fafaf7"}}>{["∅","Jenis","Qty","Tot Pjg (m)","Tot Berat (kg)","Btg 12m"].map(h=><th key={h} style={th}>{h}</th>)}</tr></thead>
+        <tbody>
+          {gs.map((g,i)=>(
+            <tr key={i} style={{borderBottom:"1px solid rgba(26,26,26,0.04)"}}>
+              <td style={{padding:"4px 9px",fontWeight:600}}>D{g.dia}</td>
+              <td style={{padding:"4px 9px",color:"#7a7a6a"}}>{g.jenis}</td>
+              <td style={{padding:"4px 9px",textAlign:"right"}}>{g.qty}</td>
+              <td style={{padding:"4px 9px",textAlign:"right"}}>{g.totLen.toFixed(2)}</td>
+              <td style={{padding:"4px 9px",textAlign:"right",fontWeight:600}}>{g.totWt.toFixed(2)}</td>
+              <td style={{padding:"4px 9px",textAlign:"right"}}>{Math.ceil(g.totLen/12/0.95)}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot><tr style={{background:"#f0efe9"}}>
+          <td colSpan={4} style={{padding:"5px 9px",fontWeight:700,fontSize:9,textTransform:"uppercase"}}>Total</td>
+          <td style={{padding:"5px 9px",fontWeight:700,textAlign:"right",color}}>{tot.toFixed(2)} kg</td>
+          <td style={{padding:"5px 9px",fontWeight:700,textAlign:"right",color:"#4a4a6a"}}>{gs.reduce((s,g)=>s+Math.ceil(g.totLen/12/0.95),0)} btg</td>
+        </tr></tfoot>
+      </table>
+    </div>
+  );
+}
+
+function GrpEditor({grp,itemId,setter,canRemove,panjang,qty}){
+  const c=useCallback((field,val)=>updGrp(setter,itemId,grp.id,field,val),[setter,itemId,grp.id]);
+  const lap=40*(+grp.dia/1000)*2,bLen=(+panjang||0)+lap,bQty=(+grp.jml||0)*(+qty||0);
+  const wt=BAR_WT[+grp.dia]||0;
+  return(
+    <div style={{background:"rgba(26,26,26,0.03)",border:"1px solid rgba(26,26,26,0.09)",borderRadius:10,padding:10,marginBottom:7}}>
+      <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}>
+        <div style={{flex:1}}>
+          <TxtInp val={grp.label} onChange={v=>c("label",v)} placeholder="Nama tulangan"/>
+        </div>
+        {canRemove&&<button onClick={()=>remGrp(setter,itemId,grp.id)}
+          style={{background:"rgba(192,57,43,0.08)",border:"1px solid rgba(192,57,43,0.2)",color:"#c0392b",borderRadius:6,padding:"3px 8px",fontSize:10,cursor:"pointer",fontWeight:600,flexShrink:0}}>✕</button>}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(75px,1fr))",gap:6}}>
+        <Sel label="∅" val={`${grp.dia}`} onChange={v=>c("dia",+v)} opts={BAR_DIA.map(String)}/>
+        <Sel label="Jenis" val={grp.jenis} onChange={v=>c("jenis",v)} opts={JENIS}/>
+        <Inp label="Jml Btg" val={grp.jml} min={1} onChange={v=>c("jml",v)}/>
+        <div style={{display:"flex",flexDirection:"column",gap:2}}>
+          <label style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#7a7a6a"}}>Tot Berat</label>
+          <div style={{background:"rgba(45,122,74,0.08)",border:"1px solid rgba(45,122,74,0.18)",borderRadius:8,padding:"6px 8px",fontSize:12,fontFamily:"monospace",color:"#2d7a4a",fontWeight:600}}>
+            {(bLen*bQty*wt).toFixed(1)}<span style={{fontSize:9,fontWeight:400,color:"#7a7a6a",marginLeft:3}}>kg</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LinItem({item,letter,idx,setItems}){
+  const set=useCallback((id,p,v)=>upd(setItems,id,p,v),[setItems]);
+  const c=calcLin(item),meta=META[letter];
+  const sengkangRow={lb:"Sengkang",dia:+item.sengkang.dia,jenis:item.sengkang.jenis,n:c.stN,ln:c.stL,tot:c.stTot,wt:c.sWt,totWt:c.stTot*c.sWt};
+  const rows=[...c.groups,sengkangRow];
+  return(
+    <div style={{background:"#fff",border:"1px solid rgba(26,26,26,0.08)",borderRadius:14,padding:14,marginBottom:10}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:11,flexWrap:"wrap"}}>
+        <Badge letter={letter} sub={idx} sz={34}/>
+        <div>
+          <div style={{fontWeight:700,fontSize:13,color:meta.color}}>{meta.label} {idx}</div>
+          <div style={{fontSize:10,color:"#9a9a8a",fontFamily:"monospace"}}>Vol {c.vol.toFixed(3)}m³ · Bks {c.form.toFixed(2)}m²</div>
+        </div>
+        <button onClick={()=>remI(setItems,item.id)} style={{marginLeft:"auto",background:"rgba(192,57,43,0.08)",border:"1px solid rgba(192,57,43,0.2)",color:"#c0392b",borderRadius:7,padding:"3px 10px",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Hapus</button>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(80px,1fr))",gap:7,marginBottom:12}}>
+        <Inp label="Panjang" unit="m" val={item.panjang} onChange={v=>set(item.id,"panjang",v)}/>
+        <Inp label="Lebar b" unit="m" val={item.lebar}   onChange={v=>set(item.id,"lebar",v)}/>
+        <Inp label="Tinggi h" unit="m" val={item.tinggi} onChange={v=>set(item.id,"tinggi",v)}/>
+        <Inp label="Qty"              val={item.qty} min={1} onChange={v=>set(item.id,"qty",v)}/>
+      </div>
+      <div style={{marginBottom:10}}>
+        <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:meta.color,marginBottom:7}}>Tulangan Longitudinal</div>
+        {item.tulanganGroups.map(g=>(
+          <GrpEditor key={g.id} grp={g} itemId={item.id} setter={setItems} canRemove={item.tulanganGroups.length>1} panjang={item.panjang} qty={item.qty}/>
+        ))}
+        <button onClick={()=>addGrp(setItems,item.id)}
+          style={{background:"transparent",border:`1px dashed ${meta.color}`,color:meta.color,borderRadius:8,padding:"5px 14px",fontSize:11,cursor:"pointer",fontWeight:600,width:"100%",marginTop:2}}>
+          + Tambah Tulangan
+        </button>
+      </div>
+      <div style={{background:"rgba(26,26,26,0.03)",borderRadius:10,padding:10,marginBottom:10}}>
+        <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#7a7a6a",marginBottom:7}}>Sengkang</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(80px,1fr))",gap:6}}>
+          <Sel label="∅ Sengk"   val={`${item.sengkang.dia}`}  onChange={v=>set(item.id,"sengkang.dia",+v)}  opts={BAR_DIA.map(String)}/>
+          <Sel label="Jenis Sngk" val={item.sengkang.jenis}     onChange={v=>set(item.id,"sengkang.jenis",v)} opts={JENIS}/>
+          <Inp label="Jarak"     unit="m" val={item.sengkang.jarak} step={0.05} onChange={v=>set(item.id,"sengkang.jarak",v)}/>
+        </div>
+      </div>
+      <RBar rows={rows}/>
+    </div>
+  );
+}
+
+function KolItem({item,idx,setItems}){
+  const set=useCallback((id,p,v)=>upd(setItems,id,p,v),[setItems]);
+  const c=calcKol(item);
+  const sengkangRow={lb:"Sengkang",dia:+item.sengkang.dia,jenis:item.sengkang.jenis,n:c.stN,ln:c.stL,tot:c.stTot,wt:c.sWt,totWt:c.stTot*c.sWt};
+  const rows=[...c.groups,sengkangRow];
+  return(
+    <div style={{background:"#fff",border:"1px solid rgba(26,26,26,0.08)",borderRadius:14,padding:14,marginBottom:10}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:11,flexWrap:"wrap"}}>
+        <Badge letter="C" sub={idx} sz={34}/>
+        <div>
+          <div style={{fontWeight:700,fontSize:13,color:META.C.color}}>Kolom {idx}</div>
+          <div style={{fontSize:10,color:"#9a9a8a",fontFamily:"monospace"}}>Vol {c.vol.toFixed(3)}m³ · Bks {c.form.toFixed(2)}m²</div>
+        </div>
+        <button onClick={()=>remI(setItems,item.id)} style={{marginLeft:"auto",background:"rgba(192,57,43,0.08)",border:"1px solid rgba(192,57,43,0.2)",color:"#c0392b",borderRadius:7,padding:"3px 10px",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Hapus</button>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(80px,1fr))",gap:7,marginBottom:12}}>
+        <Inp label="Lebar b" unit="m" val={item.lebar}  onChange={v=>set(item.id,"lebar",v)}/>
+        <Inp label="Dalam h" unit="m" val={item.dalam}  onChange={v=>set(item.id,"dalam",v)}/>
+        <Inp label="Tinggi"  unit="m" val={item.tinggi} onChange={v=>set(item.id,"tinggi",v)}/>
+        <Inp label="Qty"              val={item.qty} min={1} onChange={v=>set(item.id,"qty",v)}/>
+      </div>
+      <div style={{marginBottom:10}}>
+        <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:META.C.color,marginBottom:7}}>Tulangan Longitudinal</div>
+        {item.tulanganGroups.map(g=>(
+          <GrpEditor key={g.id} grp={g} itemId={item.id} setter={setItems} canRemove={item.tulanganGroups.length>1} panjang={item.tinggi} qty={item.qty}/>
+        ))}
+        <button onClick={()=>addGrp(setItems,item.id)}
+          style={{background:"transparent",border:`1px dashed ${META.C.color}`,color:META.C.color,borderRadius:8,padding:"5px 14px",fontSize:11,cursor:"pointer",fontWeight:600,width:"100%",marginTop:2}}>
+          + Tambah Tulangan
+        </button>
+      </div>
+      <div style={{background:"rgba(26,26,26,0.03)",borderRadius:10,padding:10,marginBottom:10}}>
+        <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#7a7a6a",marginBottom:7}}>Sengkang</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(80px,1fr))",gap:6}}>
+          <Sel label="∅ Sengk"   val={`${item.sengkang.dia}`}  onChange={v=>set(item.id,"sengkang.dia",+v)}  opts={BAR_DIA.map(String)}/>
+          <Sel label="Jenis Sngk" val={item.sengkang.jenis}     onChange={v=>set(item.id,"sengkang.jenis",v)} opts={JENIS}/>
+          <Inp label="Jarak"     unit="m" val={item.sengkang.jarak} step={0.05} onChange={v=>set(item.id,"sengkang.jarak",v)}/>
+        </div>
+      </div>
+      <RBar rows={rows}/>
+    </div>
+  );
+}
+
+function PlatItem({item,idx,setItems}){
+  const set=useCallback((id,p,v)=>upd(setItems,id,p,v),[setItems]);
+  const c=calcPlat(item);
+  return(
+    <div style={{background:"#fff",border:"1px solid rgba(26,26,26,0.08)",borderRadius:14,padding:14,marginBottom:10}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:11,flexWrap:"wrap"}}>
+        <Badge letter="D" sub={idx} sz={34}/>
+        <div>
+          <div style={{fontWeight:700,fontSize:13,color:META.D.color}}>Plat {idx}</div>
+          <div style={{fontSize:10,color:"#9a9a8a",fontFamily:"monospace"}}>Vol {c.vol.toFixed(3)}m³ · Bks {c.form.toFixed(2)}m²</div>
+        </div>
+        <button onClick={()=>remI(setItems,item.id)} style={{marginLeft:"auto",background:"rgba(192,57,43,0.08)",border:"1px solid rgba(192,57,43,0.2)",color:"#c0392b",borderRadius:7,padding:"3px 10px",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Hapus</button>
+      </div>
+      <div style={{display:"inline-flex",background:"#e8e7e0",borderRadius:8,padding:3,marginBottom:11}}>
+        {["batang","wiremesh"].map(m=>(
+          <button key={m} onClick={()=>set(item.id,"mode",m)}
+            style={{padding:"4px 13px",borderRadius:6,border:"none",fontSize:11,fontWeight:600,cursor:"pointer",background:item.mode===m?"#1a1a1a":"transparent",color:item.mode===m?"#f0efe9":"#7a7a6a"}}>
+            {m==="batang"?"Tulangan Batang":"Wiremesh"}
+          </button>
+        ))}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(80px,1fr))",gap:7,marginBottom:11}}>
+        <Inp label="Panjang" unit="m" val={item.panjang} onChange={v=>set(item.id,"panjang",v)}/>
+        <Inp label="Lebar"   unit="m" val={item.lebar}   onChange={v=>set(item.id,"lebar",v)}/>
+        <Inp label="Tebal"   unit="m" val={item.tebal}   step={0.01} onChange={v=>set(item.id,"tebal",v)}/>
+        <Inp label="Qty"              val={item.qty} min={1} onChange={v=>set(item.id,"qty",v)}/>
+      </div>
+      {item.mode==="batang"?(
+        <>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9,marginBottom:6}}>
+            <div style={{background:"rgba(74,74,106,0.06)",borderRadius:9,padding:10}}>
+              <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#4a4a6a",marginBottom:8}}>Tulangan Atas</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                <Sel label="∅" val={`${item.atas.dia}`} onChange={v=>set(item.id,"atas.dia",+v)} opts={BAR_DIA.map(String)}/>
+                <Sel label="Jenis" val={item.atas.jenis} onChange={v=>set(item.id,"atas.jenis",v)} opts={JENIS}/>
+                <Inp label="Jarak X" unit="m" val={item.atas.jarakX} step={0.05} onChange={v=>set(item.id,"atas.jarakX",v)}/>
+                <Inp label="Jarak Y" unit="m" val={item.atas.jarakY} step={0.05} onChange={v=>set(item.id,"atas.jarakY",v)}/>
+              </div>
+            </div>
+            <div style={{background:"rgba(45,122,154,0.06)",borderRadius:9,padding:10}}>
+              <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#2d7a9a",marginBottom:8}}>Tulangan Bawah</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                <Sel label="∅" val={`${item.bawah.dia}`} onChange={v=>set(item.id,"bawah.dia",+v)} opts={BAR_DIA.map(String)}/>
+                <Sel label="Jenis" val={item.bawah.jenis} onChange={v=>set(item.id,"bawah.jenis",v)} opts={JENIS}/>
+                <Inp label="Jarak X" unit="m" val={item.bawah.jarakX} step={0.05} onChange={v=>set(item.id,"bawah.jarakX",v)}/>
+                <Inp label="Jarak Y" unit="m" val={item.bawah.jarakY} step={0.05} onChange={v=>set(item.id,"bawah.jarakY",v)}/>
+              </div>
+            </div>
+          </div>
+          {c.rows&&<RBar rows={c.rows}/>}
+        </>
+      ):(
+        <div style={{background:"rgba(45,122,154,0.06)",border:"1px solid rgba(45,122,154,0.15)",borderRadius:9,padding:11}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(105px,1fr))",gap:7,marginBottom:9}}>
+            <Sel label="Tipe WM" val={item.wm.tipe}       onChange={v=>set(item.id,"wm.tipe",v)}    opts={WM_TYPES}/>
+            <Sel label="Lapis"   val={`${item.wm.lapis}`} onChange={v=>set(item.id,"wm.lapis",+v)}  opts={["1","2"]}/>
+            <Inp label="Overlap X" unit="m" val={item.wm.overlapX} step={0.05} onChange={v=>set(item.id,"wm.overlapX",v)}/>
+            <Inp label="Overlap Y" unit="m" val={item.wm.overlapY} step={0.05} onChange={v=>set(item.id,"wm.overlapY",v)}/>
+          </div>
+          {c.mode==="wm"&&<div style={{fontFamily:"monospace",fontSize:13,fontWeight:600,color:"#2d7a9a"}}>
+            {c.sheets} lembar <span style={{fontWeight:400,color:"#7a7a6a",fontSize:11}}>≈ {c.wmWt.toFixed(1)} kg · {WM_WT[item.wm.tipe]} kg/m²</span>
+          </div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Sec({letter,items,setItems,mkItem,children}){
+  const meta=META[letter];
+  const add=useCallback(()=>setItems(p=>[...p,mkItem(Date.now())]),[setItems,mkItem]);
+  let rows=[];
+  items.forEach(it=>{
+    if(letter==="A"||letter==="B"){
+      const c=calcLin(it);
+      c.groups.forEach(g=>rows.push({dia:g.dia,jenis:g.jenis,n:g.n,tot:g.tot,totWt:g.totWt}));
+      rows.push({dia:+it.sengkang.dia,jenis:it.sengkang.jenis,n:c.stN,tot:c.stTot,totWt:c.stTot*c.sWt});
+    }else if(letter==="C"){
+      const c=calcKol(it);
+      c.groups.forEach(g=>rows.push({dia:g.dia,jenis:g.jenis,n:g.n,tot:g.tot,totWt:g.totWt}));
+      rows.push({dia:+it.sengkang.dia,jenis:it.sengkang.jenis,n:c.stN,tot:c.stTot,totWt:c.stTot*c.sWt});
+    }else if(letter==="D"){
+      const c=calcPlat(it);if(c.mode==="bar"&&c.rows)rows.push(...c.rows);
+    }
+  });
+  return(
+    <div style={{background:"#fff",borderRadius:18,boxShadow:"0 3px 18px rgba(0,0,0,0.06)",padding:18,marginBottom:18,border:"1px solid rgba(26,26,26,0.06)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+        <Badge letter={letter} sz={36}/>
+        <div>
+          <div style={{fontWeight:800,fontSize:15,color:"#1a1a1a"}}>Seksi {letter} — {meta.label}</div>
+          <div style={{fontSize:11,color:"#7a7a6a"}}>{items.length} elemen</div>
+        </div>
+        <button onClick={add} style={{marginLeft:"auto",background:"#1a1a1a",color:"#f0efe9",border:"none",borderRadius:8,padding:"7px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>
+          + Tambah {meta.label}
+        </button>
+      </div>
+      {items.length===0&&<div style={{textAlign:"center",padding:"24px 0",color:"#9a9a8a",fontSize:13,background:"#f8f7f3",borderRadius:9,border:"1px dashed rgba(26,26,26,0.12)"}}>Belum ada elemen — klik "+ Tambah" untuk mulai</div>}
+      {children}
+      {items.length>0&&<SecRekap rows={rows} color={meta.color}/>}
+    </div>
+  );
+}
+
+function SCard({label,val,unit,color="#1a1a1a",dark}){
+  return(
+    <div style={{background:dark?"#1a1a1a":"#f0efe9",borderRadius:12,padding:"11px 13px",border:dark?"none":"1px solid rgba(26,26,26,0.08)"}}>
+      <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:dark?"rgba(240,239,233,0.45)":"#7a7a6a",marginBottom:4}}>{label}</div>
+      <div style={{fontFamily:"monospace",fontWeight:600,fontSize:16,color:dark?"#f0efe9":color,lineHeight:1}}>
+        {val}<span style={{fontSize:10,fontWeight:400,marginLeft:3,color:dark?"rgba(240,239,233,0.5)":"#aaa"}}>{unit}</span>
+      </div>
+    </div>
+  );
+}
+
+const fmtRp=v=>"Rp "+Math.round(v).toLocaleString("id-ID");
+
+function App(){
+  const[sloofs,setSloofs]=useState(()=>[mkSloof(1)]);
+  const[baloks,setBaloks]=useState(()=>[mkBalok(2)]);
+  const[koloms,setKoloms]=useState(()=>[mkKolom(3)]);
+  const[plats, setPlats] =useState(()=>[mkPlat(4)]);
+  const[tab,setTab]=useState("input");
+  const[showSet,setShowSet]=useState(false);
+  const[params,setParams]=useState({hBeton:1250000,hBeks:150000,hPly:185000,hMin:35000,hPak:20000,hBesi:14500,hKawat:25000,hUpah:500000,hWM:185000,waste:5,truck:7,reuse:3});
+  const P=(k,v)=>setParams(p=>({...p,[k]:v}));
+
+  let vS=0,vB=0,vK=0,vP=0,form=0,wmSh=0;const barRows=[];
+  sloofs.forEach(it=>{const c=calcLin(it);vS+=c.vol;form+=c.form;c.groups.forEach(g=>barRows.push({dia:g.dia,jenis:g.jenis,totLen:g.tot,totWt:g.totWt}));barRows.push({dia:+it.sengkang.dia,jenis:it.sengkang.jenis,totLen:c.stTot,totWt:c.stTot*c.sWt});});
+  baloks.forEach(it=>{const c=calcLin(it);vB+=c.vol;form+=c.form;c.groups.forEach(g=>barRows.push({dia:g.dia,jenis:g.jenis,totLen:g.tot,totWt:g.totWt}));barRows.push({dia:+it.sengkang.dia,jenis:it.sengkang.jenis,totLen:c.stTot,totWt:c.stTot*c.sWt});});
+  koloms.forEach(it=>{const c=calcKol(it);vK+=c.vol;form+=c.form;c.groups.forEach(g=>barRows.push({dia:g.dia,jenis:g.jenis,totLen:g.tot,totWt:g.totWt}));barRows.push({dia:+it.sengkang.dia,jenis:it.sengkang.jenis,totLen:c.stTot,totWt:c.stTot*c.sWt});});
+  plats.forEach(it=>{const c=calcPlat(it);vP+=c.vol;form+=c.form;if(c.mode==="bar"&&c.rows)barRows.push(...c.rows.map(r=>({dia:r.dia,jenis:r.jenis,totLen:r.tot,totWt:r.totWt})));if(c.mode==="wm")wmSh+=c.sheets;});
+
+  const vBersih=vS+vB+vK+vP,vOrder=vBersih*(1+params.waste/100);
+  const trucks=Math.ceil(vOrder/(params.truck||7));
+  const besiTot=barRows.reduce((s,r)=>s+r.totWt,0);
+  const kawat=besiTot*0.015,ply=Math.ceil(form/2.88/(params.reuse||1)),minyak=form*0.15,paku=form*0.20;
+  const bMap={};barRows.forEach(r=>{const k=`${r.dia}-${r.jenis}`;if(!bMap[k])bMap[k]={dia:r.dia,jenis:r.jenis,totLen:0,totWt:0};bMap[k].totLen+=r.totLen;bMap[k].totWt+=r.totWt;});
+  const bGroups=Object.values(bMap).sort((a,b)=>a.dia-b.dia);
+
+  const rab=[
+    {u:"Beton Readymix",s:"m³",v:vOrder,h:params.hBeton},{u:"Upah Cor+Vibrator",s:"m³",v:vOrder,h:params.hUpah},
+    {u:"Bekisting",s:"m²",v:form,h:params.hBeks},{u:"Plywood 12mm",s:"lbr",v:ply,h:params.hPly},
+    {u:"Minyak Bekisting",s:"L",v:minyak,h:params.hMin},{u:"Paku",s:"kg",v:paku,h:params.hPak},
+    {u:"Besi Tulangan",s:"kg",v:besiTot,h:params.hBesi},{u:"Kawat Bendrat",s:"kg",v:kawat,h:params.hKawat},
+    ...(wmSh>0?[{u:"Wiremesh",s:"lbr",v:wmSh,h:params.hWM}]:[]),
+  ];
+  const rabTot=rab.reduce((s,r)=>s+r.v*r.h,0);
+
+  const doJSON=()=>{
+    const totalBtg=bGroups.reduce((s,g)=>s+Math.ceil(g.totLen/12/0.95),0);
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([JSON.stringify({
+      params,sloofs,baloks,koloms,plats,
+      summary:{vBersih,vOrder,trucks,truckCapacity:params.truck,besiTot,form,totalBtg12m:totalBtg,
+        besiPerDia:bGroups.map(g=>({dia:`D${g.dia}`,jenis:g.jenis,totLen:+g.totLen.toFixed(3),totWt:+g.totWt.toFixed(3),btg12m:Math.ceil(g.totLen/12/0.95)}))
+      }
+    },null,2)],{type:"application/json"}));
+    a.download="pembesian-ics.json";a.click();
+  };
+  const doXLSX=()=>{
+    const X=window.XLSX;if(!X){alert("SheetJS belum dimuat");return;}
+    const wb=X.utils.book_new();
+    // ── Sheet 1: Rekap Pembesian per diameter ──
+    const rekapHeader=["∅","Jenis","Total Panjang (m)","Berat/m (kg/m)","Total Berat (kg)","Btg 12m (5% waste)"];
+    const rekapData=bGroups.map((g,i)=>[
+      `D${g.dia}`,g.jenis,g.totLen,BAR_WT[g.dia]||0,
+      {f:`C${4+i}*D${4+i}`},{f:`CEILING(C${4+i}/12/0.95,1)`}
+    ]);
+    const rekapTotRow=3+bGroups.length;
+    X.utils.book_append_sheet(wb,X.utils.aoa_to_sheet([
+      ["Kalkulator Pembesian ICS v3.2"],[],rekapHeader,...rekapData,[],
+      ["TOTAL","","","",{f:`SUM(E4:E${rekapTotRow})`},{f:`SUM(F4:F${rekapTotRow})`}]
+    ]),"Rekap Pembesian");
+    // ── Sheet 2: RAB ──
+    const rabHeader=["Uraian","Volume","Sat","Harga Satuan (Rp)","Jumlah (Rp)","Ket"];
+    const rabRows=rab.map(r=>[
+      r.u, r.v, r.s, r.h, r.v*r.h,
+      r.u==="Beton Readymix" ? `${trucks} truk @ ${params.truck} m³/truk` : ""
+    ]);
+    const totalBtg=bGroups.reduce((s,g)=>s+Math.ceil(g.totLen/12/0.95),0);
+    const rabDataStartRow=4; // row 1=title, 2=blank, 3=header, 4..= data
+    const rabDataEndRow=3+rabRows.length;
+    X.utils.book_append_sheet(wb,X.utils.aoa_to_sheet([
+      ["RAB — ICS v3.2"],[],rabHeader,...rabRows,[],[],
+      ["Detail Kebutuhan Besi (cutting waste 5%)"],
+      ["∅","Total Panjang (m)","kg/m","Total Berat (kg)","Jumlah Batang 12m",""],
+      ...bGroups.map(g=>[`D${g.dia} ${g.jenis}`,g.totLen,BAR_WT[g.dia]||0,g.totLen*(BAR_WT[g.dia]||0),Math.ceil(g.totLen/12/0.95),""]),
+      ["TOTAL BATANG","","",besiTot,totalBtg,"btg"],[],
+      ["TOTAL RAB","","","",{f:`SUM(E${rabDataStartRow}:E${rabDataEndRow})`},""]
+    ]),"RAB");
+    X.writeFile(wb,"pembesian-ics.xlsx");
+  };
+  const doReset=()=>{setSloofs([mkSloof(Date.now())]);setBaloks([mkBalok(Date.now()+1)]);setKoloms([mkKolom(Date.now()+2)]);setPlats([mkPlat(Date.now()+3)]);};
+
+  const thH={padding:"6px 9px",fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.4px",color:"#7a7a6a",borderBottom:"1px solid rgba(26,26,26,0.1)",textAlign:"left",whiteSpace:"nowrap"};
+
+  return(
+    <div style={{minHeight:"100vh",background:"#f0efe9",color:"#1a1a1a",fontSize:13}}>
+      {/* HEADER */}
+      <div style={{position:"sticky",top:0,zIndex:200,background:"rgba(240,239,233,0.97)",backdropFilter:"blur(14px)",borderBottom:"1px solid rgba(26,26,26,0.1)",padding:"9px 16px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <img src="../../assets/logo.png" alt="ICS" style={{width:38,height:38,objectFit:"contain",padding:6,borderRadius:10,background:"#1a1a1a",flex:"0 0 auto"}}/>
+        <div style={{flex:1,minWidth:140}}>
+          <div style={{fontWeight:800,fontSize:15,lineHeight:1.2}}>Kalkulator Pembesian ICS</div>
+          <div style={{fontSize:10,color:"#7a7a6a"}}>Estimator Beton Struktural & Pembesian Detail · v3.2</div>
+        </div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          <button onClick={()=>{window.location.href="../../index.html"}} style={{background:"transparent",color:"#1a1a1a",border:"1px solid rgba(26,26,26,0.2)",borderRadius:7,padding:"5px 12px",fontWeight:700,fontSize:11,cursor:"pointer"}}>Home</button>
+          {[
+            {lb:"⚙ Harga Satuan",fn:()=>setShowSet(s=>!s),st:{background:showSet?"#1a1a1a":"transparent",color:showSet?"#f0efe9":"#1a1a1a",border:"1px solid rgba(26,26,26,0.2)"}},
+            {lb:"↓ JSON",fn:doJSON,st:{background:"transparent",color:"#4a4a6a",border:"1px solid rgba(74,74,106,0.3)"}},
+            {lb:"⬇ Excel",fn:doXLSX,st:{background:"#217346",color:"#fff",border:"none"}},
+            {lb:"↺ Reset",fn:doReset,st:{background:"transparent",color:"#c0392b",border:"1px solid rgba(192,57,43,0.25)"}},
+          ].map(b=><button key={b.lb} onClick={b.fn} style={{...b.st,borderRadius:7,padding:"5px 12px",fontWeight:700,fontSize:11,cursor:"pointer"}}>{b.lb}</button>)}
+        </div>
+      </div>
+
+      {/* TABS */}
+      <div style={{display:"flex",background:"rgba(240,239,233,0.97)",borderBottom:"1px solid rgba(26,26,26,0.08)",padding:"0 16px"}}>
+        {[["input","📋 Input & Kalkulasi"],["visualisasi","📐 Visualisasi"]].map(([t,l])=>(
+          <button key={t} onClick={()=>setTab(t)} style={{padding:"9px 20px",border:"none",background:"transparent",fontSize:12,fontWeight:700,cursor:"pointer",color:tab===t?"#1a1a1a":"#7a7a6a",borderBottom:tab===t?"2.5px solid #1a1a1a":"2.5px solid transparent",marginBottom:-1}}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      <div style={{maxWidth:1020,margin:"0 auto",padding:"18px 12px 50px"}}>
+
+        {/* SETTINGS */}
+        {showSet&&(
+          <div style={{background:"#fff",borderRadius:16,boxShadow:"0 3px 16px rgba(0,0,0,0.07)",padding:18,marginBottom:16,border:"1px solid rgba(26,26,26,0.07)"}}>
+            <div style={{fontWeight:800,fontSize:14,marginBottom:12}}>⚙ Harga Satuan & Parameter</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:8}}>
+              {[["hBeton","Beton Readymix","Rp/m³"],["hBeks","Bekisting","Rp/m²"],["hPly","Plywood 12mm","Rp/lbr"],["hMin","Minyak","Rp/L"],["hPak","Paku","Rp/kg"],["hBesi","Besi Tulangan","Rp/kg"],["hKawat","Kawat Bendrat","Rp/kg"],["hUpah","Upah Cor+Vib","Rp/m³"],["hWM","Wiremesh","Rp/lbr"],["waste","Susut/Waste","%"],["truck","Kapasitas Truk","m³"],["reuse","Reuse Bekisting","×"]].map(([k,l,u])=>(
+                <Inp key={k} label={`${l} (${u})`} val={params[k]} onChange={v=>P(k,v)}/>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab==="input"&&(
+          <>
+            <Sec letter="A" items={sloofs} setItems={setSloofs} mkItem={mkSloof}>
+              {sloofs.map((it,i)=><LinItem key={it.id} item={it} letter="A" idx={i+1} setItems={setSloofs}/>)}
+            </Sec>
+            <Sec letter="B" items={baloks} setItems={setBaloks} mkItem={mkBalok}>
+              {baloks.map((it,i)=><LinItem key={it.id} item={it} letter="B" idx={i+1} setItems={setBaloks}/>)}
+            </Sec>
+            <Sec letter="C" items={koloms} setItems={setKoloms} mkItem={mkKolom}>
+              {koloms.map((it,i)=><KolItem key={it.id} item={it} idx={i+1} setItems={setKoloms}/>)}
+            </Sec>
+            <Sec letter="D" items={plats} setItems={setPlats} mkItem={mkPlat}>
+              {plats.map((it,i)=><PlatItem key={it.id} item={it} idx={i+1} setItems={setPlats}/>)}
+            </Sec>
+
+            {/* REKAPITULASI */}
+            <div style={{background:"#fff",borderRadius:18,boxShadow:"0 3px 18px rgba(0,0,0,0.07)",padding:20,marginBottom:18,border:"1px solid rgba(26,26,26,0.06)"}}>
+              <div style={{fontWeight:800,fontSize:17,marginBottom:16}}>Rekapitulasi</div>
+
+              <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#7a7a6a",marginBottom:8}}>Volume Beton</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(105px,1fr))",gap:7,marginBottom:16}}>
+                <SCard label="Sloof" val={vS.toFixed(3)} unit="m³" color="#4a4a6a"/>
+                <SCard label="Balok" val={vB.toFixed(3)} unit="m³" color="#2d7a4a"/>
+                <SCard label="Kolom" val={vK.toFixed(3)} unit="m³" color="#8a7a5a"/>
+                <SCard label="Plat"  val={vP.toFixed(3)} unit="m³" color="#2d7a9a"/>
+                <SCard label="Bersih" val={vBersih.toFixed(3)} unit="m³"/>
+                <SCard label={`+${params.waste}% Susut`} val={(vOrder-vBersih).toFixed(3)} unit="m³" color="#c0392b"/>
+                <SCard label="Order" val={vOrder.toFixed(2)} unit="m³" dark/>
+              </div>
+
+              <div style={{background:"linear-gradient(125deg,#1c1c1c,#2e2e2e)",borderRadius:13,padding:"14px 18px",marginBottom:18,display:"flex",gap:22,flexWrap:"wrap",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",color:"rgba(240,239,233,0.4)",marginBottom:3}}>Readymix Concrete</div>
+                  <div style={{fontWeight:800,fontSize:22,color:"#f0efe9"}}>{trucks>0?`${trucks} Truk`:"— Truk"}</div>
+                  <div style={{fontSize:10,color:"rgba(240,239,233,0.45)",marginTop:2,fontFamily:"monospace"}}>@ {params.truck} m³/truk</div>
+                </div>
+                {[["Vol Order",`${vOrder.toFixed(2)} m³`],["Vol Bersih",`${vBersih.toFixed(2)} m³`],["Waste",`${(vOrder-vBersih).toFixed(2)} m³`]].map(([l,v])=>(
+                  <div key={l}><div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",color:"rgba(240,239,233,0.38)",marginBottom:3}}>{l}</div><div style={{fontFamily:"monospace",fontWeight:600,fontSize:13,color:"#f0efe9"}}>{v}</div></div>
+                ))}
+              </div>
+
+              <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#7a7a6a",marginBottom:8}}>Grand Total Pembesian</div>
+              <div style={{overflowX:"auto",marginBottom:18}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,fontFamily:"monospace"}}>
+                  <thead><tr style={{background:"#e8e7e0"}}>{["∅","Jenis","Tot Pjg (m)","kg/m","Tot Berat (kg)","Btg 12m*"].map(h=><th key={h} style={thH}>{h}</th>)}</tr></thead>
+                  <tbody>
+                    {bGroups.map((g,i)=>(
+                      <tr key={i} style={{borderBottom:"1px solid rgba(26,26,26,0.05)",background:i%2?"#fafaf7":"#fff"}}>
+                        <td style={{padding:"5px 9px",fontWeight:600}}>D{g.dia}</td>
+                        <td style={{padding:"5px 9px",color:"#7a7a6a"}}>{g.jenis}</td>
+                        <td style={{padding:"5px 9px",textAlign:"right"}}>{g.totLen.toFixed(2)}</td>
+                        <td style={{padding:"5px 9px",textAlign:"right",color:"#7a7a6a"}}>{(BAR_WT[g.dia]||0).toFixed(3)}</td>
+                        <td style={{padding:"5px 9px",textAlign:"right",fontWeight:600,color:"#2d7a4a"}}>{g.totWt.toFixed(2)}</td>
+                        <td style={{padding:"5px 9px",textAlign:"right"}}>{Math.ceil(g.totLen/12/0.95)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot><tr style={{background:"#f0efe9"}}>
+                    <td colSpan={4} style={{padding:"6px 9px",fontWeight:700,fontSize:9,textTransform:"uppercase"}}>Total Besi</td>
+                    <td style={{padding:"6px 9px",fontWeight:700,textAlign:"right",color:"#2d7a4a",fontSize:13}}>{besiTot.toFixed(2)} kg</td>
+                    <td style={{padding:"6px 9px",textAlign:"right",fontWeight:700,color:"#4a4a6a"}}>{bGroups.reduce((s,g)=>s+Math.ceil(g.totLen/12/0.95),0)} btg</td>
+                  </tr></tfoot>
+                </table>
+              </div>
+              <div style={{fontSize:10,color:"#9a9a8a",marginBottom:18,fontFamily:"monospace"}}>* Btg 12m = CEILING(total panjang ÷ 12m ÷ 0.95) — dihitung per diameter, sudah termasuk 5% cutting waste</div>
+
+              <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#7a7a6a",marginBottom:8}}>Material Pendukung</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))",gap:7,marginBottom:20}}>
+                <SCard label="Bekisting"     val={form.toFixed(1)}    unit="m²"/>
+                <SCard label="Plywood 12mm"  val={ply}               unit="lbr"/>
+                <SCard label="Minyak Bks"    val={minyak.toFixed(1)} unit="L"/>
+                <SCard label="Paku"          val={paku.toFixed(1)}   unit="kg"/>
+                <SCard label="Kawat Bendrat" val={kawat.toFixed(2)}  unit="kg" color="#8a7a5a"/>
+                {wmSh>0&&<SCard label="Wiremesh" val={wmSh} unit="lbr" color="#2d7a9a"/>}
+              </div>
+
+              <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#7a7a6a",marginBottom:8}}>Rencana Anggaran Biaya</div>
+              <div style={{overflowX:"auto"}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                  <thead><tr style={{background:"#e8e7e0"}}>{["Uraian","Volume","Sat","Harga Satuan","Jumlah (Rp)"].map(h=><th key={h} style={thH}>{h}</th>)}</tr></thead>
+                  <tbody>
+                    {rab.map((r,i)=>(
+                      <tr key={i} style={{borderBottom:"1px solid rgba(26,26,26,0.05)",background:i%2?"#fafaf7":"#fff"}}>
+                        <td style={{padding:"6px 9px"}}>{r.u}</td>
+                        <td style={{padding:"6px 9px",textAlign:"right",fontFamily:"monospace"}}>{r.v.toFixed(2)}</td>
+                        <td style={{padding:"6px 9px",color:"#7a7a6a"}}>{r.s}</td>
+                        <td style={{padding:"6px 9px",fontFamily:"monospace"}}>{fmtRp(r.h)}</td>
+                        <td style={{padding:"6px 9px",textAlign:"right",fontWeight:600,fontFamily:"monospace"}}>{fmtRp(r.v*r.h)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot><tr style={{background:"#1a1a1a"}}>
+                    <td colSpan={4} style={{padding:"9px 9px",fontWeight:800,fontSize:13,color:"#f0efe9",textTransform:"uppercase",letterSpacing:"0.5px"}}>TOTAL RAB</td>
+                    <td style={{padding:"9px 9px",fontFamily:"monospace",fontWeight:600,fontSize:14,color:"#f0efe9",textAlign:"right"}}>{fmtRp(rabTot)}</td>
+                  </tr></tfoot>
+                </table>
+              </div>
+            </div>
+
+            <div style={{background:"rgba(26,26,26,0.03)",borderRadius:10,padding:"10px 14px",border:"1px solid rgba(26,26,26,0.07)"}}>
+              <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"#7a7a6a",marginBottom:4}}>Asumsi Perhitungan</div>
+              <p style={{fontSize:11,color:"#7a7a6a",lineHeight:1.7}}>Selimut beton 40mm · Lap splice 40D × 2 ujung · Sengkang min cover 40mm + 100mm hook · Plywood 1.2×2.4m (2.88 m²) · Minyak 0.15 L/m² · Paku 0.20 kg/m² · Kawat bendrat 1.5% berat besi · Cutting waste 5% · Btg 12m = CEILING(tot_panjang / 12 / 0.95)</p>
+            </div>
+          </>
+        )}
+
+        {tab==="visualisasi"&&(
+          <div>
+            <div style={{background:"#fff",borderRadius:18,boxShadow:"0 3px 18px rgba(0,0,0,0.07)",padding:20,marginBottom:18,border:"1px solid rgba(26,26,26,0.06)"}}>
+              <div style={{fontWeight:800,fontSize:17,marginBottom:3}}>Visualisasi Axonometrik Pembesian</div>
+              <div style={{fontSize:11,color:"#7a7a6a",marginBottom:16}}>Render otomatis berdasarkan input elemen pertama per seksi · beton semi-transparan · besi solid</div>
+              <VisualisasiCanvas sloofs={sloofs} baloks={baloks} koloms={koloms} plats={plats}/>
+            </div>
+            <div style={{background:"#fff",borderRadius:18,boxShadow:"0 3px 18px rgba(0,0,0,0.07)",padding:20,border:"1px solid rgba(26,26,26,0.06)"}}>
+              <div style={{fontWeight:700,fontSize:13,marginBottom:14}}>Keterangan Elemen</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(210px,1fr))",gap:10}}>
+                {[
+                  {l:"A",n:"Sloof",c:"#4a4a6a",it:sloofs[0],desc:s=>`${s.panjang}m × ${s.lebar}×${s.tinggi}m · ${s.tulanganGroups?.length||1} grup tulangan · sengk D${s.sengkang.dia}@${(+s.sengkang.jarak*100).toFixed(0)}cm`},
+                  {l:"B",n:"Balok",c:"#2d7a4a",it:baloks[0],desc:s=>`${s.panjang}m × ${s.lebar}×${s.tinggi}m · ${s.tulanganGroups?.length||1} grup tulangan · sengk D${s.sengkang.dia}@${(+s.sengkang.jarak*100).toFixed(0)}cm`},
+                  {l:"C",n:"Kolom",c:"#8a7a5a",it:koloms[0],desc:s=>`${s.lebar}×${s.dalam}m · h ${s.tinggi}m · ${s.tulanganGroups?.length||1} grup tulangan · sengk D${s.sengkang.dia}@${(+s.sengkang.jarak*100).toFixed(0)}cm`},
+                  {l:"D",n:"Plat", c:"#2d7a9a",it:plats[0], desc:s=>s.mode==="wiremesh"?`${s.panjang}×${s.lebar}m · t=${s.tebal}m · WM ${s.wm.tipe} ${s.wm.lapis}lapis`:`${s.panjang}×${s.lebar}m · t=${s.tebal}m · D${s.atas.dia}@${(+s.atas.jarakX*100).toFixed(0)}cm`},
+                ].map(e=>(
+                  <div key={e.l} style={{background:"#f8f7f3",borderRadius:11,padding:12,border:`1px solid ${e.c}20`}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}><Badge letter={e.l} sz={26}/><span style={{fontWeight:700,fontSize:12,color:e.c}}>{e.n}</span></div>
+                    <p style={{fontSize:11,color:"#5a5a5a",lineHeight:1.6,fontFamily:"monospace"}}>{e.it?e.desc(e.it):"—"}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

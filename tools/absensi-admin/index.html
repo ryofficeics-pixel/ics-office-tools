@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Absensi ICS – Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07080f;--surface:#0e1117;--surface2:#141820;--surface3:#1b2130;--teal:#00e5c8;--teal2:#00b8a9;--amber:#ffb800;--rose:#ff4d6d;--violet:#7c6bff;--success:#00d68f;--text:#d4dde8;--muted:#3d5068;--border:rgba(0,229,200,0.1)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 40% 30% at 0 0,rgba(0,229,200,.04),transparent 70%),radial-gradient(ellipse 30% 40% at 100% 100%,rgba(124,107,255,.05),transparent 70%);pointer-events:none;z-index:0}
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px}
+.spinner{width:44px;height:44px;border:3px solid var(--surface2);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* AUTH */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1;display:none}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:40px 36px;width:100%;max-width:420px;box-shadow:0 0 60px rgba(0,229,200,.08)}
+.auth-icon{width:62px;height:62px;background:linear-gradient(135deg,var(--rose),#ff6b35);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:22px;box-shadow:0 6px 30px rgba(255,77,109,.3)}
+.auth-brand-logo{width:82px;height:82px;object-fit:contain;padding:12px;border-radius:20px;background:#111;margin:0 auto 16px;display:block;border:1px solid var(--border)}
+.auth-box h1{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:6px}
+.auth-box h1 span{color:var(--teal)}
+.auth-box p{color:var(--muted);font-size:13px;margin-bottom:28px}
+.fg{margin-bottom:16px}
+.fl{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:7px}
+.fi{width:100%;padding:13px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color .2s}
+.fi:focus{border-color:var(--teal)}
+.fi::placeholder{color:var(--muted)}
+.btn-login-a{width:100%;padding:14px;background:linear-gradient(135deg,var(--rose),#ff6b35);border:none;border-radius:12px;color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 24px rgba(255,77,109,.3);margin-top:4px}
+.btn-login-a:active{transform:scale(.98)}
+.back-link{text-align:center;margin-top:14px;color:var(--muted);font-size:13px}
+.back-link a{color:var(--teal);text-decoration:none;font-weight:600}
+.err-a{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);color:var(--rose);font-size:12px;padding:10px 14px;border-radius:10px;margin-top:12px;display:none}
+
+/* DASHBOARD */
+.dash{display:none;position:relative;z-index:1}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200}
+.sb-brand{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+.sb-logo-img{width:42px;height:42px;object-fit:contain;padding:7px;border-radius:12px;background:#111;margin-bottom:10px;border:1px solid var(--border)}
+.sb-logo span{color:var(--teal)}
+.sb-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.sb-nav{padding:16px 12px;flex:1}
+.ni{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;margin-bottom:4px;border:1px solid transparent}
+.ni:hover{background:var(--surface2);color:var(--text)}
+.ni.active{background:rgba(0,229,200,.08);color:var(--teal);border-color:rgba(0,229,200,.15)}
+.ni-ic{font-size:16px;width:20px;text-align:center}
+.sb-footer{padding:16px;border-top:1px solid var(--border)}
+.adm-chip{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:12px;padding:10px 12px}
+.adm-av{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--rose),#ff6b35);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.adm-info{flex:1}
+.adm-name{font-size:13px;font-weight:600}
+.adm-role{font-size:10px;color:var(--muted)}
+.btn-sb-out{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;transition:color .2s}
+.btn-sb-out:hover{color:var(--rose)}
+.main{margin-left:240px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(14,17,23,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between}
+.topbar h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:700}
+.tbr{display:flex;align-items:center;gap:12px}
+.lclock{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--teal);background:rgba(0,229,200,.08);border:1px solid rgba(0,229,200,.2);padding:7px 14px;border-radius:20px}
+.page{padding:28px;display:none;flex-direction:column;gap:20px}
+.page.active{display:flex}
+
+/* STATS */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:.06}
+.sc.st::before{background:var(--teal)}.sc.sa::before{background:var(--amber)}.sc.sr::before{background:var(--rose)}.sc.sv::before{background:var(--violet)}
+.sc-icon{font-size:22px;margin-bottom:10px}
+.sc-val{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;line-height:1}
+.sc-lbl{font-size:12px;color:var(--muted);margin-top:6px;font-weight:600}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px}
+.card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-title small{font-size:11px;font-weight:600;color:var(--muted);font-family:'DM Sans',sans-serif}
+
+/* TABLE */
+.tw{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--surface2)}
+th{padding:11px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);text-align:left;white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:12px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(0,229,200,.02)}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.badge.in{background:rgba(0,229,200,.1);color:var(--teal);border:1px solid rgba(0,229,200,.2)}
+.badge.out{background:rgba(124,107,255,.1);color:var(--violet);border:1px solid rgba(124,107,255,.2)}.badge.siang{background:rgba(196,124,43,.12);color:#a05e10;border:1px solid rgba(196,124,43,.25)}
+.badge.ok{background:rgba(0,214,143,.1);color:var(--success);border:1px solid rgba(0,214,143,.2)}
+.badge.late{background:rgba(255,77,109,.1);color:var(--rose);border:1px solid rgba(255,77,109,.2)}
+.badge.warn{background:rgba(255,184,0,.1);color:var(--amber);border:1px solid rgba(255,184,0,.2)}
+.badge.aktif{background:rgba(0,229,200,.1);color:var(--teal);border:1px solid rgba(0,229,200,.2)}
+.badge.nonaktif{background:rgba(255,77,109,.1);color:var(--rose);border:1px solid rgba(255,77,109,.2)}
+.thumb{width:36px;height:36px;border-radius:9px;object-fit:cover;border:1px solid var(--border);cursor:pointer;transition:transform .2s}
+.thumb:hover{transform:scale(1.1)}
+.av-sm{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--violet));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#052720;flex-shrink:0}
+
+/* TOOLBAR */
+.tb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.srch{flex:1;min-width:180px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:9px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none}
+.srch:focus{border-color:var(--teal)}
+.srch::placeholder{color:var(--muted)}
+.fsel{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:9px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer}
+.btn-exp{padding:9px 16px;background:linear-gradient(135deg,var(--teal),var(--teal2));border:none;border-radius:11px;color:#052720;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-exp:active{transform:scale(.97)}
+.btn-add{padding:9px 16px;background:linear-gradient(135deg,var(--success),#00b87a);border:none;border-radius:11px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 4px 16px rgba(0,214,143,.2)}
+.btn-del{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.2);color:var(--rose);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-del:hover{background:rgba(255,77,109,.2)}
+.btn-edit{background:rgba(0,229,200,.08);border:1px solid rgba(0,229,200,.15);color:var(--teal);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-refresh{padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;color:var(--teal);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s}
+.btn-refresh:active{transform:scale(.97)}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(7,8,15,.92);z-index:800;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(8px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.modal-box h3{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px}
+.modal-box p{font-size:13px;color:var(--muted);margin-bottom:24px}
+.mfg{margin-bottom:14px}
+.mfl{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px}
+.mfi{width:100%;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.mfi:focus{border-color:var(--teal)}
+.mfi::placeholder{color:var(--muted)}
+.modal-acts{display:flex;gap:10px;margin-top:20px}
+.btn-cancel{flex:1;padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.btn-save{flex:2;padding:13px;background:linear-gradient(135deg,var(--teal),var(--teal2));border:none;border-radius:12px;color:#052720;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer}
+.btn-save:disabled{background:var(--surface2);color:var(--muted);cursor:not-allowed}
+.merr{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.2);color:var(--rose);font-size:12px;padding:9px 13px;border-radius:10px;margin-top:10px;display:none}
+.del-modal{background:var(--surface);border:1px solid rgba(255,77,109,.2);border-radius:24px;padding:32px;width:100%;max-width:400px;text-align:center}
+.del-icon{font-size:48px;margin-bottom:16px}
+.del-modal h3{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px}
+.del-modal p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+.del-acts{display:flex;gap:10px}
+.btn-del-cancel{flex:1;padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.btn-del-confirm{flex:1;padding:13px;background:linear-gradient(135deg,var(--rose),#ff6b35);border:none;border-radius:12px;color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer}
+.photo-ov{position:fixed;inset:0;background:rgba(7,8,15,.95);z-index:900;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s}
+.photo-ov.open{opacity:1;pointer-events:all}
+.photo-ov img{max-width:400px;width:100%;border-radius:20px}
+.photo-ov-x{position:absolute;top:20px;right:20px;width:40px;height:40px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* BAR CHART */
+.barchart{display:flex;align-items:flex-end;gap:6px;margin-top:8px}
+.bc-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bc-bar-wrap{width:100%;height:70px;display:flex;align-items:flex-end}
+.bc-bar{width:100%;border-radius:5px 5px 0 0;min-height:3px;transition:height .5s cubic-bezier(.34,1.56,.64,1)}
+.bc-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+.bc-val{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700}
+
+/* ALERT */
+.alert-late,.alert-early,.alert-overtime,.alert-absent{border-radius:14px;padding:12px 18px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.alert-late{background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2)}
+.alert-early{background:rgba(0,229,200,.05);border:1px solid rgba(0,229,200,.2)}
+.alert-overtime{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2)}
+.alert-absent{background:rgba(120,120,140,.06);border:1px solid rgba(120,120,140,.2)}
+.al-icon{font-size:20px}
+.al-info{flex:1}
+.al-info h4{font-size:13px;font-weight:700;color:var(--amber)}
+.alert-early .al-info h4{color:var(--teal)}
+.alert-overtime .al-info h4{color:var(--rose)}
+.alert-absent .al-info h4{color:var(--muted)}
+.al-info p{font-size:11px;color:var(--muted);margin-top:2px}
+.al-count{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--amber)}
+
+/* ERROR BANNER */
+.err-banner{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.2);border-radius:12px;padding:12px 16px;font-size:13px;color:var(--rose);display:none}
+
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}.stat-row{grid-template-columns:1fr 1fr}.topbar{padding:14px 16px}.page{padding:16px}
+}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:11px 20px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{border-color:rgba(0,214,143,.3);color:var(--success)}
+.toast.err{border-color:rgba(255,77,109,.3);color:var(--rose)}
+.toast.info{border-color:rgba(0,229,200,.3);color:var(--teal)}
+@keyframes pulse2{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+</style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div><div style="color:var(--muted);font-size:14px">Memuat dashboard...</div></div>
+
+<!-- AUTH -->
+<div class="auth-wrap" id="auth-wrap">
+  <div class="auth-box">
+    <img class="auth-brand-logo" src="../../assets/logo.png" alt="ICS">
+    <div class="auth-icon">🔧</div>
+    <h1>Admin <span>Panel ICS</span></h1>
+    <p>Masuk sebagai administrator AbsenPro</p>
+    <div class="fg"><label class="fl">Email Admin</label><input class="fi" id="a-email" type="email" placeholder="admin@perusahaan.com"></div>
+    <div class="fg"><label class="fl">Password</label>
+      <div style="position:relative">
+        <input class="fi" id="a-pw" type="password" placeholder="••••••••" style="padding-right:46px">
+        <button type="button" onclick="togglePw('a-pw','eye-a')" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;line-height:1" id="eye-a">👁️</button>
+      </div>
+    </div>
+    <button class="btn-login-a" onclick="adminLogin()">Masuk sebagai Admin →</button>
+    <div class="err-a" id="err-a"></div>
+    <div class="back-link"><a href="../absensi-karyawan/index.html">← Portal Karyawan</a></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dash" id="dash">
+  <div class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <img class="sb-logo-img" src="../../assets/logo.png" alt="ICS">
+      <div class="sb-logo">Admin <span>ICS</span></div>
+      <div class="sb-sub">Dashboard Absensi</div>
+    </div>
+    <div class="sb-nav">
+      <div class="ni active" id="nav-overview" onclick="showPage('overview',this)"><span class="ni-ic">📊</span>Overview</div>
+      <div class="ni" id="nav-realtime" onclick="showPage('realtime',this)"><span class="ni-ic">⚡</span>Update</div>
+      <div class="ni" id="nav-laporan" onclick="showPage('laporan',this)"><span class="ni-ic">📋</span>Laporan</div>
+      <div class="ni" id="nav-karyawan" onclick="showPage('karyawan',this)"><span class="ni-ic">👥</span>Kelola Karyawan</div>
+    </div>
+    <div class="sb-footer">
+      <div class="adm-chip">
+        <div class="adm-av">AD</div>
+        <div class="adm-info"><div class="adm-name" id="adm-name">Admin</div><div class="adm-role">Super Admin</div></div>
+        <button class="btn-sb-out" onclick="adminLogout()">⏻</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button id="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" style="display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px">☰</button>
+        <h2 id="page-title">Overview</h2>
+      </div>
+      <div class="tbr">
+        <div style="font-size:13px;color:var(--muted)" id="date-lbl">–</div>
+        <div style="display:flex;align-items:center;gap:6px;background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--success)">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse2 1.5s infinite"></span>
+          LIVE SYNC
+        </div>
+        <div class="lclock" id="adm-clock">--:--:--</div>
+      </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div class="err-banner" id="ov-err"></div>
+      <div class="stat-row">
+        <div class="sc st"><div class="sc-icon">✅</div><div class="sc-val" id="s-hadir">–</div><div class="sc-lbl">Hadir Hari Ini</div></div>
+        <div class="sc sr"><div class="sc-icon">❌</div><div class="sc-val" id="s-absen">–</div><div class="sc-lbl">Tidak Hadir</div></div>
+        <div class="sc sa"><div class="sc-icon">⏰</div><div class="sc-val" id="s-telat">–</div><div class="sc-lbl">Terlambat</div></div>
+        <div class="sc sv"><div class="sc-icon">🏃</div><div class="sc-val" id="s-pulang">–</div><div class="sc-lbl">Sudah Pulang</div></div>
+      </div>
+      <div id="late-alert-wrap"></div>
+      <div class="card">
+        <div class="card-title">Kehadiran 7 Hari Terakhir <button class="btn-refresh" onclick="refreshAll()">🔄 Refresh</button></div>
+        <div class="barchart" id="barchart"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Aktivitas Terbaru <small id="ov-count">–</small></div>
+        <div class="tw"><table>
+          <thead><tr><th>Foto</th><th>Nama</th><th>Tipe</th><th>Jam</th><th>Hari</th><th>Alamat</th><th>Status</th></tr></thead>
+          <tbody id="ov-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- REALTIME -->
+    <div class="page" id="page-realtime">
+      <div class="card" style="background:rgba(0,229,200,.04);border-color:rgba(0,229,200,.2)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">⚡</span>
+          <div><div style="font-weight:700;color:var(--teal)">Log Absensi Hari Ini</div><div style="font-size:12px;color:var(--muted)" id="rt-last-update">Belum diperbarui</div></div>
+          <button onclick="manualRefreshRT()" style="margin-left:auto;background:rgba(0,229,200,.15);border:1px solid rgba(0,229,200,.3);color:var(--teal);padding:8px 18px;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer" id="btn-rt-refresh">🔄 Refresh</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Log Absensi Live <small id="rt-total">–</small></div>
+        <div class="tw"><table>
+          <thead><tr><th>Foto</th><th>NIP</th><th>Nama</th><th>Divisi</th><th>Tipe</th><th>Jam</th><th>Hari</th><th>Alamat</th><th>Status</th><th>Hash</th></tr></thead>
+          <tbody id="rt-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- LAPORAN -->
+    <div class="page" id="page-laporan">
+      <div class="card">
+        <div class="card-title">Filter & Export Laporan
+          <small id="lap-query-info" style="color:var(--teal);font-size:11px"></small>
+        </div>
+        <div class="tb">
+          <input class="srch" id="lap-srch" type="text" placeholder="🔍 Cari nama / NIP..." oninput="filterLap()">
+          <select class="fsel" id="lap-tipe" onchange="filterLap()"><option value="">Semua Tipe</option><option value="masuk">Absen Masuk</option><option value="siang">Absen Siang</option><option value="pulang">Absen Pulang</option></select>
+          <input class="fsel" type="date" id="lap-tgl-from" onchange="filterLap()" title="Dari tanggal" style="width:140px">
+          <span style="color:var(--muted);font-size:12px">s/d</span>
+          <input class="fsel" type="date" id="lap-tgl-to" onchange="filterLap()" title="Sampai tanggal" style="width:140px">
+          <button class="btn-refresh" onclick="filterLap()" title="Muat ulang data sesuai filter tanggal" style="color:var(--teal)">🔍 Muat Rekap</button>
+          <button class="btn-exp" onclick="exportXLS()">📥 Download XLS</button>
+          <button class="btn-exp" style="background:linear-gradient(135deg,var(--violet),#a855f7);color:#fff" onclick="window.print()">🖨️ Print</button>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Foto</th><th>NIP</th><th>Nama</th><th>Divisi</th><th>Tipe</th><th>Jam</th><th>Hari</th><th>Tanggal</th><th>Alamat</th><th>Akurasi</th><th>Hash</th><th>Status</th></tr></thead>
+          <tbody id="lap-tbody"></tbody>
+        </table></div>
+        <div style="padding:10px 0;font-size:12px;color:var(--muted)" id="lap-count">–</div>
+      </div>
+    </div>
+
+    <!-- KARYAWAN -->
+    <div class="page" id="page-karyawan">
+      <div class="card">
+        <div class="card-title">Data Karyawan <button class="btn-add" onclick="openAddModal()">+ Tambah Karyawan</button></div>
+        <div class="tb"><input class="srch" id="kar-srch" type="text" placeholder="🔍 Cari nama / NIP..." oninput="filterKar()">
+          <button class="btn-refresh" onclick="refreshAll()">🔄 Refresh</button>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Avatar</th><th>NIP</th><th>Nama</th><th>Divisi</th><th>Email</th><th>Shift</th><th>Status Hari Ini</th><th>Aksi</th></tr></thead>
+          <tbody id="kar-tbody"></tbody>
+        </table></div>
+        <div style="padding:10px 0;font-size:12px;color:var(--muted)" id="kar-count">–</div>
+      </div>
+
+      <!-- QC ACCESS MANAGEMENT PANEL — moved inside .dash / #page-karyawan so it is
+           (a) auth-gated by the parent .dash visibility, and
+           (b) scoped to the correct page section.
+           display:none by default; shown only when QC_CONFIG is present. -->
+      <div id="qc-access-panel" style="display:none;margin-top:8px;padding:20px;background:#1e2533;border-radius:12px;border:1px solid #374151;">
+        <h3 style="color:#f59e0b;margin:0 0 12px;font-size:15px;font-weight:700;">🔧 Akses QC — Kelola Hak Akses</h3>
+        <p style="color:#9ca3af;font-size:13px;margin:0 0 14px;">Aktifkan atau nonaktifkan akses QC per karyawan.</p>
+        <div id="qc-employee-list" style="display:flex;flex-direction:column;gap:8px;">
+          <div style="color:#6b7280;font-size:13px;">Memuat data karyawan...</div>
+        </div>
+        <div id="qc-access-msg" style="margin-top:10px;font-size:13px;color:#10b981;min-height:20px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT KARYAWAN -->
+<div class="overlay" id="add-modal">
+  <div class="modal-box">
+    <h3 id="add-modal-title">➕ Tambah Karyawan</h3>
+    <p id="add-modal-sub">Buat akun login untuk karyawan baru</p>
+    <div class="mfg"><label class="mfl">Nama Lengkap</label><input class="mfi" id="f-nama" type="text" placeholder="Ahmad Kurniawan"></div>
+    <div class="mfg"><label class="mfl">NIP / ID Karyawan</label><input class="mfi" id="f-nip" type="text" placeholder="EMP-2024-0042"></div>
+    <div class="mfg"><label class="mfl">Divisi / Departemen</label><input class="mfi" id="f-divisi" type="text" placeholder="Divisi Teknologi Informasi"></div>
+    <div class="mfg"><label class="mfl">Shift Kerja</label>
+      <select class="mfi" id="f-shift">
+        <option value="Reguler (08:00-16:00)">Reguler (08:00–16:00)</option>
+        <option value="Shift Pagi (07:00-15:00)">Shift Pagi (07:00–15:00)</option>
+        <option value="Shift Siang (12:00-20:00)">Shift Siang (12:00–20:00)</option>
+        <option value="Shift Malam (20:00-04:00)">Shift Malam (20:00–04:00)</option>
+        <option value="Fleksibel">Fleksibel</option>
+      </select>
+    </div>
+    <div class="mfg"><label class="mfl">Email Login</label><input class="mfi" id="f-email" type="email" placeholder="nama@perusahaan.com"></div>
+    <div class="mfg" id="pw-group"><label class="mfl">Password</label>
+      <div style="position:relative">
+        <input class="mfi" id="f-pw" type="password" placeholder="Min. 6 karakter" style="padding-right:46px">
+        <button type="button" onclick="togglePw('f-pw','eye-f')" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;line-height:1" id="eye-f">👁️</button>
+      </div>
+    </div>
+    <div class="merr" id="add-err"></div>
+    <div class="modal-acts">
+      <button class="btn-cancel" onclick="closeAddModal()">Batal</button>
+      <button class="btn-save" id="btn-save-kar" onclick="saveKaryawan()">Simpan Karyawan</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM -->
+<div class="overlay" id="del-modal">
+  <div class="del-modal">
+    <div class="del-icon">🗑️</div>
+    <h3>Hapus Karyawan?</h3>
+    <p id="del-msg">Data karyawan ini akan dihapus. Data absensi tetap tersimpan.</p>
+    <div class="fg" style="text-align:left;margin-bottom:20px">
+      <label class="fl" style="font-size:12px;margin-bottom:6px;display:block">Masukkan password admin untuk konfirmasi</label>
+      <div style="position:relative">
+        <input class="fi" id="del-pw" type="password" placeholder="••••••••" style="padding-right:46px;margin-bottom:4px" onkeydown="if(event.key==='Enter')confirmDelete()">
+        <button type="button" onclick="togglePw('del-pw','eye-del')" style="position:absolute;right:14px;top:46%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;line-height:1" id="eye-del">👁️</button>
+      </div>
+      <div id="del-pw-err" style="font-size:12px;color:var(--rose);min-height:16px"></div>
+    </div>
+    <div class="del-acts">
+      <button class="btn-del-cancel" onclick="closeDelModal()">Batal</button>
+      <button class="btn-del-confirm" id="btn-del-confirm" onclick="confirmDelete()">Hapus Karyawan</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO VIEWER -->
+<div class="photo-ov" id="photo-ov" onclick="closePhoto()">
+  <button class="photo-ov-x">✕</button>
+  <img id="photo-ov-img" src="" alt="">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+                            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection, query, where, orderBy, limit, onSnapshot }
+                            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyCMKJhE8hX22vU9CGCdOE539Tz0HsT6rtE",
+  authDomain:"absensi-ics.firebaseapp.com",
+  projectId:"absensi-ics",
+  storageBucket:"absensi-ics.firebasestorage.app",
+  messagingSenderId:"188267517491",
+  appId:"1:188267517491:web:722b95af1f4b71ec65b546"
+};
+
+// TWO Firebase apps: admin session + secondary for creating karyawan
+const fbApp  = initializeApp(firebaseConfig, 'admin-app');
+const auth   = getAuth(fbApp);
+const db     = getFirestore(fbApp);
+const fbApp2 = initializeApp(firebaseConfig, 'secondary-app');
+const auth2  = getAuth(fbApp2);
+
+let adminUser = null, allAbsensi = [], allKaryawan = [];
+let deleteTargetId = null;
+// Debounced render: batch multiple render calls in same tick into one
+let _renderPending = false;
+function scheduleRender() {
+  if (_renderPending) return;
+  _renderPending = true;
+  requestAnimationFrame(() => {
+    _renderPending = false;
+    renderOverview();
+    const activePage = document.querySelector('.page.active');
+    if (activePage) {
+      const id = activePage.id.replace('page-','');
+      if (id === 'laporan')  renderLaporan();
+      if (id === 'karyawan') renderKaryawan();
+      if (id === 'realtime') renderRT();
+    }
+  });
+}
+let editMode = false, editUid = null;
+let unsubKaryawan = null, unsubAbsensi = null; // realtime listener handles
+let rtInterval = null;
+
+// ─── CLOCK ────────────────────────────────────────────────────────────────
+setInterval(() => {
+  const n = new Date();
+  const cl = document.getElementById('adm-clock'); if (cl) cl.textContent = n.toLocaleTimeString('id-ID', { hour12: false });
+  const dl = document.getElementById('date-lbl');  if (dl) dl.textContent = n.toLocaleDateString('id-ID', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
+}, 1000);
+
+// ─── STATUS LOGIC ──────────────────────────────────────────────────────────
+function getStatus(r) {
+  const jam  = (r.jam || '00:00').replace(/[.\-]/g, ':');
+  const [h, m2] = jam.split(':').map(Number);
+  const mins = h * 60 + m2;
+  const day  = r.timestamp ? new Date(r.timestamp).getDay() : 1;
+  let st;
+
+  if (r.tipe === 'masuk') {
+    if (day === 0)        st = { key:'libur', label:'🚫 Libur',           cls:'warn' };
+    else if (mins < 480)  st = { key:'ok',    label:'✓ Tepat Waktu',      cls:'ok'   };
+    else if (mins <= 495) st = { key:'warn',  label:'⚠ Agak Terlambat',  cls:'warn' };
+    else                  st = { key:'late',  label:'❌ Terlambat',        cls:'late' };
+  } else if (r.tipe === 'siang') {
+    if (day === 0)        st = { key:'libur', label:'🚫 Libur',           cls:'warn' };
+    else if (mins >= 765 && mins <= 795) st = { key:'ok',   label:'✓ Tepat Waktu',          cls:'ok'   };
+    else                  st = { key:'warn',  label:'⚠ Terlambat Absen Siang', cls:'warn' };
+  } else if (r.tipe === 'pulang') {
+    if (day === 0)        st = { key:'libur', label:'🚫 Libur',           cls:'warn' };
+    else {
+      const earlyLim = day === 6 ?  900 :  960;
+      const lateLim  = day === 6 ?  960 : 1020;
+      if (mins < earlyLim) st = { key:'early',    label:'⚠ Pulang Awal',      cls:'warn' };
+      else if (mins > lateLim) st = { key:'overtime', label:'⏰ Pulang Terlambat', cls:'late' };
+      else                 st = { key:'ok',       label:'✓ Tepat Waktu',       cls:'ok'   };
+    }
+  } else {
+    st = { key:'–', label:'–', cls:'' };
+  }
+
+  if (r.beta_rc) st = { ...st, label: st.label + ' · beta test' };
+  return st;
+}
+
+function statusBadge(r) {
+  const st = getStatus(r);
+  return `<span class="badge ${st.cls}">${st.label}</span>`;
+}
+
+// ─── AUTH ──────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  document.getElementById('loading').style.display = 'none';
+  if (user) {
+    try {
+      const snap = await getDoc(doc(db, 'admins', user.uid));
+      if (snap.exists()) {
+        adminUser = user;
+        document.getElementById('adm-name').textContent = snap.data().nama || 'Admin';
+        document.getElementById('auth-wrap').style.display = 'none';
+        document.getElementById('dash').style.display      = 'block';
+        await initDash();
+      } else {
+        await signOut(auth);
+        showAuthWrap();
+        toast('❌ Akun ini bukan admin', 'err');
+      }
+    } catch(e) {
+      await signOut(auth);
+      showAuthWrap();
+      toast('❌ Error: ' + e.message, 'err');
+    }
+  } else {
+    showAuthWrap();
+  }
+});
+
+function showAuthWrap() {
+  document.getElementById('auth-wrap').style.display = 'flex';
+  document.getElementById('dash').style.display      = 'none';
+}
+
+window.adminLogin = async function() {
+  const email = document.getElementById('a-email').value.trim();
+  const pw    = document.getElementById('a-pw').value;
+  const err   = document.getElementById('err-a');
+  err.style.display = 'none';
+  try { await signInWithEmailAndPassword(auth, email, pw); }
+  catch(e) {
+    err.style.display = 'block';
+    err.textContent = e.code === 'auth/invalid-credential' ? '❌ Email atau password salah' : '❌ ' + e.message;
+  }
+};
+
+window.adminLogout = async function() {
+  stopRealtimeListeners();
+  await signOut(auth);
+  adminUser = null;
+  if (rtInterval) clearInterval(rtInterval);
+};
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+async function initDash() {
+  startRealtimeListeners();
+  startRT();
+  if (window.innerWidth <= 900) document.getElementById('menu-btn').style.display = 'block';
+}
+
+// ─── REALTIME LISTENERS (onSnapshot) ──────────────────────────────────────
+function startRealtimeListeners() {
+  stopRealtimeListeners(); // clear any existing
+
+  // ── KARYAWAN listener ──
+  const karQuery = collection(db, 'karyawan');
+  unsubKaryawan = onSnapshot(karQuery, snap => {
+    const docs = snap.docs.map(d => ({ ...d.data(), uid: d.id }));
+    // Filter: prefer role==='karyawan', fallback to all if none have role field
+    const filtered = docs.filter(d => d.role === 'karyawan');
+    allKaryawan = filtered.length > 0 ? filtered : docs;
+    console.log('[RT] karyawan update:', allKaryawan.length);
+    scheduleRender();
+  }, e => {
+    console.error('[RT] karyawan error:', e.code, e.message);
+    if (e.code === 'permission-denied') {
+      showRulesError();
+    } else {
+      toast('⚠️ Gagal sync karyawan: ' + e.message, 'err');
+      showErrBanner('Sync karyawan gagal: ' + e.message);
+    }
+  });
+
+  // ── ABSENSI listener (realtime: 2 hari terakhir untuk dashboard) ──
+  // Cukup untuk admin monitor live, tanpa stream seluruh historical data
+  function yesterdayStr() {
+    const d = new Date(); d.setDate(d.getDate() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  const liveQ = query(collection(db, 'absensi'), where('tanggal', '>=', yesterdayStr()));
+  unsubAbsensi = onSnapshot(liveQ, snap => {
+    const liveDocs = snap.docs.map(d => ({ ...d.data(), _docId: d.id }))
+      .filter(r => !r.sim_testing); // sembunyikan record simulasi dari admin
+    const yesterday = yesterdayStr();
+    // Merge live (2 days) into allAbsensi, replace those 2 days with fresh data
+    // CATATAN: allAbsensi dipakai HANYA untuk dashboard/overview — TIDAK untuk rekap laporan
+    const older = allAbsensi.filter(r => r.tanggal < yesterday);
+    allAbsensi = [...older, ...liveDocs]
+      .sort((a, b) => (b.tanggal || '') > (a.tanggal || '') ? 1 : (b.tanggal || '') < (a.tanggal || '') ? -1 :
+                      (b.timestamp || '') > (a.timestamp || '') ? 1 : -1)
+      .slice(0, 500); // limit HANYA untuk dashboard - BUKAN untuk rekap
+    console.log('[RT] absensi live (2d):', liveDocs.length, 'total cache:', allAbsensi.length);
+    scheduleRender();
+  }, e => {
+    console.error('[RT] absensi error:', e.message);
+    showErrBanner('Gagal load data absensi: ' + e.message);
+  });
+
+  // ── Load data lebih lama sekali saja (tidak di-stream), tanpa limit ──
+  getDocs(query(collection(db, 'absensi'), where('tanggal', '<', yesterdayStr())))
+    .then(snap => {
+      const historical = snap.docs.map(d => ({ ...d.data(), _docId: d.id }))
+        .filter(r => !r.sim_testing);
+      const live = allAbsensi.filter(r => r.tanggal >= yesterdayStr());
+      // Dashboard cache: limit 500 untuk performa rendering
+      allAbsensi = [...historical, ...live]
+        .sort((a, b) => (b.tanggal || '') > (a.tanggal || '') ? 1 : (b.tanggal || '') < (a.tanggal || '') ? -1 :
+                        (b.timestamp || '') > (a.timestamp || '') ? 1 : -1)
+        .slice(0, 500); // limit HANYA untuk dashboard cache
+      scheduleRender();
+    })
+    .catch(e => console.warn('[historical absensi]', e.message));
+}
+
+function stopRealtimeListeners() {
+  if (unsubKaryawan) { unsubKaryawan(); unsubKaryawan = null; }
+  if (unsubAbsensi)  { unsubAbsensi();  unsubAbsensi  = null; }
+}
+
+function showRulesError() {
+  const b = document.getElementById('ov-err');
+  if (b) {
+    b.innerHTML = `
+      <strong>⚠️ Firestore Security Rules belum dikonfigurasi</strong><br>
+      Admin tidak bisa membaca koleksi <code>karyawan</code>.<br><br>
+      <strong>Buka <a href="https://console.firebase.google.com/project/absensi-ics/firestore/rules" target="_blank" style="color:#fff;text-decoration:underline">Firebase Console → Firestore → Rules</a> dan paste rules berikut:</strong>
+      <pre style="background:#0002;padding:8px;margin:8px 0;border-radius:6px;font-size:11px;white-space:pre-wrap;word-break:break-all">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /admins/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    match /karyawan/{uid} {
+      allow read: if request.auth != null && (
+        request.auth.uid == uid ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+      allow write: if request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    match /absensi/{docId} {
+      allow read: if request.auth != null && (
+        resource == null ||
+        request.auth.uid == resource.data.uid ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+      allow create: if request.auth != null;
+      allow update: if false;
+      allow delete: if request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    match /_timesync/{doc} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}</pre>
+      <button onclick="document.getElementById('ov-err').style.display='none'; startRealtimeListeners();"
+        style="margin-top:6px;padding:6px 14px;background:#fff3;border:1px solid #fff6;border-radius:6px;color:#fff;cursor:pointer;font-size:13px">
+        🔄 Coba lagi setelah update rules
+      </button>`;
+    b.style.display = 'block';
+  }
+}
+
+function showErrBanner(msg) {
+  const b = document.getElementById('ov-err');
+  if (b) { b.textContent = '⚠️ ' + msg; b.style.display = 'block'; }
+}
+
+window.refreshAll = async function() {
+  // Data is kept live via onSnapshot — just re-render and restart listeners if needed
+  if (!unsubKaryawan || !unsubAbsensi) {
+    toast('🔄 Menyambung ulang listener...', 'info');
+    startRealtimeListeners();
+  } else {
+    toast('✅ Data sudah real-time (auto-sync aktif)', 'ok');
+    scheduleRender();
+  }
+};
+
+// ─── UTILS ────────────────────────────────────────────────────────────────
+function todayStr() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+// ─── PAGE NAV ─────────────────────────────────────────────────────────────
+window.showPage = function(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = { overview:'Overview', realtime:'Update Absensi', laporan:'Laporan & Export', karyawan:'Kelola Karyawan' };
+  document.getElementById('page-title').textContent = titles[id] || id;
+  document.getElementById('sidebar').classList.remove('open');
+  if (id === 'laporan') renderLaporan();
+  if (id === 'karyawan') { renderKaryawan(); if (window.initQCPanel) window.initQCPanel(); }
+  if (id === 'realtime') startRT();
+};
+
+// ─── OVERVIEW ─────────────────────────────────────────────────────────────
+function renderOverview() {
+  const today     = todayStr();
+  const todayRec  = allAbsensi.filter(r => r.tanggal === today);
+  const hadirIds  = [...new Set(todayRec.filter(r => r.tipe === 'masuk').map(r => r.uid))];
+  const pulangIds = [...new Set(todayRec.filter(r => r.tipe === 'pulang').map(r => r.uid))];
+  const telatIds  = [...new Set(todayRec.filter(r => ['warn','late'].includes(getStatus(r).key) && r.tipe === 'masuk').map(r => r.uid))];
+  const CUTOFF = '2026-03-09';
+  const activeKaryawan = allKaryawan.filter(k => (k.created_at || '').slice(0,10) >= CUTOFF);
+  const total     = activeKaryawan.length || 1;
+
+  set('s-hadir',  hadirIds.length + '/' + total);
+  set('s-absen',  total - hadirIds.length);
+  set('s-telat',  telatIds.length);
+  set('s-pulang', pulangIds.length);
+
+  // ── Alerts ─────────────────────────────────────────────────────────────
+  const lw = document.getElementById('late-alert-wrap');
+  let alertsHtml = '';
+
+  // 1. Terlambat
+  if (telatIds.length > 0) {
+    const names = [...new Set(todayRec.filter(r => ['warn','late'].includes(getStatus(r).key) && r.tipe === 'masuk').map(r => r.nama))].join(', ');
+    alertsHtml += `<div class="alert-late">
+      <span class="al-icon">⚠️</span>
+      <div class="al-info"><h4>Keterlambatan Masuk</h4><p>${names}</p></div>
+      <div class="al-count">${telatIds.length}</div>
+    </div>`;
+  }
+
+  // 2. Pulang Awal
+  const pulangAwalIds = [...new Set(todayRec.filter(r => getStatus(r).key === 'early').map(r => r.uid))];
+  if (pulangAwalIds.length > 0) {
+    const names = [...new Set(todayRec.filter(r => getStatus(r).key === 'early').map(r => r.nama))].join(', ');
+    alertsHtml += `<div class="alert-early">
+      <span class="al-icon">🏃</span>
+      <div class="al-info"><h4>Pulang Awal</h4><p>${names}</p></div>
+      <div class="al-count" style="color:var(--teal)">${pulangAwalIds.length}</div>
+    </div>`;
+  }
+
+  // 3. Pulang Terlambat
+  const pulangLateIds = [...new Set(todayRec.filter(r => getStatus(r).key === 'overtime').map(r => r.uid))];
+  if (pulangLateIds.length > 0) {
+    const names = [...new Set(todayRec.filter(r => getStatus(r).key === 'overtime').map(r => r.nama))].join(', ');
+    alertsHtml += `<div class="alert-overtime">
+      <span class="al-icon">⏰</span>
+      <div class="al-info"><h4>Pulang Terlambat</h4><p>${names}</p></div>
+      <div class="al-count" style="color:var(--rose)">${pulangLateIds.length}</div>
+    </div>`;
+  }
+
+  // 4. Belum Absen Masuk
+  const sudahMasukUids = new Set(hadirIds);
+  const belumAbsen = activeKaryawan.filter(k => !sudahMasukUids.has(k.uid));
+  if (belumAbsen.length > 0 && belumAbsen.length < total) {
+    const names = belumAbsen.map(k => k.nama).join(', ');
+    alertsHtml += `<div class="alert-absent">
+      <span class="al-icon">❓</span>
+      <div class="al-info"><h4>Belum Absen Masuk</h4><p>${names}</p></div>
+      <div class="al-count" style="color:var(--muted)">${belumAbsen.length}</div>
+    </div>`;
+  }
+
+  // 5. Siang alerts (tampil jika jam > 13:15)
+  const nowMins = new Date().getHours()*60 + new Date().getMinutes();
+  if (nowMins > 795) {
+    const siangIds = new Set(todayRec.filter(r => r.tipe === 'siang').map(r => r.uid));
+    const belumSiang = activeKaryawan.filter(k => sudahMasukUids.has(k.uid) && !siangIds.has(k.uid));
+    if (belumSiang.length > 0) {
+      const snames = belumSiang.map(k => k.nama).join(', ');
+      alertsHtml += `<div class="alert-absent" style="border-left:3px solid #c47c2b">
+        <span class="al-icon">☀️</span>
+        <div class="al-info"><h4>Belum Absen Siang</h4><p>${snames}</p></div>
+        <div class="al-count" style="color:#a05e10">${belumSiang.length}</div>
+      </div>`;
+    }
+    const siangTelat = [...new Set(todayRec.filter(r => r.tipe==='siang' && getStatus(r).key==='warn').map(r => r.uid))];
+    if (siangTelat.length > 0) {
+      const stnames = [...new Set(todayRec.filter(r => r.tipe==='siang' && getStatus(r).key==='warn').map(r => r.nama))].join(', ');
+      alertsHtml += `<div class="alert-late" style="border-left:3px solid #c47c2b;background:rgba(196,124,43,.06)">
+        <span class="al-icon">⚠️</span>
+        <div class="al-info"><h4>Terlambat Absen Siang</h4><p>${stnames}</p></div>
+        <div class="al-count" style="color:#a05e10">${siangTelat.length}</div>
+      </div>`;
+    }
+  }
+
+  lw.innerHTML = alertsHtml;
+
+  renderBarChart();
+
+  // Recent table
+  const recent = allAbsensi.slice(0, 15);
+  set('ov-count', recent.length + ' entri terbaru');
+  const tbody = document.getElementById('ov-tbody');
+  tbody.innerHTML = recent.length === 0
+    ? `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">Belum ada data. <button onclick="refreshAll()" style="color:var(--teal);background:none;border:none;cursor:pointer;font-weight:700">Klik Refresh →</button></td></tr>`
+    : recent.map(r => `<tr>
+        <td>${r.foto_url ? `<img class="thumb" src="${r.foto_url}" onclick="openPhoto('${r.foto_url}')">` : '<div class="av-sm">👤</div>'}</td>
+        <td><strong>${r.nama||'–'}</strong><br><span class="mono" style="color:var(--muted)">${r.nip||''}</span></td>
+        <td><span class="badge ${r.tipe==='masuk'?'in':r.tipe==='siang'?'siang':'out'}">${r.tipe==='masuk'?'↑ Masuk':r.tipe==='siang'?'☀ Siang':'↓ Pulang'}</span></td>
+        <td class="mono">${(r.jam||'–').replace(/[.\\-]/g, ':')}</td>
+        <td style="font-size:12px">${r.hari||'–'}</td>
+        <td style="font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.gps_address||'Alamat tidak tersedia'}</td>
+        <td>${statusBadge(r)}</td>
+      </tr>`).join('');
+}
+
+function renderBarChart() {
+  const chart = document.getElementById('barchart');
+  const days  = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const now   = new Date();
+  const cols  = [];
+  for (let i = 6; i >= 0; i--) {
+    const d   = new Date(now); d.setDate(now.getDate() - i);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const cnt = new Set(allAbsensi.filter(r => r.tanggal === key && r.tipe === 'masuk').map(r => r.uid)).size;
+    cols.push({ label: days[d.getDay()], val: cnt, today: i === 0 });
+  }
+  const max = Math.max(...cols.map(c => c.val), 1);
+  const BAR_H = 70;
+  chart.innerHTML = cols.map(c => `<div class="bc-col">
+    <div class="bc-val" style="color:${c.today?'var(--teal)':'var(--text)'}">${c.val > 0 ? c.val : ''}</div>
+    <div class="bc-bar-wrap">
+      <div class="bc-bar" style="height:${Math.max(Math.round(c.val/max*BAR_H),c.val>0?4:0)}px;background:${c.today?'linear-gradient(180deg,var(--teal),var(--teal2))':'var(--surface3)'}"></div>
+    </div>
+    <div class="bc-lbl" style="color:${c.today?'var(--teal)':'var(--muted)'}">${c.label}</div>
+  </div>`).join('');
+}
+
+// ─── REAL-TIME ─────────────────────────────────────────────────────────────
+function startRT() {
+  renderRT();
+  updateRTTimestamp();
+  if (rtInterval) clearInterval(rtInterval); // no auto-interval needed, data live via onSnapshot
+}
+
+window.manualRefreshRT = function() {
+  const btn = document.getElementById('btn-rt-refresh');
+  btn.textContent = '⏳ Memuat...'; btn.disabled = true;
+  setTimeout(() => {
+    renderRT();
+    updateRTTimestamp();
+    btn.textContent = '🔄 Refresh'; btn.disabled = false;
+    toast('✅ Data diperbarui', 'ok');
+  }, 300);
+};
+
+function updateRTTimestamp() {
+  const el = document.getElementById('rt-last-update');
+  if (el) el.textContent = 'Diperbarui: ' + new Date().toLocaleTimeString('id-ID', {hour12:false});
+}
+
+function renderRT() {
+  const tbody = document.getElementById('rt-tbody');
+  if (!tbody) return;
+  set('rt-total', allAbsensi.length + ' total entri');
+  tbody.innerHTML = allAbsensi.length === 0
+    ? `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">Belum ada data</td></tr>`
+    : allAbsensi.slice(0, 60).map(r => `<tr>
+        <td>${r.foto_url ? `<img class="thumb" src="${r.foto_url}" onclick="openPhoto('${r.foto_url}')">` : '<div class="av-sm" style="width:32px;height:32px">👤</div>'}</td>
+        <td class="mono">${r.nip||r.uid?.slice(0,8)||'–'}</td>
+        <td><strong>${r.nama||'–'}</strong></td>
+        <td style="font-size:12px;color:var(--muted)">${r.divisi||'–'}</td>
+        <td><span class="badge ${r.tipe==='masuk'?'in':r.tipe==='siang'?'siang':'out'}">${r.tipe==='masuk'?'↑ Masuk':r.tipe==='siang'?'☀ Siang':'↓ Pulang'}</span></td>
+        <td class="mono">${(r.jam||'–').replace(/[.\\-]/g, ':')}</td>
+        <td style="font-size:12px">${r.hari||'–'}</td>
+        <td style="font-size:11px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.gps_address||'Alamat tidak tersedia'}</td>
+        <td>${statusBadge(r)}</td>
+        <td class="mono" style="font-size:9px;color:var(--muted)">${(r.hash||'–').slice(0,14)}</td>
+      </tr>`).join('');
+}
+
+// ─── LAPORAN ───────────────────────────────────────────────────────────────
+// Cache terpisah untuk laporan — TIDAK dibatasi seperti allAbsensi dashboard
+let lapCache = [];       // hasil query rekap terakhir
+let lapLoading = false;
+
+function renderLaporan() {
+  filterLap();
+}
+
+// Ambil data rekap dari Firestore langsung (query by range tanggal)
+// Tidak bergantung pada allAbsensi yang dibatasi 500 record
+async function fetchLapData(from, to) {
+  let q;
+  if (from && to) {
+    // Range lengkap — query Firestore dengan where tanggal
+    q = query(collection(db, 'absensi'),
+      where('tanggal', '>=', from),
+      where('tanggal', '<=', to)
+    );
+  } else if (from) {
+    q = query(collection(db, 'absensi'), where('tanggal', '>=', from));
+  } else if (to) {
+    q = query(collection(db, 'absensi'), where('tanggal', '<=', to));
+  } else {
+    // Tidak ada filter tanggal — gunakan cache allAbsensi (dashboard) untuk mencegah load semua data
+    return null; // sinyal: gunakan allAbsensi
+  }
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ ...d.data(), _docId: d.id }))
+    .filter(r => !r.sim_testing);
+}
+
+window.filterLap = async function() {
+  const q    = document.getElementById('lap-srch').value.toLowerCase();
+  const tp   = document.getElementById('lap-tipe').value;
+  const from = document.getElementById('lap-tgl-from').value; // format: YYYY-MM-DD
+  const to   = document.getElementById('lap-tgl-to').value;
+  const tbody = document.getElementById('lap-tbody');
+  const countEl = document.getElementById('lap-count');
+
+  // Jika ada filter tanggal → fetch langsung dari Firestore (tidak kena limit 500)
+  if (from || to) {
+    if (lapLoading) return;
+    lapLoading = true;
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:24px">⏳ Memuat data rekap...</td></tr>`;
+    countEl.textContent = 'Memuat...';
+    try {
+      lapCache = await fetchLapData(from, to);
+    } catch(e) {
+      tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--rose);padding:24px">❌ Gagal memuat data: ${e.message}</td></tr>`;
+      countEl.textContent = 'Error';
+      lapLoading = false;
+      return;
+    }
+    lapLoading = false;
+  } else {
+    // Tanpa filter tanggal — pakai allAbsensi (dashboard cache, max 500)
+    lapCache = allAbsensi;
+  }
+
+  // Filter di frontend (nama, tipe) — sudah dapat data penuh dari Firestore
+  const filtered = lapCache.filter(r => {
+    const mq  = !q  || (r.nama||'').toLowerCase().includes(q) || (r.nip||'').toLowerCase().includes(q);
+    const mt  = !tp || r.tipe === tp;
+    // Inclusive range check (string YYYY-MM-DD dapat dibandingkan langsung)
+    const mf  = !from || (r.tanggal || '') >= from;
+    const mt2 = !to   || (r.tanggal || '') <= to;
+    return mq && mt && mf && mt2;
+  });
+
+  tbody.innerHTML = filtered.length === 0
+    ? `<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:24px">Tidak ada data</td></tr>`
+    : filtered.map(r => `<tr>
+        <td>${r.foto_url ? `<img class="thumb" src="${r.foto_url}" onclick="openPhoto('${r.foto_url}')">` : '–'}</td>
+        <td class="mono">${r.nip||'–'}</td>
+        <td>${r.nama||'–'}</td>
+        <td style="font-size:12px;color:var(--muted)">${r.divisi||'–'}</td>
+        <td><span class="badge ${r.tipe==='masuk'?'in':r.tipe==='siang'?'siang':'out'}">${r.tipe==='masuk'?'↑ Masuk':r.tipe==='siang'?'☀ Siang':'↓ Pulang'}</span></td>
+        <td class="mono">${(r.jam||'–').replace(/[.\-]/g, ':')}</td>
+        <td style="font-size:12px">${r.hari||'–'}</td>
+        <td class="mono">${r.tanggal||'–'}</td>
+        <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.gps_address||'Alamat tidak tersedia'}</td>
+        <td class="mono">±${r.gps_acc||'–'}m</td>
+        <td class="mono" style="font-size:9px;color:var(--muted)">${(r.hash||'–').slice(0,14)}</td>
+        <td>${statusBadge(r)}</td>
+      </tr>`).join('');
+  const sourceInfo = (from || to) ? `(query Firestore)` : `(cache dashboard)`;
+  set('lap-count', `${filtered.length} data ditampilkan · ${lapCache.length} total di rentang ${sourceInfo}`);
+  const qiEl = document.getElementById('lap-query-info');
+  if (qiEl) qiEl.textContent = (from || to) ? `📡 Data langsung dari Firestore` : `💾 Cache dashboard (max 500)`;
+};
+
+window.exportXLS = async function() {
+  const q    = document.getElementById('lap-srch').value.toLowerCase();
+  const tp   = document.getElementById('lap-tipe').value;
+  const from = document.getElementById('lap-tgl-from').value;
+  const to   = document.getElementById('lap-tgl-to').value;
+
+  // Pastikan lapCache sudah ter-load dengan data dari rentang tanggal yang dipilih
+  // Jika belum (misalnya user langsung klik export tanpa filter dulu), fetch terlebih dahulu
+  let sourceData = lapCache;
+  if ((from || to) && lapCache.length === 0) {
+    toast('⏳ Memuat data dari Firestore...', 'info');
+    try {
+      sourceData = await fetchLapData(from, to);
+      lapCache = sourceData;
+    } catch(e) {
+      toast('❌ Gagal memuat data: ' + e.message, 'err'); return;
+    }
+  } else if (!from && !to) {
+    // Tanpa filter tanggal — pakai allAbsensi
+    sourceData = allAbsensi;
+  }
+
+  const f = sourceData.filter(r => {
+    const mq = !q  || (r.nama||'').toLowerCase().includes(q) || (r.nip||'').toLowerCase().includes(q);
+    const mf = !from || (r.tanggal||'') >= from;
+    const mt = !to   || (r.tanggal||'') <= to;
+    return mq && (!tp || r.tipe === tp) && mf && mt && !r.sim_testing;
+  });
+  if (f.length === 0) { toast('⚠️ Tidak ada data untuk diexport', 'err'); return; }
+
+  const normJam  = j => (j||'').replace(/[.\-]/g, ':');
+  const fmtTgl   = t => { if (!t) return ''; const [y,m,d] = t.split('-'); return `${d}-${m}-${y}`; };
+  const BULAN_ID = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+  const getBulan = t => { if (!t) return ''; const m = parseInt((t||'').split('-')[1]||0); return BULAN_ID[m]||''; };
+  const getYear  = t => (t||'').split('-')[0] || '';
+
+  // ── SHEET 1: Detail Absensi — 1 baris per orang per hari ────────────────
+  // Group by uid+tanggal, merge masuk/siang/pulang into one row
+  const dayMap = {}; // key: uid_tanggal
+  f.forEach(r => {
+    const key = `${r.uid||r.nama}_${r.tanggal}`;
+    if (!dayMap[key]) dayMap[key] = { r, masuk: null, siang: null, pulang: null };
+    if (r.tipe === 'masuk')  dayMap[key].masuk  = r;
+    if (r.tipe === 'siang')  dayMap[key].siang  = r;
+    if (r.tipe === 'pulang') dayMap[key].pulang = r;
+  });
+  // Sort by tanggal desc then nama asc
+  const dayRows = Object.values(dayMap).sort((a, b) => {
+    if (b.r.tanggal !== a.r.tanggal) return b.r.tanggal > a.r.tanggal ? 1 : -1;
+    return (a.r.nama||'').localeCompare(b.r.nama||'');
+  });
+
+  const jamToMins = j => { if (!j || j === '–') return null; const p = j.split(':').map(Number); return p[0]*60 + (p[1]||0); };
+  const deltaStr  = (mins, base) => { if (mins === null) return '–'; return (mins - base); };
+  const deltaLate = (mins, base) => { if (mins === null) return '–'; const d = mins - base; return d > 0 ? d : '–'; };
+
+  const s1H = ['No','Nama','NIP','Divisi','Hari','Tanggal','Jam Masuk','Jam Pulang','Jam Siang','Status Masuk','Status Pulang','∆ Masuk (mnt)','∆ Pulang (mnt)'];
+  const s1D = dayRows.map((d, idx) => {
+    const base = d.masuk || d.pulang || d.siang || d.r;
+    const jamMasukNorm  = d.masuk  ? normJam(d.masuk.jam)  : '–';
+    const jamPulangNorm = d.pulang ? normJam(d.pulang.jam) : '–';
+    return [
+      idx + 1,
+      base.nama || '',
+      base.nip  || '',
+      base.divisi || '',
+      base.hari || '',
+      fmtTgl(base.tanggal),
+      jamMasukNorm,
+      jamPulangNorm,
+      d.siang  ? normJam(d.siang.jam)  : '–',
+      d.masuk  ? getStatus(d.masuk).label.replace(/[✓⚠❌🚫⏰]/g,'').trim()  : '–',
+      d.pulang ? getStatus(d.pulang).label.replace(/[✓⚠❌🚫⏰]/g,'').trim() : '–',
+      deltaLate(jamToMins(jamMasukNorm), 480),  // L: menit terlambat dari 08:00 (hanya jika terlambat)
+      deltaStr(jamToMins(jamPulangNorm), 960),  // M: menit sejak 16:00 (+ = lembur, - = pulang awal)
+    ];
+  });
+  const ws1 = XLSX.utils.aoa_to_sheet([s1H, ...s1D]);
+  ws1['!cols'] = [{wch:5},{wch:22},{wch:14},{wch:18},{wch:12},{wch:14},{wch:12},{wch:12},{wch:12},{wch:20},{wch:20},{wch:16},{wch:16}];
+  ws1['!autofilter'] = { ref: `A1:M1` };
+
+  // ── BUILD REKAP DATA (nama × bulan) — for Sheet 3 ───────────────────────
+  const rekap = {};
+  const allNama = new Set();
+  const allBulanKeys = new Set();
+  f.forEach(r => {
+    const nama     = r.nama || '(tidak dikenal)';
+    const bulanKey = (r.tanggal||'').slice(0,7);
+    if (!bulanKey) return;
+    allNama.add(nama);
+    allBulanKeys.add(bulanKey);
+    if (!rekap[nama]) rekap[nama] = {};
+    if (!rekap[nama][bulanKey]) rekap[nama][bulanKey] = {tepat:0,agak:0,terlambat:0,siangTepat:0,siangTerlambat:0,pulangAwal:0,pulangTerlambat:0};
+    const st = getStatus(r).key;
+    if (r.tipe === 'masuk') {
+      if (st==='ok')   rekap[nama][bulanKey].tepat++;
+      if (st==='warn') rekap[nama][bulanKey].agak++;
+      if (st==='late') rekap[nama][bulanKey].terlambat++;
+    } else if (r.tipe === 'pulang') {
+      if (st === 'early')    rekap[nama][bulanKey].pulangAwal++;
+      if (st === 'overtime') rekap[nama][bulanKey].pulangTerlambat++;
+    } else if (r.tipe === 'siang') {
+      if (st === 'ok')   rekap[nama][bulanKey].siangTepat++;
+      if (st === 'warn') rekap[nama][bulanKey].siangTerlambat++;
+    }
+  });
+  const sortedNama  = [...allNama].sort((a,b) => a.localeCompare(b));
+  const sortedBulan = [...allBulanKeys].sort();
+
+  // ── SHEET 2: Rekap Absensi — daily pivot (1 row per employee × day cols) ──
+  // Unique dates sorted chronologically
+  const uniqueDates = [...new Set(f.map(r => r.tanggal).filter(Boolean))].sort();
+  const hariID = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const fmtDayHdr = t => {
+    const [y,m,d] = t.split('-');
+    return `${hariID[new Date(t).getDay()]}  ${d}/${m}/${y}`;
+  };
+
+  // Build per-employee map: uid → { divisi, nama, nip, addr, days: {tanggal: {masuk,siang,pulang}} }
+  const empMap = {};
+  f.forEach(r => {
+    const key = r.uid || r.nama;
+    if (!empMap[key]) empMap[key] = { divisi:r.divisi||'', nama:r.nama||'', nip:r.nip||'', addr:'', days:{} };
+    if (r.gps_address && r.gps_address !== 'Alamat tidak tersedia') empMap[key].addr = r.gps_address;
+    if (!empMap[key].days[r.tanggal]) empMap[key].days[r.tanggal] = {masuk:null,siang:null,pulang:null};
+    if (r.tipe==='masuk')  empMap[key].days[r.tanggal].masuk  = r;
+    if (r.tipe==='siang')  empMap[key].days[r.tanggal].siang  = r;
+    if (r.tipe==='pulang') empMap[key].days[r.tanggal].pulang = r;
+  });
+  const sortedEmp = Object.values(empMap).sort((a,b) => {
+    const dc = (a.divisi||'').localeCompare(b.divisi||'');
+    return dc !== 0 ? dc : (a.nama||'').localeCompare(b.nama||'');
+  });
+
+  // Header rows
+  const s2h1 = ['Divisi','Nama','NIP','Proyek / Lokasi'];
+  const s2h2 = ['','','',''];
+  uniqueDates.forEach(t => { s2h1.push(fmtDayHdr(t),'',''); s2h2.push('Masuk','Siang','Pulang'); });
+  s2h1.push('Total Hadir','Total Terlambat','Pulang Awal','∆ Masuk (mnt)','∆ Pulang (mnt)');
+  s2h2.push('','','','','');
+
+  // Data rows
+  const s2Data = sortedEmp.map(emp => {
+    const row = [emp.divisi, emp.nama, emp.nip, emp.addr];
+    let totHadir=0, totTerlambat=0, totPulangAwal=0, totDeltaMasuk=0, totDeltaPulang=0;
+    uniqueDates.forEach(t => {
+      const day = emp.days[t] || {};
+      row.push(day.masuk  ? normJam(day.masuk.jam)  : '–');
+      row.push(day.siang  ? normJam(day.siang.jam)  : '–');
+      row.push(day.pulang ? normJam(day.pulang.jam) : '–');
+      if (day.masuk) {
+        totHadir++;
+        const stk = getStatus(day.masuk).key;
+        if (stk==='warn'||stk==='late') totTerlambat++;
+        const dm = jamToMins(normJam(day.masuk.jam));
+        if (dm !== null && dm > 480) totDeltaMasuk += (dm - 480);
+      }
+      if (day.pulang) {
+        const stk = getStatus(day.pulang).key;
+        if (stk==='early') totPulangAwal++;
+        const dp = jamToMins(normJam(day.pulang.jam));
+        if (dp !== null) totDeltaPulang += (dp - 960);
+      }
+    });
+    row.push(totHadir, totTerlambat, totPulangAwal);
+    row.push(totDeltaMasuk > 0 ? totDeltaMasuk : '–');
+    row.push(totDeltaPulang !== 0 ? totDeltaPulang : '–');
+    return row;
+  });
+
+  const ws2 = XLSX.utils.aoa_to_sheet([s2h1, s2h2, ...s2Data]);
+
+  // Merge day header cells (row 0, groups of 3)
+  const merges = [];
+  let mc2 = 4;
+  uniqueDates.forEach(() => { merges.push({s:{r:0,c:mc2},e:{r:0,c:mc2+2}}); mc2+=3; });
+  ws2['!merges'] = merges;
+
+  // Col widths
+  const s2cols = [{wch:14},{wch:20},{wch:12},{wch:34}];
+  uniqueDates.forEach(() => s2cols.push({wch:10},{wch:10},{wch:10}));
+  s2cols.push({wch:14},{wch:18},{wch:13},{wch:15},{wch:15});
+  ws2['!cols'] = s2cols;
+  ws2['!autofilter'] = { ref: `A1:${XLSX.utils.encode_col(s2h1.length-1)}1` };
+
+  // ── SHEET 3: Raw Rekap with AutoFilter ───────────────────────────────────
+  const s3H = ['No','Nama','Bulan','Tahun','Tepat Waktu','Agak Terlambat','Terlambat','Siang Tepat','Siang Terlambat','Pulang Awal','Pulang Terlambat'];
+  const s3D = [];
+  let s3no = 1;
+  sortedBulan.forEach(bk => {
+    const [y, m] = bk.split('-');
+    const bulanLabel = `${BULAN_ID[parseInt(m)]} ${y}`;
+    sortedNama.forEach(nama => {
+      const v = rekap[nama]?.[bk];
+      if (!v) return;
+      s3D.push([s3no++, nama, bulanLabel, y, v.tepat, v.agak, v.terlambat, v.siangTepat||0, v.siangTerlambat||0, v.pulangAwal, v.pulangTerlambat||0]);
+    });
+  });
+  const ws3 = XLSX.utils.aoa_to_sheet([s3H, ...s3D]);
+  ws3['!cols'] = [{wch:5},{wch:22},{wch:12},{wch:8},{wch:16},{wch:18},{wch:14},{wch:14},{wch:18},{wch:14},{wch:18}];
+  ws3['!autofilter'] = { ref: `A1:K1` };
+
+  // ── Build & download ─────────────────────────────────────────────────────
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, 'Detail Absensi');
+  XLSX.utils.book_append_sheet(wb, ws2, 'Rekap Absensi');
+  XLSX.utils.book_append_sheet(wb, ws3, 'Rekap Filter Bulan');
+  XLSX.writeFile(wb, 'absensi_' + todayStr() + '.xlsx');
+  toast('📥 XLS berhasil diunduh!', 'ok');
+}
+
+// ─── KARYAWAN ──────────────────────────────────────────────────────────────
+function renderKaryawan() { filterKar(); }
+
+window.filterKar = function() {
+  const q        = document.getElementById('kar-srch').value.toLowerCase();
+  const filtered = allKaryawan.filter(k => !q || (k.nama||'').toLowerCase().includes(q) || (k.nip||'').toLowerCase().includes(q));
+  const today    = todayStr();
+  const todayM   = allAbsensi.filter(r => r.tanggal === today && r.tipe === 'masuk');
+  const tbody    = document.getElementById('kar-tbody');
+  tbody.innerHTML = filtered.length === 0
+    ? `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px">Belum ada karyawan terdaftar</td></tr>`
+    : filtered.map(k => {
+        const init  = (k.nama||'?').split(' ').map(w => w[0]).slice(0,2).join('');
+        const hadir = todayM.find(r => r.uid === k.uid);
+        const st    = hadir ? getStatus(hadir) : null;
+        const badge = hadir
+          ? `<span class="badge ${st.cls}">${st.label} · ${(hadir.jam||'').replace(/[.\\-]/g, ':')}</span>`
+          : `<span class="badge nonaktif">✗ Belum Hadir</span>`;
+        return `<tr>
+          <td><div class="av-sm">${init}</div></td>
+          <td class="mono">${k.nip||'–'}</td>
+          <td><strong>${k.nama||'–'}</strong></td>
+          <td style="font-size:12px;color:var(--muted)">${k.divisi||'–'}</td>
+          <td style="font-size:12px">${k.email||'–'}</td>
+          <td style="font-size:12px">${k.shift||'–'}</td>
+          <td>${badge}</td>
+          <td style="display:flex;gap:6px;align-items:center">
+            <button class="btn-edit" onclick="openEditModal('${k.uid}')">✏️ Edit</button>
+            <button class="btn-del" onclick="openDelModal('${k.uid}','${(k.nama||'').replace(/'/g,"\\'")}')">🗑️</button>
+          </td>
+        </tr>`;
+      }).join('');
+  set('kar-count', `${filtered.length} karyawan terdaftar`);
+};
+
+// ─── ADD/EDIT KARYAWAN ──────────────────────────────────────────────────────
+window.openAddModal = function() {
+  editMode = false; editUid = null;
+  document.getElementById('add-modal-title').textContent = '➕ Tambah Karyawan Baru';
+  document.getElementById('add-modal-sub').textContent   = 'Buat akun login untuk karyawan baru';
+  document.getElementById('pw-group').style.display      = 'block';
+  ['f-nama','f-nip','f-divisi','f-email','f-pw'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('add-err').style.display = 'none';
+  document.getElementById('add-modal').classList.add('open');
+};
+
+window.openEditModal = function(uid) {
+  const k = allKaryawan.find(k => k.uid === uid); if (!k) return;
+  editMode = true; editUid = uid;
+  document.getElementById('add-modal-title').textContent = '✏️ Edit Karyawan';
+  document.getElementById('add-modal-sub').textContent   = 'Perbarui data karyawan';
+  document.getElementById('pw-group').style.display      = 'none';
+  document.getElementById('f-nama').value   = k.nama   || '';
+  document.getElementById('f-nip').value    = k.nip    || '';
+  document.getElementById('f-divisi').value = k.divisi || '';
+  document.getElementById('f-shift').value  = k.shift  || 'Reguler (08:00-16:00)';
+  document.getElementById('f-email').value  = k.email  || '';
+  document.getElementById('add-err').style.display = 'none';
+  document.getElementById('add-modal').classList.add('open');
+};
+
+window.closeAddModal = function() { document.getElementById('add-modal').classList.remove('open'); };
+
+window.saveKaryawan = async function() {
+  const nama   = document.getElementById('f-nama').value.trim();
+  const nip    = document.getElementById('f-nip').value.trim();
+  const divisi = document.getElementById('f-divisi').value.trim();
+  const shift  = document.getElementById('f-shift').value;
+  const email  = document.getElementById('f-email').value.trim();
+  const pw     = document.getElementById('f-pw').value;
+  const err    = document.getElementById('add-err');
+  const btn    = document.getElementById('btn-save-kar');
+  err.style.display = 'none';
+  if (!nama||!nip||!email) { err.style.display='block'; err.textContent='❌ Nama, NIP, dan Email wajib diisi'; return; }
+  if (!editMode && pw.length < 6) { err.style.display='block'; err.textContent='❌ Password minimal 6 karakter'; return; }
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    if (editMode) {
+      await setDoc(doc(db,'karyawan',editUid), { nama, nip, divisi, shift, email }, { merge: true });
+      // onSnapshot will update allKaryawan on all clients automatically
+      toast('✅ Data karyawan diperbarui!', 'ok');
+    } else {
+      // Use secondary app so admin session is NOT disturbed
+      const cred = await createUserWithEmailAndPassword(auth2, email, pw);
+      const uid  = cred.user.uid;
+      await signOut(auth2);
+      const data = { nama, nip, divisi, shift, email, role:'karyawan', created_at: new Date().toISOString() };
+      await setDoc(doc(db,'karyawan',uid), data);
+      // onSnapshot will push to allKaryawan on all clients automatically
+      toast('✅ Karyawan berhasil ditambahkan!', 'ok');
+    }
+    closeAddModal();
+    renderKaryawan();
+  } catch(e) {
+    err.style.display = 'block';
+    err.textContent = e.code === 'auth/email-already-in-use' ? '❌ Email sudah digunakan' : '❌ ' + e.message;
+    console.error('saveKaryawan error:', e.code, e.message);
+  }
+  btn.disabled = false; btn.textContent = 'Simpan Karyawan';
+};
+
+// ─── DELETE ────────────────────────────────────────────────────────────────
+window.openDelModal = function(uid, nama) {
+  deleteTargetId = uid;
+  document.getElementById('del-msg').textContent = `Karyawan "${nama}" akan dihapus permanen. Data absensi tetap tersimpan.`;
+  document.getElementById('del-pw').value = '';
+  document.getElementById('del-pw-err').textContent = '';
+  document.getElementById('del-modal').classList.add('open');
+  setTimeout(() => document.getElementById('del-pw').focus(), 100);
+};
+
+window.closeDelModal = function() {
+  document.getElementById('del-modal').classList.remove('open');
+  document.getElementById('del-pw').value = '';
+  document.getElementById('del-pw-err').textContent = '';
+  deleteTargetId = null;
+};
+
+window.confirmDelete = async function() {
+  if (!deleteTargetId) return;
+  const pw  = document.getElementById('del-pw').value.trim();
+  const err = document.getElementById('del-pw-err');
+  const btn = document.getElementById('btn-del-confirm');
+  if (!pw) { err.textContent = '⚠ Password tidak boleh kosong'; return; }
+  err.textContent = '';
+  btn.disabled = true; btn.textContent = 'Memverifikasi...';
+  try {
+    // Re-authenticate to verify admin identity before destructive action
+    const email = auth.currentUser?.email;
+    await signInWithEmailAndPassword(auth, email, pw);
+    await deleteDoc(doc(db, 'karyawan', deleteTargetId));
+    closeDelModal();
+    toast('🗑️ Karyawan berhasil dihapus', 'ok');
+  } catch(e) {
+    if (e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') {
+      err.textContent = '❌ Password salah';
+    } else {
+      err.textContent = '❌ ' + e.message;
+    }
+  }
+  btn.disabled = false; btn.textContent = 'Hapus Karyawan';
+};
+
+// ─── PHOTO ─────────────────────────────────────────────────────────────────
+window.openPhoto = function(src) { document.getElementById('photo-ov-img').src = src; document.getElementById('photo-ov').classList.add('open'); };
+window.closePhoto = function() { document.getElementById('photo-ov').classList.remove('open'); };
+
+// ─── UTILS ─────────────────────────────────────────────────────────────────
+function set(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+function toast(msg, type = 'info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = `toast ${type} show`;
+  clearTimeout(window._tt); window._tt = setTimeout(() => el.className = 'toast', 3500);
+}
+window.togglePw = function(iId, bId) {
+  const i = document.getElementById(iId), b = document.getElementById(bId);
+  i.type = i.type === 'password' ? 'text' : 'password';
+  b.textContent = i.type === 'password' ? '👁️' : '🙈';
+};
+window.addEventListener('resize', () => {
+  document.getElementById('menu-btn').style.display = window.innerWidth <= 900 ? 'block' : 'none';
+});
+</script>
+
+<!-- ─── END QC ACCESS MANAGEMENT PANEL ──────────────────── -->
+
+<script>
+// ─── QC ACCESS PANEL INITIALIZER ─────────────────────────────────────────
+// FIXED: was an IIFE that ran immediately on page load (before auth) and
+// injected the error message directly into the UI DOM.
+//
+// Now:
+//  1. Exposed as window.initQCPanel() — called by showPage('karyawan') so it
+//     only runs after the user is authenticated and on the right page.
+//  2. When QC_CONFIG is absent: logs to console only, panel stays hidden.
+//  3. When QC_CONFIG is present: panel becomes visible and loads data.
+// ─────────────────────────────────────────────────────────────────────────
+window.initQCPanel = (function() {
+  var _initialised = false;
+
+  return function() {
+    // Only run once per session — repeated showPage('karyawan') calls are safe.
+    if (_initialised) return;
+
+    var SCRIPT_URL = (window.QC_CONFIG && window.QC_CONFIG.appsScriptUrl) || "";
+    if (!SCRIPT_URL) {
+      // FIXED: was injecting red error text into #qc-employee-list (visible UI).
+      // Now: silent console warning only. Panel stays hidden (display:none).
+      console.error("[QC Panel] QC_CONFIG tidak ditemukan. Pastikan qc-config.js di-load sebelum admin.html.");
+      return; // panel remains display:none — no UI contamination
+    }
+
+    // Config found — reveal the panel now that we know it will work.
+    var panel = document.getElementById("qc-access-panel");
+    if (panel) panel.style.display = "block";
+
+    _initialised = true;
+
+    function apiFetch(action, params) {
+      var url = SCRIPT_URL + "?action=" + action;
+      if (params) Object.keys(params).forEach(function(k){ url += "&" + k + "=" + encodeURIComponent(params[k]); });
+      return fetch(url).then(function(r){ return r.json(); });
+    }
+
+    function apiPost(payload) {
+      return fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).then(function(r){ return r.json(); });
+    }
+
+    function renderEmployees(employees) {
+      var list = document.getElementById("qc-employee-list");
+      // FIXED: clear container before rendering to prevent text overlap.
+      list.innerHTML = "";
+      if (!employees || !employees.length) {
+        list.innerHTML = '<span style="color:#6b7280;font-size:13px;">Tidak ada karyawan ditemukan di Sheet.</span>';
+        return;
+      }
+      list.innerHTML = employees.map(function(emp) {
+        var enabled = emp.qc_enabled === true || emp.qc_enabled === "TRUE" || emp.qc_enabled === "true";
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#0f1623;border-radius:8px;">' +
+          '<div>' +
+            '<div style="color:#f9fafb;font-size:13px;font-weight:600;">' + (emp.full_name||emp.username||emp.employee_id) + '</div>' +
+            '<div style="color:#6b7280;font-size:11px;">' + (emp.username||"") + ' · ' + (emp.role||"staff") + '</div>' +
+          '</div>' +
+          '<button onclick="toggleQC(\'' + emp.employee_id + '\',' + (!enabled) + ')" ' +
+            'style="background:' + (enabled ? '#10b981' : '#374151') + ';color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">' +
+            (enabled ? 'QC: ON' : 'QC: OFF') +
+          '</button>' +
+        '</div>';
+      }).join("");
+    }
+
+    window.toggleQC = function(employeeId, newState) {
+      var msg = document.getElementById("qc-access-msg");
+      msg.style.color = "#9ca3af"; msg.textContent = "Menyimpan...";
+      apiPost({ action: "updateEmployeeQCStatus", employee_id: employeeId, qc_enabled: newState })
+        .then(function(res) {
+          if (res.success) {
+            msg.style.color = "#10b981"; msg.textContent = "✓ Status QC diperbarui.";
+            loadEmployees();
+          } else {
+            msg.style.color = "#ef4444"; msg.textContent = "Gagal: " + (res.error||"Unknown");
+          }
+        }).catch(function(e) {
+          msg.style.color = "#ef4444"; msg.textContent = "Error: " + e.toString();
+        });
+    };
+
+    function loadEmployees() {
+      var list = document.getElementById("qc-employee-list");
+      list.innerHTML = '<div style="color:#6b7280;font-size:13px;">Memuat data karyawan...</div>';
+      apiFetch("getEmployeesQCStatus")
+        .then(function(res) {
+          if (res.success) renderEmployees(res.data.employees);
+          else list.innerHTML = '<span style="color:#ef4444">Gagal memuat: ' + (res.error||"") + '</span>';
+        })
+        .catch(function(e) {
+          list.innerHTML = '<span style="color:#ef4444">Error koneksi: ' + e + '</span>';
+        });
+    }
+
+    loadEmployees();
+  };
+})();
+</script>
+
+</body>
+</html>

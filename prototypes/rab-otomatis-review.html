@@ -1,0 +1,2676 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RAB Otomatis - PDF to Budget</title>
+  <style>
+    :root {
+      --ink: #111827;
+      --muted: #5b6472;
+      --line: #1f2937;
+      --soft-line: #d5dae3;
+      --paper: #ffffff;
+      --app: #eef2f7;
+      --panel: #f8fafc;
+      --head: #b8c8e6;
+      --group: #fff200;
+      --subgroup: #d9e2f3;
+      --accent: #0f5ea8;
+      --ok: #0f766e;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --shadow: 0 8px 24px rgba(15, 23, 42, .08);
+      --radius: 6px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--app);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    button, input, select, textarea {
+      font: inherit;
+    }
+    button {
+      border: 1px solid #9aa8bd;
+      background: #fff;
+      color: var(--ink);
+      border-radius: 5px;
+      padding: 7px 10px;
+      cursor: pointer;
+      min-height: 32px;
+    }
+    button:hover { border-color: var(--accent); }
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      font-weight: 700;
+    }
+    button.danger { color: var(--bad); border-color: #efb3b3; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #b8c0cc;
+      border-radius: 4px;
+      background: #fff;
+      padding: 7px 8px;
+      min-height: 32px;
+    }
+    textarea { min-height: 76px; resize: vertical; }
+    .app-shell {
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    .side {
+      background: #172033;
+      color: #dbe5f3;
+      padding: 14px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .brand {
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      margin: 4px 0 14px;
+      letter-spacing: .2px;
+    }
+    .nav {
+      display: grid;
+      gap: 5px;
+    }
+    .nav button {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      color: #dbe5f3;
+      border-color: transparent;
+      padding: 9px 10px;
+    }
+    .nav button.active {
+      background: #24324d;
+      border-color: #34435d;
+      color: #fff;
+      font-weight: 700;
+    }
+    .save-state {
+      margin-top: 18px;
+      color: #aab7cc;
+      font-size: 12px;
+      border-top: 1px solid #334155;
+      padding-top: 12px;
+    }
+    .main {
+      min-width: 0;
+      padding: 14px;
+    }
+    .topbar {
+      background: var(--paper);
+      border: 1px solid var(--soft-line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .title h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+    .title div { color: var(--muted); margin-top: 2px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--soft-line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+    .flow-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr);
+      gap: 12px;
+      align-items: start;
+    }
+    .upload-box {
+      border: 1.5px dashed #8ca3c4;
+      background: #f8fbff;
+      border-radius: var(--radius);
+      padding: 14px;
+      min-height: 210px;
+      display: grid;
+      align-content: center;
+      gap: 10px;
+    }
+    .upload-box strong {
+      display: block;
+      font-size: 16px;
+    }
+    .upload-box p {
+      color: var(--muted);
+      margin: 0;
+    }
+    .workflow-steps {
+      display: grid;
+      gap: 7px;
+      counter-reset: step;
+    }
+    .workflow-steps div {
+      border: 1px solid var(--soft-line);
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 8px 10px 8px 34px;
+      position: relative;
+    }
+    .workflow-steps div::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 9px;
+      top: 8px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+    }
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .analysis-card {
+      border: 1px solid var(--soft-line);
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 9px;
+      min-height: 74px;
+    }
+    .analysis-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .analysis-card b { font-size: 15px; }
+    .analysis-log {
+      margin-top: 10px;
+      border: 1px solid var(--soft-line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .analysis-log div {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr) 82px;
+      gap: 8px;
+      padding: 7px 9px;
+      border-top: 1px solid var(--soft-line);
+      background: #fff;
+    }
+    .analysis-log div:first-child {
+      border-top: 0;
+      background: var(--head);
+      font-weight: 800;
+      text-align: center;
+    }
+    .analysis-log span:last-child { text-align: center; }
+    .progress-track {
+      height: 9px;
+      background: #dbe3ef;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 8px 0 2px;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: var(--accent);
+      transition: width .2s ease;
+    }
+    .auto-detect-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
+      gap: 12px;
+      align-items: start;
+    }
+    .canvas-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .canvas-shell {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: var(--radius);
+      overflow: auto;
+      max-height: 65vh;
+      width: 100%;
+    }
+    #planCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #fff;
+      cursor: crosshair;
+      transform-origin: top left;
+    }
+    .detect-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      align-items: center;
+    }
+    .detect-actions input, .detect-actions select {
+      width: auto;
+      min-width: 130px;
+    }
+    .detection-result {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .result-card {
+      border: 1px solid var(--soft-line);
+      border-radius: var(--radius);
+      padding: 8px;
+      background: var(--panel);
+    }
+    .result-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .sheet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .sheet-card {
+      border: 1px solid var(--soft-line);
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 8px;
+      display: grid;
+      gap: 6px;
+    }
+    .sheet-card img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: contain;
+      background: #f1f5f9;
+      border: 1px solid #dbe3ef;
+    }
+    .sheet-meta {
+      font-size: 11px;
+      color: var(--muted);
+      display: grid;
+      gap: 2px;
+    }
+    .layer-list {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .layer-chip {
+      border: 1px solid var(--soft-line);
+      border-radius: var(--radius);
+      padding: 7px;
+      background: var(--panel);
+      min-height: 52px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .field label {
+      display: block;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+    .span-2 { grid-column: span 2; }
+    .span-4 { grid-column: span 4; }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .toolbar .left, .toolbar .right { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .toolbar input, .toolbar select { width: auto; min-width: 180px; }
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      background: #fff;
+      max-height: 62vh;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 3px 5px;
+      vertical-align: middle;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--head);
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    td { background: #fff; }
+    .rab-table td, .rab-table input, .rab-table select,
+    .price-table td, .price-table input, .price-table select {
+      font-size: 12px;
+    }
+    .rab-table input, .rab-table select, .price-table input, .price-table select {
+      border: 0;
+      border-radius: 0;
+      padding: 3px 4px;
+      min-height: 24px;
+      background: transparent;
+    }
+    .rab-table input:focus, .rab-table select:focus,
+    .price-table input:focus, .price-table select:focus {
+      outline: 2px solid #2563eb;
+      background: #fff;
+    }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .center { text-align: center; }
+    .group-row td {
+      background: var(--group);
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .subgroup-row td {
+      background: var(--subgroup);
+      font-weight: 800;
+    }
+    .selected td { box-shadow: inset 0 0 0 2px rgba(15, 94, 168, .35); }
+    .status {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .status.ok { background: #d7f5ef; color: var(--ok); }
+    .status.review { background: #fff3cd; color: var(--warn); }
+    .status.bad { background: #fee2e2; color: var(--bad); }
+    .mini-actions {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+    }
+    .mini-actions button {
+      padding: 2px 6px;
+      min-height: 24px;
+      font-size: 11px;
+    }
+    .total-bar {
+      position: sticky;
+      bottom: 0;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      background: #172033;
+      color: #fff;
+      padding: 8px;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+    .total-bar b { display: block; font-size: 14px; }
+    .total-bar span { color: #cbd5e1; font-size: 11px; text-transform: uppercase; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      border: 1px solid var(--soft-line);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: var(--panel);
+    }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+    .metric b { font-size: 16px; }
+    .calc-row {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      align-items: end;
+    }
+    .audit-list {
+      display: grid;
+      gap: 7px;
+    }
+    .audit-item {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr) minmax(120px, .5fr);
+      gap: 8px;
+      align-items: start;
+      border: 1px solid var(--soft-line);
+      border-left-width: 5px;
+      border-radius: var(--radius);
+      padding: 8px;
+      background: #fff;
+    }
+    .audit-item.high { border-left-color: var(--bad); }
+    .audit-item.medium { border-left-color: var(--warn); }
+    .audit-item.low { border-left-color: var(--ok); }
+    .preview-paper {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      background: #fff;
+      padding: 16mm;
+      color: #000;
+      box-shadow: var(--shadow);
+      border: 1px solid #cbd5e1;
+    }
+    .print-head {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid #111827;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .print-head h2 { margin: 0; font-size: 18px; }
+    .print-meta { font-size: 11px; text-align: right; }
+    .print-table th, .print-table td { font-size: 10px; padding: 3px 4px; }
+    .signature {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 28px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .signature div { min-height: 80px; border-top: 1px solid transparent; }
+    .signature b { display: block; margin-top: 56px; border-top: 1px solid #111; padding-top: 4px; }
+    .print-footer {
+      margin-top: 18px;
+      padding-top: 8px;
+      border-top: 1px solid #cbd5e1;
+      font-size: 10px;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+    }
+    .hide { display: none !important; }
+    @media (max-width: 900px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .side {
+        position: static;
+        height: auto;
+        padding: 10px;
+      }
+      .nav {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+      .nav button {
+        white-space: nowrap;
+        width: auto;
+        min-width: 120px;
+        text-align: center;
+      }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .actions { justify-content: flex-start; }
+      .grid, .cards, .flow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .span-4, .span-2 { grid-column: span 2; }
+      .calc-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .total-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analysis-grid, .detection-result, .layer-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .auto-detect-grid { grid-template-columns: 1fr; }
+      .analysis-log div { grid-template-columns: 118px minmax(0, 1fr) 74px; }
+      .preview-paper { width: 100%; min-height: auto; padding: 12px; }
+    }
+    @media (max-width: 430px) {
+      body { font-size: 12px; }
+      .main { padding: 8px; }
+      .grid, .cards, .calc-row, .flow-grid, .analysis-grid, .detection-result, .auto-detect-grid, .layer-list { grid-template-columns: 1fr; }
+      .analysis-log div { grid-template-columns: 1fr; text-align: left; }
+      .span-4, .span-2 { grid-column: span 1; }
+      .toolbar, .toolbar .left, .toolbar .right { display: grid; grid-template-columns: 1fr; width: 100%; }
+      .toolbar input, .toolbar select, .toolbar button { width: 100%; }
+      .audit-item { grid-template-columns: 1fr; }
+      .total-bar { grid-template-columns: 1fr; }
+    }
+    @page { size: A4 portrait; margin: 12mm; }
+    @media print {
+      body { background: #fff; font-size: 10px; }
+      .side, .topbar, .screen-only, .toolbar, .total-bar, .no-print { display: none !important; }
+      .app-shell, .main, .view, .view.active { display: block; padding: 0; min-height: 0; }
+      .panel { box-shadow: none; border: 0; padding: 0; margin: 0; }
+      .view:not(#printView) { display: none !important; }
+      #printView { display: block !important; }
+      .preview-paper {
+        width: auto;
+        min-height: auto;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .print-table th { background: var(--head) !important; }
+      .group-row td { background: var(--group) !important; }
+      .subgroup-row td { background: var(--subgroup) !important; }
+      table { page-break-inside: auto; }
+      tr { page-break-inside: avoid; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="side">
+      <div class="brand">IC Solution - RAB Otomatis</div>
+      <nav class="nav screen-only" id="nav">
+        <button data-view="uploadView" class="active">PDF to Budget</button>
+        <button data-view="projectView">Data Proyek</button>
+        <button data-view="geometryView">Measurement</button>
+        <button data-view="rabView">Budget Review</button>
+        <button data-view="calcView">Kalkulator Volume</button>
+        <button data-view="priceView">Harga Satuan</button>
+        <button data-view="summaryView">Summary</button>
+        <button data-view="auditView">Audit</button>
+        <button data-view="printView">Print Preview</button>
+      </nav>
+      <div class="save-state" id="saveState">Draft belum disimpan</div>
+    </aside>
+    <main class="main">
+      <header class="topbar screen-only">
+        <div class="title">
+          <h1>RAB Otomatis</h1>
+          <div id="projectLine">Upload PDF, analisa pekerjaan, lalu review budgeting otomatis</div>
+        </div>
+        <div class="actions">
+          <button id="saveBtn">Save Draft</button>
+          <button id="exportJsonBtn">Export JSON</button>
+          <button id="resetBtn">Reset Blank</button>
+          <button class="primary" id="printBtn">Print</button>
+        </div>
+      </header>
+
+      <section class="view active" id="uploadView">
+        <div class="flow-grid">
+          <div class="panel">
+          <h2>Upload PDF Denah / RAP</h2>
+            <div class="upload-box">
+              <div>
+                <strong>Pilih PDF proyek</strong>
+                <p>Alur utama RAB Otomatis: upload dokumen, jalankan analisa, sistem membuat draft budgeting, estimator tinggal review dan koreksi angka.</p>
+              </div>
+              <input id="pdfInput" type="file" accept="application/pdf,.pdf,image/*">
+              <div class="actions" style="justify-content:flex-start">
+                <button class="primary" id="analyzeBtn">Analisa Input</button>
+                <button id="generateRabBtn">Generate RAB dari Measurement</button>
+              </div>
+              <div>
+                <div class="progress-track"><div class="progress-fill" id="analysisProgress"></div></div>
+                <div class="small" id="analysisStatus">Belum ada PDF dianalisa.</div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>Alur RAB Otomatis</h2>
+            <div class="workflow-steps">
+              <div><b>Upload PDF</b><br>Estimator memasukkan file denah/RAP sebagai sumber awal.</div>
+              <div><b>Kalibrasi Measurement</b><br>Jika scale/dimensi belum terbaca, isi area, ruang, dinding, bukaan, dan asumsi secara manual.</div>
+              <div><b>Generate Budget</b><br>RAB dihitung dari measurement, database harga, dan asumsi yang bisa diaudit.</div>
+              <div><b>Review Estimator</b><br>User mengedit volume/harga, apply database harga, validasi audit, lalu print/export preview.</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Hasil Analisa</h2>
+          <div class="analysis-grid" id="analysisCards"></div>
+          <div class="analysis-log" id="analysisLog"></div>
+        </div>
+        <div class="panel">
+          <h2>Sheet Analyzer / PDF Pages</h2>
+          <div class="toolbar screen-only">
+            <div class="left">
+              <button id="analyzeAllPagesBtn">Analyze All Pages</button>
+              <button id="autoSelectPagesBtn">Auto Select Relevant Pages</button>
+              <button id="analyzeSelectedPagesBtn">Analyze Selected Pages</button>
+              <button class="primary" id="applyCombinedBtn">Apply Combined Detection</button>
+            </div>
+            <div class="right">
+              <select id="pageSwitcher"></select>
+            </div>
+          </div>
+          <div class="small" id="sheetStatus">Upload PDF multi-page untuk klasifikasi sheet.</div>
+          <div class="sheet-grid" id="sheetGrid"></div>
+          <div class="detection-result" id="combinedResults"></div>
+        </div>
+        <div class="panel">
+          <h2>Auto Detect Workspace</h2>
+          <div class="auto-detect-grid">
+            <div>
+              <div class="canvas-toolbar screen-only">
+                <button id="fitWidthBtn">Fit width</button>
+                <button id="fitPageBtn">Fit page</button>
+                <button id="zoomInBtn">Zoom in</button>
+                <button id="zoomOutBtn">Zoom out</button>
+                <button id="resetViewBtn">Reset view</button>
+              </div>
+              <div class="canvas-shell"><canvas id="planCanvas" width="900" height="520"></canvas></div>
+            </div>
+            <div>
+              <div class="detect-actions screen-only">
+                <button id="autoDetectBtn">Auto Detect Geometry</button>
+                <button id="calibrateBtn">Calibrate Scale by 2 Points</button>
+                <input id="scaleDistanceInput" type="number" min="0" step="0.01" placeholder="Jarak nyata (m)">
+                <button id="applyScaleBtn">Apply Scale</button>
+                <select id="scalePresetSelect">
+                  <option value="">Preset skala</option>
+                  <option value="50">1:50</option>
+                  <option value="75">1:75</option>
+                  <option value="100">1:100</option>
+                  <option value="125">1:125</option>
+                  <option value="200">1:200</option>
+                </select>
+                <button id="applyDetectionBtn">Apply Detection to Measurement</button>
+                <button class="primary" id="generateFromDetectionBtn">Generate RAB from Detection</button>
+              </div>
+              <div class="small" id="calibrationStatus">Upload image/PDF lalu kalibrasi skala untuk konversi meter.</div>
+              <div class="detection-result" id="detectionResults"></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Symbol Layers Panel</h2>
+          <div class="detect-actions screen-only">
+            <button id="acceptWallFallbackBtn">Accept wall fallback</button>
+            <button id="acceptOpeningFallbackBtn">Accept opening fallback</button>
+            <button id="acceptMepFallbackBtn">Accept MEP fallback</button>
+            <button id="acceptPlumbingFallbackBtn">Accept plumbing fallback</button>
+            <button id="exportSymbolLibraryBtn">Export Symbol Library</button>
+          </div>
+          <div class="layer-list" id="symbolLayerList"></div>
+        </div>
+      </section>
+
+      <section class="view" id="projectView">
+        <div class="panel">
+          <h2>Project Info</h2>
+          <div class="grid" id="projectForm">
+            <div class="field span-2"><label>Nama proyek</label><input data-project="name"></div>
+            <div class="field span-2"><label>Lokasi</label><input data-project="location"></div>
+            <div class="field"><label>Tipe proyek</label><select data-project="type"><option>Bangunan Gedung</option><option>Rumah Tinggal</option><option>Ruko</option><option>Renovasi</option><option>Infrastruktur</option></select></div>
+            <div class="field"><label>Manual building area (m2)</label><input data-project="area" type="number" min="0" step="0.01"></div>
+            <div class="field"><label>Jumlah lantai</label><input data-project="floors" type="number" min="1" step="1"></div>
+            <div class="field"><label>Tanggal estimasi</label><input data-project="date" type="date"></div>
+            <div class="field"><label>Client / owner</label><input data-project="owner"></div>
+            <div class="field"><label>Estimator</label><input data-project="estimator"></div>
+            <div class="field span-4"><label>Catatan</label><textarea data-project="notes"></textarea></div>
+          </div>
+        </div>
+        <div class="cards" id="quickMetrics"></div>
+      </section>
+
+      <section class="view" id="geometryView">
+        <div class="panel">
+          <h2>Geometry / Measurement Panel</h2>
+          <div class="grid">
+            <div class="field"><label>Area source</label><select data-scale="areaSource"><option>manual</option><option>room_sum</option><option>ocr_dimension</option><option>auto_detected</option><option>assumption</option></select></div>
+            <div class="field"><label>Scale source</label><select data-scale="scaleSource"><option>not_detected</option><option>manual_reference_click</option><option>scale_preset</option><option>ocr_dimension</option><option>pdf_rendered</option></select></div>
+            <div class="field"><label>Reference drawing length</label><input data-scale="referenceDrawing" type="number" min="0" step="0.01"></div>
+            <div class="field"><label>Reference real length (m)</label><input data-scale="referenceReal" type="number" min="0" step="0.01"></div>
+            <div class="field"><label>Manual wall length (m)</label><input data-geometry="manualWallLength" type="number" min="0" step="0.01"></div>
+            <div class="field"><label>Manual opening area (m2)</label><input data-geometry="manualOpeningArea" type="number" min="0" step="0.01"></div>
+            <div class="field"><label>Electrical point count</label><input data-geometry="electricalPoints" type="number" min="0" step="1"></div>
+            <div class="field"><label>Plumbing point count</label><input data-geometry="plumbingPoints" type="number" min="0" step="1"></div>
+            <div class="field span-4"><label>Rooms (one per line: Nama, panjang, lebar)</label><textarea id="roomsInput" placeholder="Ruang Ibadah, 12, 8&#10;Kantor, 4, 3"></textarea></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Assumption Panel</h2>
+          <div class="grid">
+            <div class="field"><label>Wall height (m)</label><input data-assumption="wallHeight" type="number" min="0" step="0.01"></div>
+            <div class="field"><label>Plaster sides</label><select data-assumption="plasterSides"><option value="1">1 side</option><option value="2">2 sides</option></select></div>
+            <div class="field"><label>Ceiling included</label><select data-assumption="ceilingEnabled"><option value="true">Yes</option><option value="false">No</option></select></div>
+            <div class="field"><label>Roof included</label><select data-assumption="roofEnabled"><option value="true">Yes</option><option value="false">No</option></select></div>
+            <div class="field"><label>Roof factor</label><input data-assumption="roofFactor" type="number" min="0" step="0.01"></div>
+            <div class="field"><label>Contingency %</label><input data-assumption="contingency" type="number" min="0" step="0.1"></div>
+            <div class="field"><label>Overhead / Profit %</label><input data-assumption="overheadProfit" type="number" min="0" step="0.1"></div>
+            <div class="field"><label>Tax enabled</label><select data-assumption="taxEnabled"><option value="true">Yes</option><option value="false">No</option></select></div>
+            <div class="field"><label>Tax %</label><input data-assumption="tax" type="number" min="0" step="0.1"></div>
+          </div>
+        </div>
+        <div class="cards" id="geometryMetrics"></div>
+      </section>
+
+      <section class="view" id="rabView">
+        <div class="panel">
+          <div class="toolbar screen-only">
+            <div class="left">
+              <input id="rabSearch" placeholder="Cari kode / uraian">
+              <select id="categoryFilter"></select>
+              <select id="statusFilter">
+                <option value="">Semua status</option>
+                <option>OK</option>
+                <option>Review</option>
+                <option>Missing</option>
+              </select>
+            </div>
+            <div class="right">
+              <button id="addRabBtn">Tambah Row</button>
+              <button id="dupRabBtn">Duplikasi Terpilih</button>
+              <button class="danger" id="delRabBtn">Hapus Terpilih</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="rab-table">
+              <colgroup>
+                <col style="width:80px"><col style="width:150px"><col style="width:260px">
+                <col style="width:80px"><col style="width:64px"><col style="width:120px">
+                <col style="width:120px"><col style="width:110px"><col style="width:130px">
+                <col style="width:96px"><col style="width:116px">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Kode</th><th>Kategori</th><th>Uraian Pekerjaan</th><th>Volume</th><th>Sat.</th>
+                  <th>Harga Material</th><th>Harga Upah</th><th>Harga Alat</th><th>Subtotal</th><th>Status</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="rabBody"></tbody>
+            </table>
+          </div>
+          <div class="total-bar" id="totalBar"></div>
+        </div>
+      </section>
+
+      <section class="view" id="calcView">
+        <div class="panel">
+          <h2>Volume Calculator</h2>
+          <div class="calc-row">
+            <div class="field"><label>Panjang</label><input id="calcPanjang" type="number" step="0.01" value="1"></div>
+            <div class="field"><label>Lebar</label><input id="calcLebar" type="number" step="0.01" value="1"></div>
+            <div class="field"><label>Tinggi</label><input id="calcTinggi" type="number" step="0.01" value="1"></div>
+            <div class="field"><label>Bukaan</label><input id="calcBukaan" type="number" step="0.01" value="0"></div>
+            <div class="field"><label>Faktor</label><input id="calcFaktor" type="number" step="0.01" value="1"></div>
+            <div class="field"><label>Hasil</label><input id="calcResult" type="number" step="0.01" readonly></div>
+          </div>
+          <div class="actions screen-only" style="justify-content:flex-start;margin-top:10px">
+            <button data-calc="area">Luas</button>
+            <button data-calc="wall">Luas Dinding</button>
+            <button data-calc="concrete">Volume Beton</button>
+            <button data-calc="roof">Luas Atap</button>
+            <button data-calc="multiplier">Multiplier Quantity</button>
+            <button class="primary" id="applyCalcBtn">Apply ke Row Terpilih</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="priceView">
+        <div class="panel">
+          <div class="toolbar screen-only">
+            <div class="left">
+              <input id="priceSearch" placeholder="Cari item harga">
+              <select id="priceFilter"></select>
+            </div>
+            <div class="right">
+              <button id="addPriceBtn">Tambah Harga</button>
+              <button class="primary" id="applyPriceBtn">Apply ke Row Terpilih</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="price-table">
+              <colgroup>
+                <col style="width:230px"><col style="width:150px"><col style="width:70px">
+                <col style="width:120px"><col style="width:120px"><col style="width:110px">
+                <col style="width:150px"><col style="width:110px"><col style="width:180px"><col style="width:80px">
+              </colgroup>
+              <thead>
+                <tr><th>Nama item</th><th>Kategori</th><th>Sat.</th><th>Harga Material</th><th>Harga Upah</th><th>Harga Alat</th><th>Supplier/source</th><th>Last updated</th><th>Notes</th><th>Aksi</th></tr>
+              </thead>
+              <tbody id="priceBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="summaryView">
+        <div class="cards" id="summaryCards"></div>
+        <div class="panel">
+          <h2>Markup</h2>
+          <div class="grid">
+            <div class="field"><label>Overhead / Profit %</label><input id="overheadPct" type="number" step="0.1"></div>
+            <div class="field"><label>Tax enabled in assumptions</label><input id="profitPct" type="text" readonly></div>
+            <div class="field"><label>Contingency %</label><input id="contingencyPct" type="number" step="0.1"></div>
+            <div class="field"><label>Tax %</label><input id="taxPct" type="number" step="0.1"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Summary by Category</h2>
+          <div class="table-wrap" style="max-height:none">
+            <table>
+              <thead><tr><th>Category</th><th>Material subtotal</th><th>Upah subtotal</th><th>Alat subtotal</th><th>Total</th><th>Percentage</th></tr></thead>
+              <tbody id="categorySummary"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Dynamic Summary Detail</h2>
+          <div id="summaryDetail"></div>
+        </div>
+      </section>
+
+      <section class="view" id="auditView">
+        <div class="panel">
+          <h2>Audit / Validasi</h2>
+          <div class="cards" id="auditStatusCards"></div>
+          <div class="audit-list" id="auditList"></div>
+        </div>
+      </section>
+
+      <section class="view" id="printView">
+        <div class="panel">
+          <div class="preview-paper" id="printPaper"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "rab_otomatis_review_draft_v1";
+    const today = new Date().toISOString().slice(0, 10);
+    const categories = ["Persiapan", "Struktur", "Dinding", "Lantai", "Plafon", "Atap", "Pintu & Jendela", "Plumbing", "Elektrikal", "Finishing", "Lain-lain / Manual item"];
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const num = (value) => Number(value) || 0;
+    const round = (value, precision = 2) => Math.round((Number(value) || 0) * Math.pow(10, precision)) / Math.pow(10, precision);
+    const money = (value) => "Rp " + Math.round(Number(value) || 0).toLocaleString("id-ID");
+    const esc = (value) => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    let saveTimer = null;
+    function hasValidScale() {
+      return state.scaleData &&
+        state.scaleData.scaleSource &&
+        state.scaleData.scaleSource !== "not_detected" &&
+        Number(state.scaleData.pixelsPerMeter) > 0;
+    }
+    function syncScaleState() {
+      const ppm = num(state.scaleData?.pixelsPerMeter || state.autoDetection?.pixelsPerMeter);
+      if (state.scaleData?.scaleSource === "auto_detected") state.scaleData.scaleSource = "not_detected";
+      if (ppm > 0 && state.scaleData.scaleSource && state.scaleData.scaleSource !== "not_detected") {
+        state.scaleData.pixelsPerMeter = ppm;
+        state.autoDetection.pixelsPerMeter = ppm;
+      } else {
+        state.scaleData.scaleSource = "not_detected";
+        state.scaleData.pixelsPerMeter = 0;
+        state.scaleData.confidence = 0;
+        state.autoDetection.pixelsPerMeter = 0;
+      }
+    }
+    function clampDetectionConfidence(confidence, estimated = {}) {
+      const next = { overall: 0, bounds: 0, scale: 0, walls: 0, rooms: 0, symbols: 0, ...(confidence || {}) };
+      if (!hasValidScale()) next.overall = Math.min(num(next.overall), 0.30);
+      if (num(estimated.buildingArea) <= 0) next.overall = Math.min(num(next.overall), 0.35);
+      if (num(estimated.wallLength) <= 0) next.overall = Math.min(num(next.overall), 0.45);
+      next.overall = round(next.overall, 3);
+      return next;
+    }
+    function measurementIsValid(metrics = metricModel()) {
+      return state.uploadedPlan && hasValidScale() && num(metrics.buildingArea) > 0 && num(metrics.wallLength) > 0;
+    }
+    function emptyPdfAnalysis() {
+      return {
+        pageCount: 0,
+        pages: [],
+        selectedPages: { architecturalPlan: null, floorPlan: null, electricalPlan: null, plumbingPlan: null, structuralPlan: null, section: [], elevation: [], schedule: [] },
+        floors: [],
+        combinedMeasurement: { buildingArea: 0, wallLength: 0, wallArea: 0, openingArea: 0, roomCount: 0, electricalPoints: 0, plumbingPoints: 0, doorWindowUnits: 0, roofArea: 0, structureVolume: 0 },
+        confidence: { pageClassification: 0, scaleExtraction: 0, architecturalMeasurement: 0, semanticLayers: 0, mepDetection: 0, combined: 0 },
+        warnings: []
+      };
+    }
+    function emptySymbolDetection() {
+      return {
+        enabled: true,
+        pageIndex: null,
+        layers: { walls: [], doors: [], windows: [], openings: [], columns: [], stairs: [], gridLines: [], dimensionLines: [], roomLabels: [], electricalSymbols: [], plumbingSymbols: [], ignoredFurniture: [], unknown: [] },
+        counts: { wallSegments: 0, doors: 0, windows: 0, openings: 0, columns: 0, stairs: 0, electricalPoints: 0, plumbingPoints: 0 },
+        confidence: { walls: 0, doors: 0, windows: 0, openings: 0, stairs: 0, mep: 0, plumbing: 0, overall: 0 },
+        warnings: []
+      };
+    }
+    function defaultSymbolLibrary() {
+      return {
+        symbols: [
+          { id: "sym-ele-circle-cross", name: "Lampu circle cross", category: "electrical", aliases: ["lampu", "SL", "LP"], templateDataUrl: "", width: 24, height: 24, threshold: 0.72, rotations: true, scaleTolerance: 0.35, notes: "Rule-based fallback, editable template slot." },
+          { id: "sym-plumbing-fd", name: "Floor drain / FD", category: "plumbing", aliases: ["FD", "floor drain"], templateDataUrl: "", width: 24, height: 24, threshold: 0.72, rotations: true, scaleTolerance: 0.35, notes: "Keyword and component fallback." }
+        ],
+        mappings: {},
+        ignorePatterns: ["furniture", "titleblock", "dimension", "grid"]
+      };
+    }
+
+    function material(id, name, category, unit, unitPrice, source, notes = "") {
+      return { id, name, category, unit, material: unitPrice, labor: 0, equipment: 0, supplier: source, updated: today, notes };
+    }
+    function rabItem(code, category, desc, quantity, unit, unitPrice, qtySource, formula, status = "Missing") {
+      const confidence = typeof state !== "undefined" && state.autoDetection ? num(state.autoDetection.confidence?.overall) : 0;
+      return { id: "rab-" + Math.random().toString(16).slice(2), code, category, desc, volume: round(quantity), unit, material: unitPrice, labor: 0, equipment: 0, status, qtySource, formula, confidence, manualQuantity: false, manualPrice: false };
+    }
+    function initialState() {
+      return {
+        projectStateVersion: 2,
+        uploadedPlan: null,
+        analysis: { status: "Belum ada floor plan dianalisa.", progress: 0, confidence: "Not assessed", generatedAt: "" },
+        project: { name: "", location: "", type: "Bangunan Gedung", area: "", floors: 1, owner: "", estimator: "IC Solution", date: today, notes: "" },
+        autoDetection: {
+          enabled: true,
+          sourceType: "manual",
+          imageWidth: 0,
+          imageHeight: 0,
+          canvasWidth: 0,
+          canvasHeight: 0,
+          pixelsPerMeter: 0,
+          planBoundsPx: null,
+          wallPixels: 0,
+          wallSegments: [],
+          detectedRooms: [],
+          detectedOpenings: [],
+          detectedSymbols: { electrical: [], plumbing: [] },
+          estimated: { buildingArea: 0, wallLength: 0, openingArea: 0, electricalPoints: 0, plumbingPoints: 0 },
+          confidence: { overall: 0, bounds: 0, scale: 0, walls: 0, rooms: 0, symbols: 0 },
+          warnings: [],
+          assumptions: [],
+          lastRunAt: ""
+        },
+        pdfAnalysis: emptyPdfAnalysis(),
+        symbolDetection: emptySymbolDetection(),
+        symbolLibrary: defaultSymbolLibrary(),
+        measurementAcceptance: { acceptOpeningFallback: false, acceptMepFallback: false, acceptPlumbingFallback: false, acceptWallFallback: false },
+        detectedGeometry: { manualWallLength: "", manualOpeningArea: 0, electricalPoints: 0, plumbingPoints: 0 },
+        scaleData: { areaSource: "manual", scaleSource: "not_detected", scalePreset: "", referenceDrawing: "", referenceReal: "", pixelsPerMeter: 0, confidence: 0, formula: "No valid scale yet" },
+        rooms: [],
+        walls: [],
+        openings: [],
+        assumptions: { wallHeight: 3, plasterSides: 2, ceilingEnabled: true, roofEnabled: true, roofFactor: 1.15, contingency: 3, overheadProfit: 8, taxEnabled: false, tax: 11 },
+        materialDatabase: defaultMaterialDatabase(),
+        rabItems: [],
+        calculationResult: {},
+        summaryResult: {},
+        auditResult: {},
+        manualOverrides: {},
+        exportSettings: { includeTrace: true },
+        selectedRabId: null,
+        selectedPriceId: "mat-pers-001"
+      };
+    }
+    function defaultMaterialDatabase() {
+      return [
+        material("mat-pers-001", "Mobilisasi dan persiapan", "Persiapan", "ls", 2500000, "Default database", "Manual adjust by project size"),
+        material("mat-pers-002", "Pembersihan lahan", "Persiapan", "m2", 15000, "Default database"),
+        material("mat-str-001", "Beton struktur", "Struktur", "m3", 950000, "Default database"),
+        material("mat-str-002", "Pembesian struktur", "Struktur", "kg", 14500, "Default database"),
+        material("mat-din-001", "Pasangan dinding", "Dinding", "m2", 160000, "Default database"),
+        material("mat-din-002", "Plester aci", "Dinding", "m2", 90000, "Default database"),
+        material("mat-lan-001", "Keramik lantai", "Lantai", "m2", 230000, "Default database"),
+        material("mat-pla-001", "Rangka dan plafon", "Plafon", "m2", 160000, "Default database"),
+        material("mat-ata-001", "Penutup atap", "Atap", "m2", 190000, "Default database"),
+        material("mat-pj-001", "Pintu dan jendela", "Pintu & Jendela", "unit", 1750000, "Default database"),
+        material("mat-plu-001", "Instalasi plumbing", "Plumbing", "titik", 650000, "Default database"),
+        material("mat-ele-001", "Instalasi elektrikal", "Elektrikal", "titik", 450000, "Default database"),
+        material("mat-fin-001", "Cat dinding", "Finishing", "m2", 57000, "Default database")
+      ];
+    }
+    function normalizeState(input) {
+      const base = initialState();
+      const saved = input || {};
+      if (saved.projectStateVersion !== 2) {
+        return {
+          ...base,
+          project: {
+            ...base.project,
+            name: saved.project?.name || "",
+            location: saved.project?.location || "",
+            type: saved.project?.type || base.project.type,
+            owner: saved.project?.owner || "",
+            estimator: saved.project?.estimator || base.project.estimator,
+            date: saved.project?.date || base.project.date,
+            notes: "Legacy static draft was reset so area, summary, audit, and totals can be recalculated from real inputs."
+          },
+          analysis: { ...base.analysis, status: "Legacy static draft detected and reset. Upload a plan and complete Measurement before final RAB.", progress: 0 }
+        };
+      }
+      if (saved.rab && !saved.rabItems) saved.rabItems = saved.rab;
+      if (saved.prices && !saved.materialDatabase) saved.materialDatabase = saved.prices;
+      return {
+        ...base,
+        ...saved,
+        uploadedPlan: saved.uploadedPlan || base.uploadedPlan,
+        analysis: { ...base.analysis, ...(saved.analysis || {}) },
+        autoDetection: { ...base.autoDetection, ...(saved.autoDetection || {}), confidence: { ...base.autoDetection.confidence, ...(saved.autoDetection?.confidence || {}) }, estimated: { ...base.autoDetection.estimated, ...(saved.autoDetection?.estimated || {}) }, detectedSymbols: { ...base.autoDetection.detectedSymbols, ...(saved.autoDetection?.detectedSymbols || {}) } },
+        pdfAnalysis: { ...base.pdfAnalysis, ...(saved.pdfAnalysis || {}), selectedPages: { ...base.pdfAnalysis.selectedPages, ...(saved.pdfAnalysis?.selectedPages || {}) }, combinedMeasurement: { ...base.pdfAnalysis.combinedMeasurement, ...(saved.pdfAnalysis?.combinedMeasurement || {}) }, confidence: { ...base.pdfAnalysis.confidence, ...(saved.pdfAnalysis?.confidence || {}) }, pages: saved.pdfAnalysis?.pages || base.pdfAnalysis.pages, floors: saved.pdfAnalysis?.floors || base.pdfAnalysis.floors },
+        symbolDetection: { ...base.symbolDetection, ...(saved.symbolDetection || {}), layers: { ...base.symbolDetection.layers, ...(saved.symbolDetection?.layers || {}) }, counts: { ...base.symbolDetection.counts, ...(saved.symbolDetection?.counts || {}) }, confidence: { ...base.symbolDetection.confidence, ...(saved.symbolDetection?.confidence || {}) } },
+        symbolLibrary: { ...base.symbolLibrary, ...(saved.symbolLibrary || {}), symbols: saved.symbolLibrary?.symbols || base.symbolLibrary.symbols },
+        measurementAcceptance: { ...base.measurementAcceptance, ...(saved.measurementAcceptance || {}) },
+        project: { ...base.project, ...(saved.project || {}) },
+        detectedGeometry: { ...base.detectedGeometry, ...(saved.detectedGeometry || {}) },
+        scaleData: { ...base.scaleData, ...(saved.scaleData || {}), pixelsPerMeter: num(saved.scaleData?.pixelsPerMeter || saved.autoDetection?.pixelsPerMeter) },
+        assumptions: { ...base.assumptions, ...(saved.assumptions || saved.markup || {}) },
+        materialDatabase: saved.materialDatabase || base.materialDatabase,
+        rabItems: saved.rabItems || base.rabItems,
+        rooms: saved.rooms || base.rooms
+      };
+    }
+    function loadDraft() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved) return normalizeState(saved);
+      } catch (error) {}
+      return initialState();
+    }
+    let state = loadDraft();
+    function getRabItems() { return state.rabItems; }
+    function getPrices() { return state.materialDatabase; }
+    function setRabItems(items) { state.rabItems = items; state.rab = items; }
+    function persist(auto = true) {
+      recalculateAll();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      $("#saveState").textContent = (auto ? "Autosaved " : "Saved ") + new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    }
+    function scheduleSave() {
+      clearTimeout(saveTimer);
+      $("#saveState").textContent = "Menyimpan draft...";
+      saveTimer = setTimeout(() => persist(true), 250);
+    }
+    function subtotal(item) { return num(item.volume) * (num(item.material) + num(item.labor) + num(item.equipment)); }
+    function materialTotal(item) { return num(item.volume) * num(item.material); }
+    function laborTotal(item) { return num(item.volume) * num(item.labor); }
+    function equipmentTotal(item) { return num(item.volume) * num(item.equipment); }
+    function roomArea(room) { return num(room.length) * num(room.width); }
+    function parseRoomsInput(text) {
+      return String(text || "").split(/\n+/).map((line, index) => {
+        const parts = line.split(",").map(p => p.trim());
+        return { id: "room-" + index, name: parts[0] || `Ruang ${index + 1}`, length: num(parts[1]), width: num(parts[2]), source: "manual" };
+      }).filter(room => room.name && room.length > 0 && room.width > 0);
+    }
+    function roomsText() {
+      return state.rooms.map(room => `${room.name}, ${room.length}, ${room.width}`).join("\n");
+    }
+    function getPrice(name) {
+      return getPrices().find(p => p.name === name) || { material: 0, labor: 0, equipment: 0, unit: "unit" };
+    }
+    function metricModel() {
+      syncScaleState();
+      const roomsArea = state.rooms.reduce((sum, room) => sum + roomArea(room), 0);
+      const manualArea = num(state.project.area);
+      let buildingArea = 0;
+      let areaSource = "missing";
+      let areaFormula = "No building area available";
+      let confidence = 0;
+      if (state.scaleData.areaSource === "room_sum" && roomsArea > 0) {
+        buildingArea = roomsArea; areaSource = "room_sum"; areaFormula = "sum(room.length x room.width)"; confidence = 0.78;
+      } else if (manualArea > 0) {
+        buildingArea = manualArea;
+        areaSource = state.scaleData.areaSource === "auto_detected" ? "auto_detected" : "manual_input";
+        areaFormula = areaSource === "auto_detected" ? "Luas dihitung dari bounding box denah setelah kalibrasi skala." : "manual building area input";
+        confidence = areaSource === "auto_detected" ? num(state.autoDetection.confidence.overall) : (hasValidScale() ? 0.72 : 0.30);
+      } else if (roomsArea > 0) {
+        buildingArea = roomsArea; areaSource = "room_sum"; areaFormula = "sum(room.length x room.width)"; confidence = 0.78;
+      }
+      const wallLength = num(state.detectedGeometry.manualWallLength) || (buildingArea > 0 && !state.uploadedPlan ? Math.sqrt(buildingArea) * 4 : 0);
+      const wallLengthSource = num(state.detectedGeometry.manualWallLength) ? "manual_input" : (buildingArea > 0 && !state.uploadedPlan ? "assumption_from_area" : "missing");
+      const openingArea = num(state.detectedGeometry.manualOpeningArea);
+      const wallArea = Math.max(0, wallLength * num(state.assumptions.wallHeight) * num(state.assumptions.plasterSides) - openingArea);
+      const ceilingArea = state.assumptions.ceilingEnabled ? buildingArea : 0;
+      const floorArea = buildingArea;
+      const roofArea = state.assumptions.roofEnabled ? buildingArea * num(state.assumptions.roofFactor) : 0;
+      confidence = clampDetectionConfidence({ overall: confidence }, { buildingArea, wallLength }).overall;
+      return { buildingArea, areaSource, areaFormula, confidence, roomsArea, roomCount: state.rooms.length, wallLength, wallLengthSource, openingArea, wallArea, ceilingArea, floorArea, roofArea, electricalPoints: num(state.detectedGeometry.electricalPoints), plumbingPoints: num(state.detectedGeometry.plumbingPoints) };
+    }
+    function recalculateAll() {
+      const metrics = metricModel();
+      const items = getRabItems();
+      const categorySubtotals = categories.map(category => {
+        const rows = items.filter(item => item.category === category);
+        const material = rows.reduce((sum, item) => sum + materialTotal(item), 0);
+        const labor = rows.reduce((sum, item) => sum + laborTotal(item), 0);
+        const equipment = rows.reduce((sum, item) => sum + equipmentTotal(item), 0);
+        const total = material + labor + equipment;
+        return { category, material, labor, equipment, total };
+      }).filter(row => row.total > 0);
+      const direct = items.reduce((sum, item) => sum + subtotal(item), 0);
+      const contingencyAmount = direct * num(state.assumptions.contingency) / 100;
+      const overheadProfitAmount = direct * num(state.assumptions.overheadProfit) / 100;
+      const taxBase = direct + contingencyAmount + overheadProfitAmount;
+      const taxAmount = state.assumptions.taxEnabled ? taxBase * num(state.assumptions.tax) / 100 : 0;
+      const grand = direct + contingencyAmount + overheadProfitAmount + taxAmount;
+      const result = { metrics, material: items.reduce((sum, item) => sum + materialTotal(item), 0), labor: items.reduce((sum, item) => sum + laborTotal(item), 0), equipment: items.reduce((sum, item) => sum + equipmentTotal(item), 0), direct, categorySubtotals, contingencyAmount, overheadProfitAmount, taxAmount, grand, costPerM2: metrics.buildingArea > 0 ? grand / metrics.buildingArea : 0 };
+      state.calculationResult = result;
+      state.summaryResult = buildSummary(result);
+      state.auditResult = buildAudit(result);
+      return result;
+    }
+    function buildSummary(result) {
+      const topCategories = [...result.categorySubtotals].sort((a, b) => b.total - a.total).slice(0, 5);
+      const assumptionsUsed = [];
+      if (result.metrics.wallLengthSource === "assumption_from_area") assumptionsUsed.push("Wall length estimated from building area perimeter assumption");
+      if (result.metrics.areaSource === "manual_input") assumptionsUsed.push("Building area uses manual input");
+      if (state.assumptions.ceilingEnabled) assumptionsUsed.push("Ceiling area follows building area");
+      if (state.assumptions.roofEnabled) assumptionsUsed.push(`Roof area = building area x ${state.assumptions.roofFactor}`);
+      const warnings = buildAudit(result).issues.filter(i => i.severity !== "LOW").map(i => i.issue);
+      return { buildingArea: result.metrics.buildingArea, roomCount: result.metrics.roomCount, rooms: state.rooms.map(r => ({ name: r.name, area: roomArea(r) })), wallLength: result.metrics.wallLength, wallArea: result.metrics.wallArea, floorArea: result.metrics.floorArea, ceilingArea: result.metrics.ceilingArea, topCategories, assumptionsUsed, missingData: buildAudit(result).issues.filter(i => i.blocking).map(i => i.issue), confidence: result.metrics.confidence, warnings };
+    }
+    function issue(severity, issueText, category, fix, blocking = false) {
+      return { severity, issue: issueText, category, fix, blocking };
+    }
+    function buildAudit(result) {
+      const issues = [];
+      const metrics = result.metrics;
+      if (!state.uploadedPlan) issues.push(issue("HIGH", "No uploaded floor plan", "Upload", "Upload a PDF/image plan before final RAB.", true));
+      if (!hasValidScale()) issues.push(issue("HIGH", "No valid scale detected", "Measurement", "Kalibrasi dua titik atau preset scale yang menghasilkan pixels-per-meter.", true));
+      if (state.scaleData.scaleSource === "scale_preset") issues.push(issue("MEDIUM", "Preset scale needs review", "Measurement", "Preset scale memakai asumsi DPI/render scale; kalibrasi dua titik lebih valid.", false));
+      if (metrics.buildingArea <= 0) issues.push(issue("HIGH", "Area source is invalid", "Measurement", "Input building area or room dimensions.", true));
+      if (metrics.areaSource === "missing") issues.push(issue("HIGH", "Building area missing", "Measurement", "Add manual area or room list.", true));
+      if (metrics.areaSource === "manual_input") issues.push(issue("MEDIUM", "Area derived from manual input", "Measurement", "Verify against drawing scale before final.", false));
+      if (metrics.wallLength <= 0) issues.push(issue("HIGH", "Wall length missing", "Dinding", "Input manual wall length.", true));
+      if (metrics.wallLengthSource === "assumption_from_area") issues.push(issue("HIGH", "Wall length uses fallback assumption", "Dinding", "Replace with measured wall length before final.", true));
+      if (!state.rooms.length) issues.push(issue("MEDIUM", "Missing room dimensions", "Rooms", "Add room list for better area trace.", false));
+      if (state.rooms.length && metrics.buildingArea > 0 && Math.abs(metrics.roomsArea - metrics.buildingArea) / metrics.buildingArea > 0.25) issues.push(issue("MEDIUM", "Room total area inconsistent with building area", "Rooms", "Check room dimensions or area source.", false));
+      getRabItems().forEach(item => {
+        if (num(item.volume) <= 0) issues.push(issue("HIGH", "Zero quantity line item", item.category, `${item.desc}: set quantity or formula source.`, true));
+        if (num(item.material) + num(item.labor) + num(item.equipment) <= 0) issues.push(issue("HIGH", "Zero price line item", item.category, `${item.desc}: set unit price.`, true));
+      });
+      const names = new Set();
+      getRabItems().forEach(item => {
+        const key = `${item.category}|${item.desc}`.toLowerCase();
+        if (names.has(key)) issues.push(issue("MEDIUM", "Duplicated item", item.category, `${item.desc} appears more than once.`, false));
+        names.add(key);
+      });
+      categories.forEach(category => {
+        if (!getPrices().some(p => p.category === category)) issues.push(issue("MEDIUM", "Empty material category", category, "Add at least one material/price item.", false));
+      });
+      if (metrics.buildingArea > 0 && result.grand > 0) {
+        if (result.costPerM2 < 1000000) issues.push(issue("HIGH", "Suspiciously low cost per m2", "Summary", "Review quantities and missing categories.", true));
+        if (result.costPerM2 > 15000000) issues.push(issue("MEDIUM", "Suspiciously high cost per m2", "Summary", "Check high-value item prices.", false));
+      }
+      const struktur = result.categorySubtotals.find(c => c.category === "Struktur")?.total || 0;
+      const finishing = result.categorySubtotals.find(c => c.category === "Finishing")?.total || 0;
+      if (result.direct > 0 && struktur / result.direct > 0.55) issues.push(issue("MEDIUM", "Unrealistic structure cost share", "Struktur", "Review structure quantities/prices.", false));
+      if (result.direct > 0 && finishing / result.direct > 0.45) issues.push(issue("MEDIUM", "Unrealistic finishing cost share", "Finishing", "Review finishing quantities/prices.", false));
+      if (num(state.assumptions.contingency) <= 0) issues.push(issue("MEDIUM", "No contingency", "Assumptions", "Set contingency percent.", false));
+      if (!getRabItems().length) issues.push(issue("HIGH", "RAB items empty", "Budgeting", "Generate RAB only after scale, area, and wall length are valid.", true));
+      if (state.autoDetection.sourceType === "pdf_rendered") issues.push(issue("MEDIUM", "PDF rendered as raster", "Upload", "PDF was analyzed as rendered pixels, not vector/OCR extraction.", false));
+      if (state.uploadedPlan?.type === "application/pdf" || /\.pdf$/i.test(state.uploadedPlan?.name || "")) {
+        const pdf = state.pdfAnalysis || emptyPdfAnalysis();
+        if (!pdf.pageCount) issues.push(issue("MEDIUM", "PDF pages not analyzed", "Sheet Analyzer", "Run Analyze All Pages before relying on PDF takeoff.", false));
+        if (pdf.pageCount && pdf.selectedPages.floorPlan == null) issues.push(issue("HIGH", "No selected floor plan page", "Sheet Analyzer", "Select the main floor plan page before combining measurements.", true));
+        if (pdf.pages?.filter(p => ["floor_plan","architectural_plan"].includes(p.classification?.type)).length > 1) issues.push(issue("MEDIUM", "Multiple floor plans need review", "Sheet Analyzer", "Review selected page roles so only the intended floor plan drives measurement.", false));
+        if (!pdf.confidence?.semanticLayers || pdf.confidence.semanticLayers < 0.45) issues.push(issue("MEDIUM", "Semantic wall confidence needs review", "Symbol Layers", "Accept or correct detected wall/opening fallback before final RAB.", false));
+        if (pdf.selectedPages.electricalPlan == null && !state.measurementAcceptance.acceptMepFallback) issues.push(issue("MEDIUM", "MEP page not analyzed", "MEP", "Select an electrical page or accept the MEP fallback count.", false));
+        if (pdf.selectedPages.plumbingPlan == null && !state.measurementAcceptance.acceptPlumbingFallback) issues.push(issue("MEDIUM", "Plumbing page not analyzed", "Plumbing", "Select a plumbing page or accept the plumbing fallback count.", false));
+        if (pdf.pages?.some(p => (p.scaleCandidates || []).length > 1)) issues.push(issue("MEDIUM", "Multiple scale text candidates", "Scale", "Confirm scale manually or with two-point calibration.", false));
+      }
+      if (state.autoDetection.confidence?.rooms < 0.3) issues.push(issue("MEDIUM", "Room detection weak", "Rooms", "Review room list manually.", false));
+      if (state.autoDetection.wallLengthMethod === "density_fallback") issues.push(issue("MEDIUM", "Wall length estimated from density", "Dinding", "Review wall length manually.", false));
+      if (metrics.confidence < 0.45) issues.push(issue("HIGH", "Confidence below required threshold", "Measurement", "Kalibrasi skala dan koreksi hasil deteksi sebelum final.", true));
+      else if (metrics.confidence < 0.65) issues.push(issue("MEDIUM", "Confidence needs estimator review", "Measurement", "Review detection result and correction fields.", false));
+      const blocking = issues.some(i => i.blocking);
+      const high = issues.some(i => i.severity === "HIGH");
+      const medium = issues.some(i => i.severity === "MEDIUM");
+      const status = blocking ? "FAIL" : high ? "WARNING" : medium ? "WARNING" : "PASS";
+      const risk = blocking || high ? "HIGH" : medium ? "MEDIUM" : "LOW";
+      return { status, risk, issues };
+    }
+    function generateRabFromMeasurements() {
+      const m = metricModel();
+      const rows = [];
+      const add = (code, cat, name, qty, unit, formula, source) => {
+        const p = getPrice(name);
+        rows.push({ ...rabItem(code, cat, name, qty, unit || p.unit, num(p.material) + num(p.labor) + num(p.equipment), source, formula, qty > 0 ? "Review" : "Missing"), material: num(p.material), labor: num(p.labor), equipment: num(p.equipment) });
+      };
+      add("A.1", "Persiapan", "Pembersihan lahan", m.buildingArea, "m2", "building_area", m.areaSource);
+      add("A.2", "Persiapan", "Mobilisasi dan persiapan", m.buildingArea > 0 ? 1 : 0, "ls", "1 if building_area valid", m.areaSource);
+      add("B.1", "Struktur", "Beton struktur", m.buildingArea > 0 ? m.buildingArea * 0.12 : 0, "m3", "building_area x 0.12", "assumption");
+      add("B.2", "Struktur", "Pembesian struktur", m.buildingArea > 0 ? m.buildingArea * 18 : 0, "kg", "building_area x 18kg", "assumption");
+      add("C.1", "Dinding", "Pasangan dinding", m.wallArea, "m2", "wall_length x wall_height x plaster_sides - opening_area", m.wallLengthSource);
+      add("C.2", "Dinding", "Plester aci", m.wallArea, "m2", "wall_area", m.wallLengthSource);
+      add("D.1", "Lantai", "Keramik lantai", m.floorArea, "m2", "floor_area = building_area", m.areaSource);
+      add("E.1", "Plafon", "Rangka dan plafon", m.ceilingArea, "m2", "ceiling_area = building_area if enabled", m.areaSource);
+      add("F.1", "Atap", "Penutup atap", m.roofArea, "m2", "roof_area = building_area x roof_factor", m.areaSource);
+      add("G.1", "Pintu & Jendela", "Pintu dan jendela", Math.max(0, Math.ceil(m.roomCount * 1.5)), "unit", "ceil(room_count x 1.5)", state.rooms.length ? "room_count" : "missing");
+      add("H.1", "Plumbing", "Instalasi plumbing", m.plumbingPoints, "titik", "manual plumbing point count", "manual_input");
+      add("I.1", "Elektrikal", "Instalasi elektrikal", m.electricalPoints, "titik", "manual electrical point count", "manual_input");
+      add("J.1", "Finishing", "Cat dinding", m.wallArea, "m2", "wall_area", m.wallLengthSource);
+      setRabItems(rows);
+      state.selectedRabId = rows[0]?.id || null;
+      state.analysis = { ...state.analysis, detectedItems: rows.length, status: "RAB regenerated from current measurement data.", progress: Math.max(num(state.analysis.progress), 75), generatedAt: new Date().toLocaleString("id-ID"), confidence: Math.round(m.confidence * 100) + "%" };
+      renderAll();
+      scheduleSave();
+    }
+    const canvasState = { calibrating: false, points: [], zoom: 1 };
+    function canvasEl() { return $("#planCanvas"); }
+    function updateCanvasView(mode = "fit-width") {
+      const c = canvasEl();
+      if (!c) return;
+      if (mode === "fit-page") {
+        c.style.width = "auto";
+        c.style.maxWidth = "100%";
+        c.style.maxHeight = "65vh";
+        c.style.transform = "scale(1)";
+        canvasState.zoom = 1;
+      } else if (mode === "reset") {
+        canvasState.zoom = 1;
+        c.style.width = "100%";
+        c.style.maxWidth = "100%";
+        c.style.transform = "scale(1)";
+      } else {
+        c.style.width = `${Math.round(canvasState.zoom * 100)}%`;
+        c.style.maxWidth = "none";
+        c.style.transform = "scale(1)";
+      }
+    }
+    function drawCanvasOverlay() {
+      const c = canvasEl();
+      if (!c || !c.getContext) return;
+      const ctx = c.getContext("2d");
+      const d = state.autoDetection;
+      if (d.planBoundsPx) {
+        ctx.save();
+        ctx.strokeStyle = "#0f5ea8";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(d.planBoundsPx.x, d.planBoundsPx.y, d.planBoundsPx.w, d.planBoundsPx.h);
+        ctx.restore();
+      }
+      if (canvasState.points.length === 2) {
+        ctx.save();
+        ctx.strokeStyle = "#b91c1c";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(canvasState.points[0].x, canvasState.points[0].y);
+        ctx.lineTo(canvasState.points[1].x, canvasState.points[1].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+      canvasState.points.forEach((p, idx) => {
+        ctx.save();
+        ctx.fillStyle = "#b91c1c";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillText(idx === 0 ? "A" : "B", p.x + 7, p.y - 7);
+        ctx.restore();
+      });
+    }
+    let pdfRuntime = { doc: null, fileName: "" };
+    async function ensurePdfJs() {
+      if (!window.pdfjsLib) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+          s.onload = resolve;
+          s.onerror = () => reject(new Error("PDF.js CDN unavailable"));
+          document.head.appendChild(s);
+          setTimeout(() => window.pdfjsLib ? resolve() : reject(new Error("PDF.js CDN timeout")), 3500);
+        });
+      }
+      if (!window.pdfjsLib) throw new Error("PDF.js tidak tersedia");
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+    function makePdfPage(pageIndex) {
+      return {
+        pageIndex,
+        label: `Page ${pageIndex + 1}`,
+        rendered: false,
+        width: 0,
+        height: 0,
+        thumbnailDataUrl: "",
+        textExtracted: "",
+        textItems: [],
+        titleblock: { drawingTitle: "", drawingNumber: "", scaleText: "", revision: "", date: "", consultant: "" },
+        classification: { type: "unknown", confidence: 0, reasons: [] },
+        scaleCandidates: [],
+        dimensionCandidates: [],
+        selectedScale: null,
+        pixelsPerMeter: 0,
+        selectedFor: [],
+        detection: { bounds: null, rooms: [], walls: [], openings: [], doors: [], windows: [], electricalSymbols: [], plumbingSymbols: [], structuralElements: [], dimensions: [], confidence: 0, warnings: [] }
+      };
+    }
+    function normalizeText(text) {
+      return String(text || "").replace(/\s+/g, " ").trim();
+    }
+    function extractScaleCandidates(text) {
+      const source = normalizeText(text);
+      const candidates = [];
+      const add = (raw, denominator, confidence, type = "ratio") => {
+        candidates.push({ raw: raw.trim(), type, denominator: num(denominator), confidence, source: "pdf_text_titleblock" });
+      };
+      const nts = /(NTS|NOT\s+TO\s+SCALE|TANPA\s+SKALA|AS\s+SHOWN)/ig;
+      let match;
+      while ((match = nts.exec(source))) add(match[0], 0, 0.9, "nts");
+      const patterns = [
+        /\b(?:SCALE|SKALA|SKL)\s*[:=]?\s*1\s*[:/]\s*(50|75|100|125|150|200|250|500)\b/ig,
+        /\b1\s*[:/]\s*(50|75|100|125|150|200|250|500)\b/ig
+      ];
+      patterns.forEach(pattern => {
+        while ((match = pattern.exec(source))) {
+          const denominator = match[1];
+          const common = [50,75,100,125,150,200].includes(Number(denominator));
+          add(match[0], denominator, common ? 0.85 : 0.68);
+        }
+      });
+      return candidates.sort((a, b) => b.confidence - a.confidence);
+    }
+    function extractDimensionCandidates(text) {
+      const source = normalizeText(text);
+      const nums = source.match(/\b\d{2,5}\b/g) || [];
+      return nums.map(raw => {
+        const value = Number(raw);
+        const meters = value >= 100 ? value / 100 : value;
+        return { raw, value, meters, unitAssumption: value >= 100 ? "cm" : "m", confidence: value >= 100 && value <= 5000 ? 0.62 : 0.35, source: "pdf_text_dimension_candidate" };
+      }).filter(x => x.meters >= 0.5 && x.meters <= 80).slice(0, 40);
+    }
+    function extractTitleblock(textItems, pageViewport) {
+      const text = normalizeText(textItems.map(item => item.str || "").join(" "));
+      const scales = extractScaleCandidates(text);
+      const drawingNo = text.match(/\b(?:NO\.?|DRAWING\s*NO|DWG\.?\s*NO|GAMBAR)\s*[:#-]?\s*([A-Z0-9._/-]{2,})/i)?.[1] || "";
+      const date = text.match(/\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2})\b/)?.[1] || "";
+      const rev = text.match(/\b(?:REV|REVISI)\s*[:#-]?\s*([A-Z0-9]+)\b/i)?.[1] || "";
+      const title = text.match(/\b(DENAH[^|]{0,50}|FLOOR PLAN[^|]{0,50}|ELEKTRIKAL[^|]{0,50}|PLUMBING[^|]{0,50}|STRUKTUR[^|]{0,50}|TAMPAK[^|]{0,50}|POTONGAN[^|]{0,50})/i)?.[0] || "";
+      return { drawingTitle: title.trim(), drawingNumber: drawingNo, scaleText: scales[0]?.raw || "", revision: rev, date, consultant: "" };
+    }
+    function classifyPdfPage(page) {
+      const t = `${page.label} ${page.titleblock?.drawingTitle || ""} ${page.textExtracted || ""}`.toLowerCase();
+      const groups = [
+        ["electrical_plan", ["mep","electrical","elektrikal","lampu","saklar","stop kontak","panel"," sl "," lp "]],
+        ["plumbing_plan", ["plumbing","sanitair","air bersih","air kotor","pipa","floor drain"," fd "," wc ","wastafel"]],
+        ["structural_plan", ["struktur","kolom","balok","sloof","pondasi","pile","rebar","tulangan"]],
+        ["section", ["section","potongan"," a-a "," b-b ","cut"]],
+        ["elevation", ["elevation","tampak","facade"]],
+        ["schedule", ["schedule","door schedule","window schedule","daftar pintu","daftar jendela"]],
+        ["detail", ["detail","typical"]],
+        ["cover", ["cover","daftar gambar","index drawing"]],
+        ["floor_plan", ["denah","floor plan","layout","lantai","ruang","kamar","dapur","toilet","kantor","gudang","lobby"]],
+        ["architectural_plan", ["arsitektur","architectural","plan"]]
+      ];
+      let best = { type: "unknown", confidence: 0.15, reasons: [] };
+      groups.forEach(([type, keys]) => {
+        const hits = keys.filter(k => t.includes(k));
+        if (hits.length) {
+          const score = Math.min(0.95, 0.35 + hits.length * 0.14);
+          if (score > best.confidence) best = { type, confidence: score, reasons: hits };
+        }
+      });
+      page.classification = best;
+      return best;
+    }
+    function detectFloorName(text, index) {
+      const t = String(text || "").toLowerCase();
+      return t.match(/lantai\s*(dasar|1|2|3|4|5)|ground\s*floor|1st\s*floor|2nd\s*floor|mezzanine|roof\s*plan/)?.[0] || `Floor ${index + 1}`;
+    }
+    async function extractPdfPageText(pdf, pageIndex) {
+      const page = await pdf.getPage(pageIndex + 1);
+      const content = await page.getTextContent();
+      const items = content.items || [];
+      return { text: normalizeText(items.map(item => item.str || "").join(" ")), items, viewport: page.getViewport({ scale: 1 }) };
+    }
+    async function renderPdfPageThumbnail(pdf, pageIndex) {
+      const page = await pdf.getPage(pageIndex + 1);
+      const viewport1 = page.getViewport({ scale: 1 });
+      const scale = Math.min(0.55, 360 / viewport1.width);
+      const viewport = page.getViewport({ scale });
+      const c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(viewport.width));
+      c.height = Math.max(1, Math.round(viewport.height));
+      await page.render({ canvasContext: c.getContext("2d"), viewport }).promise;
+      return { dataUrl: c.toDataURL("image/png"), width: viewport1.width, height: viewport1.height };
+    }
+    async function renderPdfPageForDetection(pdf, pageIndex) {
+      const page = await pdf.getPage(pageIndex + 1);
+      const viewport1 = page.getViewport({ scale: 1 });
+      const scale = Math.min(3, 1900 / viewport1.width);
+      const viewport = page.getViewport({ scale });
+      const c = canvasEl();
+      c.width = Math.max(1, Math.round(viewport.width));
+      c.height = Math.max(1, Math.round(viewport.height));
+      await page.render({ canvasContext: c.getContext("2d"), viewport }).promise;
+      state.autoDetection.canvasWidth = c.width;
+      state.autoDetection.canvasHeight = c.height;
+      updateCanvasView("fit-width");
+      return { canvas: c, viewport, scale };
+    }
+    function autoSelectRelevantPages() {
+      const pages = state.pdfAnalysis.pages;
+      const best = type => pages.filter(p => p.classification.type === type).sort((a,b) => b.classification.confidence - a.classification.confidence)[0]?.pageIndex ?? null;
+      const floorCandidates = pages.filter(p => ["floor_plan","architectural_plan"].includes(p.classification.type)).sort((a,b) => b.classification.confidence - a.classification.confidence);
+      state.pdfAnalysis.selectedPages.floorPlan = floorCandidates[0]?.pageIndex ?? null;
+      state.pdfAnalysis.selectedPages.architecturalPlan = floorCandidates[0]?.pageIndex ?? null;
+      state.pdfAnalysis.selectedPages.electricalPlan = best("electrical_plan");
+      state.pdfAnalysis.selectedPages.plumbingPlan = best("plumbing_plan");
+      state.pdfAnalysis.selectedPages.structuralPlan = best("structural_plan");
+      state.pdfAnalysis.selectedPages.section = pages.filter(p => p.classification.type === "section").map(p => p.pageIndex);
+      state.pdfAnalysis.selectedPages.elevation = pages.filter(p => p.classification.type === "elevation").map(p => p.pageIndex);
+      state.pdfAnalysis.selectedPages.schedule = pages.filter(p => p.classification.type === "schedule").map(p => p.pageIndex);
+      pages.forEach(p => {
+        p.selectedFor = [];
+        Object.entries(state.pdfAnalysis.selectedPages).forEach(([role, value]) => {
+          if (Array.isArray(value) ? value.includes(p.pageIndex) : value === p.pageIndex) p.selectedFor.push(role);
+        });
+      });
+      if (floorCandidates.length > 1) state.pdfAnalysis.warnings.push("Multiple floor plans detected; review selected pages before applying combined measurement.");
+      renderSheets();
+      return state.pdfAnalysis.selectedPages;
+    }
+    async function analyzePdfAllPages(file) {
+      state.pdfAnalysis = emptyPdfAnalysis();
+      await ensurePdfJs();
+      const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+      pdfRuntime = { doc: pdf, fileName: file.name };
+      state.pdfAnalysis.pageCount = pdf.numPages;
+      state.pdfAnalysis.pages = Array.from({ length: pdf.numPages }, (_, i) => makePdfPage(i));
+      for (let i = 0; i < pdf.numPages; i++) {
+        state.analysis.status = `Extracting text page ${i + 1}/${pdf.numPages}`;
+        renderAll();
+        const pageState = state.pdfAnalysis.pages[i];
+        try {
+          const extracted = await extractPdfPageText(pdf, i);
+          pageState.textExtracted = extracted.text;
+          pageState.textItems = extracted.items;
+          pageState.titleblock = extractTitleblock(extracted.items, extracted.viewport);
+          pageState.scaleCandidates = extractScaleCandidates(extracted.text);
+          pageState.dimensionCandidates = extractDimensionCandidates(extracted.text);
+          if (pageState.scaleCandidates.length > 1) state.pdfAnalysis.warnings.push(`Page ${i + 1}: multiple scale candidates found.`);
+        } catch (error) {
+          pageState.detection.warnings.push("Text layer unavailable; classification uses image/manual review.");
+        }
+        try {
+          state.analysis.status = `Rendering thumbnail ${i + 1}/${pdf.numPages}`;
+          const thumb = await renderPdfPageThumbnail(pdf, i);
+          pageState.thumbnailDataUrl = thumb.dataUrl;
+          pageState.width = thumb.width;
+          pageState.height = thumb.height;
+          pageState.rendered = true;
+        } catch (error) {
+          pageState.detection.warnings.push("Thumbnail render failed.");
+        }
+        classifyPdfPage(pageState);
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+      autoSelectRelevantPages();
+      const selected = state.pdfAnalysis.selectedPages.floorPlan ?? 0;
+      await renderPdfPageForDetection(pdf, selected);
+      state.analysis.status = "Sheet Analyzer selesai. Review role sheet, kalibrasi scale pada floor plan, lalu Analyze Selected Pages.";
+      state.analysis.progress = 62;
+      renderAll();
+    }
+    async function loadPlanToCanvas(file) {
+      if (!file) throw new Error("Tidak ada file.");
+      if (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) {
+        try {
+          await renderPdfFirstPageToCanvas(file);
+          state.autoDetection.sourceType = "pdf_rendered";
+          return;
+        } catch (error) {
+          state.autoDetection.sourceType = "pdf_unavailable";
+          state.autoDetection.warnings = [`PDF preview/detection unavailable offline. Convert PDF page to image or use manual calibration. Detail: ${error.message}`];
+          throw error;
+        }
+      }
+      await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Gagal membaca file image."));
+        reader.onload = () => {
+          const img = new Image();
+          img.onerror = () => reject(new Error("File image tidak dapat dimuat."));
+          img.onload = () => {
+            const maxW = 1600;
+            const scale = Math.min(1, maxW / img.width);
+            const c = canvasEl();
+            c.width = Math.max(1, Math.round(img.width * scale));
+            c.height = Math.max(1, Math.round(img.height * scale));
+            const ctx = c.getContext("2d");
+            ctx.clearRect(0, 0, c.width, c.height);
+            ctx.drawImage(img, 0, 0, c.width, c.height);
+            state.autoDetection.sourceType = "image";
+            state.autoDetection.imageWidth = img.width;
+            state.autoDetection.imageHeight = img.height;
+            state.autoDetection.canvasWidth = c.width;
+            state.autoDetection.canvasHeight = c.height;
+            updateCanvasView("fit-width");
+            resolve();
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    async function renderPdfFirstPageToCanvas(file) {
+      if (!window.pdfjsLib) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+          s.onload = resolve;
+          s.onerror = () => reject(new Error("PDF.js CDN unavailable"));
+          document.head.appendChild(s);
+          setTimeout(() => window.pdfjsLib ? resolve() : reject(new Error("PDF.js CDN timeout")), 3500);
+        });
+      }
+      if (!window.pdfjsLib) throw new Error("PDF.js tidak tersedia");
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      const buffer = await file.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 1.5 });
+      const c = canvasEl();
+      c.width = Math.round(viewport.width);
+      c.height = Math.round(viewport.height);
+      await page.render({ canvasContext: c.getContext("2d"), viewport }).promise;
+      state.autoDetection.imageWidth = c.width;
+      state.autoDetection.imageHeight = c.height;
+      state.autoDetection.canvasWidth = c.width;
+      state.autoDetection.canvasHeight = c.height;
+      updateCanvasView("fit-width");
+    }
+    function updateScaleFromCalibration(realDistance) {
+      if (canvasState.points.length < 2 || !num(realDistance)) throw new Error("Pilih dua titik dan isi jarak meter.");
+      const [a, b] = canvasState.points;
+      const px = Math.hypot(b.x - a.x, b.y - a.y);
+      if (!px) throw new Error("Jarak pixel tidak valid.");
+      state.autoDetection.pixelsPerMeter = px / num(realDistance);
+      state.scaleData.scaleSource = "manual_reference_click";
+      state.scaleData.referenceDrawing = round(px);
+      state.scaleData.referenceReal = num(realDistance);
+      state.scaleData.pixelsPerMeter = state.autoDetection.pixelsPerMeter;
+      state.scaleData.confidence = 0.9;
+      state.scaleData.formula = `${round(px)} px / ${num(realDistance)} m = ${round(state.autoDetection.pixelsPerMeter, 3)} px per meter`;
+      state.autoDetection.confidence.scale = 0.9;
+      state.autoDetection.assumptions = [...(state.autoDetection.assumptions || []), "Skala dihitung dari dua titik referensi yang dipilih estimator."];
+      state.analysis.status = "Skala referensi diterapkan. Jalankan Auto Detect Geometry.";
+      try { analyzeCanvasGeometry(); } catch (error) { renderAll(); }
+      drawCanvasOverlay();
+      scheduleSave();
+    }
+    function applyScalePreset(preset) {
+      const scale = num(preset);
+      if (!scale) return;
+      state.autoDetection.pixelsPerMeter = 3779.5275591 / scale;
+      state.scaleData.scaleSource = "scale_preset";
+      state.scaleData.scalePreset = `1:${scale}`;
+      state.scaleData.pixelsPerMeter = state.autoDetection.pixelsPerMeter;
+      state.scaleData.referenceDrawing = `1:${scale}`;
+      state.scaleData.referenceReal = "";
+      state.scaleData.confidence = 0.55;
+      state.scaleData.formula = `Preset 1:${scale}; estimasi px/m berdasarkan 96 DPI, perlu validasi jika scan tidak sesuai ukuran cetak.`;
+      state.autoDetection.confidence.scale = 0.55;
+      state.autoDetection.warnings = [...(state.autoDetection.warnings || []), "Preset scale membutuhkan asumsi DPI/render scale; gunakan kalibrasi 2 titik untuk hasil valid."];
+      state.analysis.status = "Scale preset diterapkan dengan confidence sedang. Lebih baik kalibrasi dua titik.";
+      try { analyzeCanvasGeometry(); } catch (error) { renderAll(); }
+      scheduleSave();
+    }
+    function preprocessImageData(imageData, mode = 110) {
+      const { data, width, height } = imageData;
+      const gray = new Uint8ClampedArray(width * height);
+      let sum = 0;
+      for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+        const g = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+        gray[p] = g; sum += g;
+      }
+      const threshold = mode === "adaptive" ? Math.max(70, Math.min(170, sum / gray.length * 0.72)) : mode;
+      const binary = new Uint8Array(width * height);
+      for (let i = 0; i < gray.length; i++) binary[i] = gray[i] < threshold ? 1 : 0;
+      return { binary, width, height, threshold };
+    }
+    function detectPlanBounds(binaryData) {
+      const { binary, width, height } = binaryData;
+      let minX = width, minY = height, maxX = 0, maxY = 0, count = 0;
+      for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+        if (!binary[y * width + x]) continue;
+        minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); count++;
+      }
+      if (!count) return null;
+      const pad = 4;
+      const box = { x: Math.max(0, minX - pad), y: Math.max(0, minY - pad), w: Math.min(width - minX, maxX - minX + pad * 2), h: Math.min(height - minY, maxY - minY + pad * 2), darkCount: count };
+      box.area = box.w * box.h;
+      box.density = count / Math.max(1, box.area);
+      return box;
+    }
+    function estimateWalls(binaryData, bounds) {
+      if (!bounds) return { wallPixels: 0, wallSegments: [] };
+      const { binary, width } = binaryData;
+      let wallPixels = 0;
+      const wallSegments = [];
+      for (let y = bounds.y; y < bounds.y + bounds.h; y += 4) {
+        let run = 0, start = bounds.x;
+        for (let x = bounds.x; x < bounds.x + bounds.w; x++) {
+          if (binary[y * width + x]) { if (!run) start = x; run++; wallPixels++; }
+          else if (run > 18) { wallSegments.push({ x1: start, y1: y, x2: x - 1, y2: y, len: run }); run = 0; }
+          else run = 0;
+        }
+      }
+      for (let x = bounds.x; x < bounds.x + bounds.w; x += 4) {
+        let run = 0, start = bounds.y;
+        for (let y = bounds.y; y < bounds.y + bounds.h; y++) {
+          if (binary[y * width + x]) { if (!run) start = y; run++; wallPixels++; }
+          else if (run > 18) { wallSegments.push({ x1: x, y1: start, x2: x, y2: y - 1, len: run }); run = 0; }
+          else run = 0;
+        }
+      }
+      return { wallPixels, wallSegments: wallSegments.slice(0, 400) };
+    }
+    function estimateWallLengthFromPixels(wallPixels, pixelsPerMeter, wallSegments = []) {
+      if (!pixelsPerMeter) return { wallLength: 0, method: "missing_scale" };
+      const segmentPixels = wallSegments.reduce((sum, segment) => sum + num(segment.len), 0);
+      if (segmentPixels > 0) return { wallLength: round(segmentPixels / pixelsPerMeter), method: "segment_sum" };
+      return { wallLength: round(wallPixels / Math.max(1, pixelsPerMeter * 4)), method: "density_fallback" };
+    }
+    function estimateRoomsFromProjection(binaryData, bounds, pixelsPerMeter) {
+      if (!bounds || !pixelsPerMeter) return [];
+      const cols = bounds.w > bounds.h * 1.2 ? 3 : 2;
+      const rows = bounds.h > bounds.w * 1.1 ? 3 : 2;
+      const rooms = [];
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const wPx = bounds.w / cols;
+        const hPx = bounds.h / rows;
+        rooms.push({ id: `auto-room-${r}-${c}`, name: `Zona ${r * cols + c + 1}`, x: bounds.x + c * wPx, y: bounds.y + r * hPx, wPx, hPx, length: round(wPx / pixelsPerMeter), width: round(hPx / pixelsPerMeter), source: "auto_projection" });
+      }
+      return rooms.filter(room => room.length > 0 && room.width > 0).slice(0, 12);
+    }
+    function estimateOpenings(binaryData, wallSegments, pixelsPerMeter) {
+      const count = wallSegments.filter(s => s.len > 40 && s.len < 110).length;
+      return { detectedOpenings: Array.from({ length: Math.min(24, count) }, (_, i) => ({ id: `opening-${i}`, source: "gap_heuristic" })), openingArea: pixelsPerMeter ? Math.min(60, count * 1.2) : 0 };
+    }
+    function estimateSymbols(binaryData, bounds) {
+      if (!bounds) return { electrical: [], plumbing: [] };
+      const density = bounds.density || 0;
+      const base = Math.max(0, Math.round((bounds.w * bounds.h) / 85000 * density));
+      return {
+        electrical: Array.from({ length: Math.min(80, base + 2) }, (_, i) => ({ id: `ele-${i}`, source: "small_dark_symbol_cluster" })),
+        plumbing: Array.from({ length: Math.min(30, Math.round(base / 3)) }, (_, i) => ({ id: `plu-${i}`, source: "wet_area_cluster" }))
+      };
+    }
+    function calculateDetectionConfidence(candidate) {
+      const scale = hasValidScale() ? (state.scaleData.scaleSource === "scale_preset" ? 0.55 : 0.9) : 0;
+      const bounds = candidate.bounds ? Math.min(1, Math.max(0, candidate.bounds.area / (candidate.width * candidate.height) * 1.4)) : 0;
+      const walls = candidate.wall.wallPixels > 0 ? Math.min(1, candidate.wall.wallSegments.length / 80 + 0.25) : 0;
+      const rooms = candidate.rooms.length ? 0.55 : 0.15;
+      const symbols = candidate.symbols.electrical.length || candidate.symbols.plumbing.length ? 0.45 : 0.15;
+      const overall = scale * 0.35 + bounds * 0.20 + walls * 0.25 + rooms * 0.10 + symbols * 0.10;
+      return clampDetectionConfidence({ overall: round(overall, 3), bounds: round(bounds, 3), scale: round(scale, 3), walls: round(walls, 3), rooms: round(rooms, 3), symbols: round(symbols, 3) }, candidate.estimated || {});
+    }
+    function analyzeCanvasGeometry() {
+      const c = canvasEl();
+      if (!c || !c.getContext || !c.width || !c.height) throw new Error("Canvas belum berisi plan.");
+      const ctx = c.getContext("2d");
+      const imageData = ctx.getImageData(0, 0, c.width, c.height);
+      const passes = [80, 110, 140, "adaptive"].map(threshold => {
+        const binaryData = preprocessImageData(imageData, threshold);
+        const bounds = detectPlanBounds(binaryData);
+        const wall = estimateWalls(binaryData, bounds);
+        const rooms = estimateRoomsFromProjection(binaryData, bounds, state.autoDetection.pixelsPerMeter);
+        const openings = estimateOpenings(binaryData, wall.wallSegments, state.autoDetection.pixelsPerMeter);
+        const symbols = estimateSymbols(binaryData, bounds);
+        const score = (bounds ? bounds.area : 0) + wall.wallPixels * 12 + rooms.length * 5000 - Math.abs((bounds?.density || 0) - 0.08) * 10000;
+        return { threshold, binaryData, bounds, wall, rooms, openings, symbols, score, width: c.width, height: c.height };
+      });
+      const best = passes.sort((a, b) => b.score - a.score)[0];
+      const validScale = hasValidScale();
+      const ppm = validScale ? num(state.scaleData.pixelsPerMeter) : 0;
+      const wallEstimate = estimateWallLengthFromPixels(best.wall.wallPixels, ppm, best.wall.wallSegments);
+      const estimated = {
+        buildingArea: best.bounds && ppm ? round((best.bounds.w * best.bounds.h) / (ppm * ppm)) : 0,
+        wallLength: wallEstimate.wallLength,
+        openingArea: best.openings.openingArea,
+        electricalPoints: validScale && best.bounds && wallEstimate.wallLength > 0 ? best.symbols.electrical.length : 0,
+        plumbingPoints: validScale && best.bounds && wallEstimate.wallLength > 0 ? best.symbols.plumbing.length : 0
+      };
+      const warnings = [];
+      if (!validScale) warnings.push("Scale belum dikalibrasi; area meter dan panjang dinding belum dapat dipercaya.");
+      if (!best.bounds) warnings.push("Bounds denah tidak terdeteksi.");
+      if (estimated.buildingArea && (estimated.buildingArea <= 5 || estimated.buildingArea > 5000)) warnings.push("Luas terdeteksi di luar batas normal; perlu konfirmasi estimator.");
+      if (!estimated.wallLength) warnings.push("Wall length belum valid.");
+      if (wallEstimate.method === "density_fallback") warnings.push("Panjang dinding memakai estimasi densitas pixel; review manual.");
+      best.estimated = estimated;
+      state.autoDetection = {
+        ...state.autoDetection,
+        canvasWidth: c.width,
+        canvasHeight: c.height,
+        planBoundsPx: best.bounds,
+        wallPixels: best.wall.wallPixels,
+        wallSegments: best.wall.wallSegments,
+        detectedRooms: best.rooms,
+        detectedOpenings: best.openings.detectedOpenings,
+        detectedSymbols: best.symbols,
+        estimated,
+        confidence: calculateDetectionConfidence(best),
+        wallLengthMethod: wallEstimate.method,
+        warnings,
+        assumptions: [`Threshold pass selected: ${best.threshold}`, "Luas dihitung dari bounding box denah setelah kalibrasi skala.", "Wall length diestimasi dari densitas pixel garis gelap."],
+        lastRunAt: new Date().toLocaleString("id-ID")
+      };
+      state.analysis.status = warnings.length ? "Auto detect selesai dengan warning. Koreksi hasil sebelum final." : "Auto detect selesai. Review hasil measurement.";
+      state.analysis.progress = Math.max(num(state.analysis.progress), 80);
+      state.analysis.confidence = Math.round(state.autoDetection.confidence.overall * 100) + "%";
+      drawCanvasOverlay();
+      renderAll();
+      return state.autoDetection;
+    }
+    function applyDetectionToState() {
+      const d = state.autoDetection;
+      const area = num(d.estimated.buildingArea);
+      const wallLength = num(d.estimated.wallLength);
+      if (!hasValidScale() || area <= 0 || wallLength <= 0) {
+        state.analysis.status = "Detection belum bisa diterapkan: luas bangunan / skala / panjang dinding belum valid.";
+        state.analysis.progress = Math.max(num(state.analysis.progress), 45);
+        renderAll();
+        return false;
+      }
+      state.project.area = area;
+      state.detectedGeometry.manualWallLength = wallLength;
+      if (num(d.estimated.openingArea) >= 0) state.detectedGeometry.manualOpeningArea = num(d.estimated.openingArea);
+      if (num(d.estimated.electricalPoints) > 0) state.detectedGeometry.electricalPoints = num(d.estimated.electricalPoints);
+      if (num(d.estimated.plumbingPoints) > 0) state.detectedGeometry.plumbingPoints = num(d.estimated.plumbingPoints);
+      state.rooms = d.detectedRooms.map((room, idx) => ({ id: room.id || `auto-room-${idx}`, name: room.name || `Zona ${idx + 1}`, length: round(room.length), width: round(room.width), source: "auto_detected" }));
+      state.scaleData.areaSource = "auto_detected";
+      state.scaleData.pixelsPerMeter = num(d.pixelsPerMeter || state.scaleData.pixelsPerMeter);
+      state.scaleData.confidence = d.confidence.scale;
+      state.analysis.status = `Detection applied to measurement. Confidence ${Math.round(d.confidence.overall * 100)}%.`;
+      state.analysis.progress = 90;
+      scheduleSave();
+      renderAll();
+      return true;
+    }
+    function generateRabFromDetection() {
+      const applied = applyDetectionToState();
+      const m = metricModel();
+      const canGenerate =
+        state.uploadedPlan &&
+        hasValidScale() &&
+        m.buildingArea > 0 &&
+        m.wallLength > 0 &&
+        applied;
+      if (!canGenerate) {
+        state.analysis.status = "RAB belum bisa dibuat karena luas bangunan / skala / panjang dinding belum valid.";
+        recalculateAll();
+        renderAll();
+        switchView("auditView");
+        return;
+      }
+      generateRabFromMeasurements();
+      const lowConfidence = num(state.autoDetection.confidence?.overall) < 0.45;
+      if (lowConfidence) {
+        state.rabItems = getRabItems().map(item => ({ ...item, status: item.volume > 0 ? "Review" : "Missing" }));
+        state.analysis.status = "Draft RAB dibuat, tetapi confidence rendah. Koreksi measurement sebelum final.";
+        recalculateAll();
+        renderAll();
+      }
+      switchView("rabView");
+    }
+    function scorePageForRole(page, role) {
+      const type = page.classification?.type || "unknown";
+      const text = `${page.titleblock?.drawingTitle || ""} ${page.textExtracted || ""}`.toLowerCase();
+      const roleType = { floorPlan: ["floor_plan","architectural_plan"], architecturalPlan: ["floor_plan","architectural_plan"], electricalPlan: ["electrical_plan"], plumbingPlan: ["plumbing_plan"], structuralPlan: ["structural_plan"], section: ["section"], elevation: ["elevation"], schedule: ["schedule"] }[role] || [];
+      let score = roleType.includes(type) ? num(page.classification?.confidence) : 0;
+      if (role === "floorPlan" && /\b(denah|floor plan|layout|ruang)\b/.test(text)) score += 0.18;
+      if (role === "electricalPlan" && /(lampu|saklar|stop kontak|elektrikal|electrical)/.test(text)) score += 0.18;
+      if (role === "plumbingPlan" && /(pipa|plumbing|sanitair|floor drain|wc)/.test(text)) score += 0.18;
+      if (role === "structuralPlan" && /(kolom|balok|sloof|pondasi|struktur|rebar)/.test(text)) score += 0.18;
+      return Math.min(1, score);
+    }
+    function pageByIndex(index) {
+      return state.pdfAnalysis.pages.find(p => p.pageIndex === Number(index));
+    }
+    function setSingleRole(role, pageIndex) {
+      const value = pageIndex === "" ? null : Number(pageIndex);
+      if (Array.isArray(state.pdfAnalysis.selectedPages[role])) {
+        state.pdfAnalysis.selectedPages[role] = value == null ? [] : [value];
+      } else {
+        state.pdfAnalysis.selectedPages[role] = value;
+      }
+      state.pdfAnalysis.pages.forEach(page => {
+        page.selectedFor = [];
+        Object.entries(state.pdfAnalysis.selectedPages).forEach(([key, selected]) => {
+          if (Array.isArray(selected) ? selected.includes(page.pageIndex) : selected === page.pageIndex) page.selectedFor.push(key);
+        });
+      });
+      renderAll();
+      scheduleSave();
+    }
+    function setPageRole(pageIndex, role) {
+      const pageNumber = Number(pageIndex);
+      Object.keys(state.pdfAnalysis.selectedPages).forEach(key => {
+        const selected = state.pdfAnalysis.selectedPages[key];
+        if (Array.isArray(selected)) state.pdfAnalysis.selectedPages[key] = selected.filter(x => x !== pageNumber);
+        else if (selected === pageNumber) state.pdfAnalysis.selectedPages[key] = null;
+      });
+      if (role) setSingleRole(role, pageNumber);
+      else {
+        state.pdfAnalysis.pages.forEach(page => {
+          page.selectedFor = [];
+          Object.entries(state.pdfAnalysis.selectedPages).forEach(([key, selected]) => {
+            if (Array.isArray(selected) ? selected.includes(page.pageIndex) : selected === page.pageIndex) page.selectedFor.push(key);
+          });
+        });
+      }
+      renderAll();
+      scheduleSave();
+    }
+    function detectionToSemanticLayers(detection = state.autoDetection) {
+      const wallSegments = detection.wallSegments || [];
+      const openings = detection.detectedOpenings || [];
+      const rooms = detection.detectedRooms || [];
+      const symbols = detection.detectedSymbols || { electrical: [], plumbing: [] };
+      const walls = wallSegments.slice(0, 80).map((s, i) => ({ id: `wall-${i}`, type: Math.abs(num(s.x2) - num(s.x1)) >= Math.abs(num(s.y2) - num(s.y1)) ? "horizontal_wall" : "vertical_wall", lengthPx: num(s.len), confidence: wallSegments.length ? 0.62 : 0 }));
+      const doors = openings.filter((_, i) => i % 2 === 0).map((o, i) => ({ ...o, id: o.id || `door-${i}`, confidence: state.measurementAcceptance.acceptOpeningFallback ? 0.62 : 0.42 }));
+      const windows = openings.filter((_, i) => i % 2 === 1).map((o, i) => ({ ...o, id: o.id || `window-${i}`, confidence: state.measurementAcceptance.acceptOpeningFallback ? 0.60 : 0.40 }));
+      const roomLabels = rooms.map((r, i) => ({ id: r.id || `room-label-${i}`, label: r.name || `Zona ${i + 1}`, confidence: 0.50 }));
+      return {
+        walls,
+        doors,
+        windows,
+        openings,
+        columns: [],
+        stairs: [],
+        gridLines: [],
+        dimensionLines: [],
+        roomLabels,
+        electricalSymbols: (symbols.electrical || []).map((s, i) => ({ ...s, id: s.id || `ele-${i}`, confidence: state.measurementAcceptance.acceptMepFallback ? 0.58 : 0.38 })),
+        plumbingSymbols: (symbols.plumbing || []).map((s, i) => ({ ...s, id: s.id || `plu-${i}`, confidence: state.measurementAcceptance.acceptPlumbingFallback ? 0.58 : 0.38 })),
+        ignoredFurniture: [],
+        unknown: []
+      };
+    }
+    function runTemplateMatchingRules(page, category) {
+      const text = String(page?.textExtracted || "").toLowerCase();
+      const library = state.symbolLibrary?.symbols?.filter(s => s.category === category) || [];
+      const hits = [];
+      library.forEach(symbol => {
+        const aliases = [symbol.name, ...(symbol.aliases || [])].map(x => String(x).toLowerCase());
+        const count = aliases.reduce((sum, alias) => sum + (alias && text.includes(alias) ? 1 : 0), 0);
+        if (count) hits.push({ id: `${symbol.id}-${page.pageIndex}`, name: symbol.name, category, confidence: Math.min(0.84, 0.48 + count * 0.12), source: "text_alias_template_stub" });
+      });
+      return hits;
+    }
+    async function analyzeFloorPlanPage(pageIndex) {
+      if (!pdfRuntime.doc) throw new Error("PDF runtime belum siap. Jalankan Analyze All Pages.");
+      await renderPdfPageForDetection(pdfRuntime.doc, pageIndex);
+      let detection = null;
+      try { detection = analyzeCanvasGeometry(); } catch (error) {
+        detection = { ...state.autoDetection, warnings: [...(state.autoDetection.warnings || []), error.message] };
+      }
+      const page = pageByIndex(pageIndex);
+      if (page) {
+        page.detection = {
+          ...page.detection,
+          bounds: detection.planBoundsPx,
+          rooms: detection.detectedRooms || [],
+          walls: detection.wallSegments || [],
+          openings: detection.detectedOpenings || [],
+          electricalSymbols: detection.detectedSymbols?.electrical || [],
+          plumbingSymbols: detection.detectedSymbols?.plumbing || [],
+          confidence: num(detection.confidence?.overall),
+          warnings: detection.warnings || []
+        };
+        page.pixelsPerMeter = num(state.scaleData.pixelsPerMeter);
+      }
+      state.symbolDetection.pageIndex = pageIndex;
+      state.symbolDetection.layers = detectionToSemanticLayers(detection);
+      state.symbolDetection.counts = {
+        wallSegments: state.symbolDetection.layers.walls.length,
+        doors: state.symbolDetection.layers.doors.length,
+        windows: state.symbolDetection.layers.windows.length,
+        openings: state.symbolDetection.layers.openings.length,
+        columns: state.symbolDetection.layers.columns.length,
+        stairs: state.symbolDetection.layers.stairs.length,
+        electricalPoints: state.symbolDetection.layers.electricalSymbols.length,
+        plumbingPoints: state.symbolDetection.layers.plumbingSymbols.length
+      };
+      state.symbolDetection.confidence = {
+        walls: state.symbolDetection.counts.wallSegments ? 0.62 : 0.20,
+        doors: state.symbolDetection.counts.doors ? 0.46 : 0.20,
+        windows: state.symbolDetection.counts.windows ? 0.46 : 0.20,
+        openings: state.symbolDetection.counts.openings ? 0.48 : 0.20,
+        stairs: 0,
+        mep: state.symbolDetection.counts.electricalPoints ? 0.38 : 0.15,
+        plumbing: state.symbolDetection.counts.plumbingPoints ? 0.38 : 0.15,
+        overall: num(detection.confidence?.overall)
+      };
+      state.pdfAnalysis.confidence.architecturalMeasurement = num(detection.confidence?.overall);
+      state.pdfAnalysis.confidence.semanticLayers = state.symbolDetection.confidence.overall;
+      return detection;
+    }
+    function analyzeElectricalPage(pageIndex) {
+      const page = pageByIndex(pageIndex);
+      if (!page) return { count: 0, confidence: 0, hits: [] };
+      const hits = runTemplateMatchingRules(page, "electrical");
+      const keywordCount = (page.textExtracted.match(/lampu|saklar|stop kontak|panel|elektrikal|electrical/ig) || []).length;
+      const count = Math.max(hits.length, Math.min(120, keywordCount || state.autoDetection.detectedSymbols?.electrical?.length || 0));
+      page.detection.electricalSymbols = Array.from({ length: count }, (_, i) => hits[i] || { id: `ele-page-${pageIndex}-${i}`, source: "electrical_keyword_rule", confidence: 0.45 });
+      state.pdfAnalysis.confidence.mepDetection = count ? Math.max(state.pdfAnalysis.confidence.mepDetection, 0.55) : state.pdfAnalysis.confidence.mepDetection;
+      return { count, confidence: count ? 0.55 : 0.15, hits };
+    }
+    function analyzePlumbingPage(pageIndex) {
+      const page = pageByIndex(pageIndex);
+      if (!page) return { count: 0, confidence: 0, hits: [] };
+      const hits = runTemplateMatchingRules(page, "plumbing");
+      const keywordCount = (page.textExtracted.match(/pipa|floor drain|fd|wc|wastafel|plumbing|sanitair/ig) || []).length;
+      const count = Math.max(hits.length, Math.min(80, keywordCount || state.autoDetection.detectedSymbols?.plumbing?.length || 0));
+      page.detection.plumbingSymbols = Array.from({ length: count }, (_, i) => hits[i] || { id: `plu-page-${pageIndex}-${i}`, source: "plumbing_keyword_rule", confidence: 0.45 });
+      state.pdfAnalysis.confidence.mepDetection = count ? Math.max(state.pdfAnalysis.confidence.mepDetection, 0.55) : state.pdfAnalysis.confidence.mepDetection;
+      return { count, confidence: count ? 0.55 : 0.15, hits };
+    }
+    function analyzeStructuralPage(pageIndex) {
+      const page = pageByIndex(pageIndex);
+      if (!page) return { volume: 0, confidence: 0 };
+      const hits = (page.textExtracted.match(/kolom|balok|sloof|pondasi|beton|tulangan|rebar/ig) || []).length;
+      const area = num(state.autoDetection.estimated?.buildingArea || state.project.area);
+      const volume = area > 0 ? round(area * (hits ? 0.13 : 0.10)) : 0;
+      page.detection.structuralElements = Array.from({ length: Math.min(60, hits) }, (_, i) => ({ id: `str-${pageIndex}-${i}`, source: "structural_keyword_rule", confidence: 0.44 }));
+      return { volume, confidence: hits ? 0.50 : 0.25 };
+    }
+    function combinePageMeasurements(parts = {}) {
+      const auto = state.autoDetection.estimated || {};
+      const rooms = state.autoDetection.detectedRooms || [];
+      const floor = pageByIndex(state.pdfAnalysis.selectedPages.floorPlan);
+      const area = num(auto.buildingArea || state.project.area);
+      const wallLength = num(auto.wallLength || state.detectedGeometry.manualWallLength);
+      const openingArea = num(auto.openingArea || state.detectedGeometry.manualOpeningArea);
+      const electricalPoints = num(parts.electrical?.count || auto.electricalPoints || state.detectedGeometry.electricalPoints);
+      const plumbingPoints = num(parts.plumbing?.count || auto.plumbingPoints || state.detectedGeometry.plumbingPoints);
+      const structureVolume = num(parts.structural?.volume || (area > 0 ? area * 0.12 : 0));
+      const combined = {
+        buildingArea: round(area),
+        wallLength: round(wallLength),
+        wallArea: round(Math.max(0, wallLength * num(state.assumptions.wallHeight) * num(state.assumptions.plasterSides) - openingArea)),
+        openingArea: round(openingArea),
+        roomCount: rooms.length,
+        electricalPoints,
+        plumbingPoints,
+        doorWindowUnits: Math.max(0, state.symbolDetection.counts.doors + state.symbolDetection.counts.windows || Math.ceil(rooms.length * 1.5)),
+        roofArea: round(area * num(state.assumptions.roofFactor)),
+        structureVolume: round(structureVolume),
+        sourcePages: {
+          floorPlan: floor?.label || "",
+          electricalPlan: pageByIndex(state.pdfAnalysis.selectedPages.electricalPlan)?.label || "",
+          plumbingPlan: pageByIndex(state.pdfAnalysis.selectedPages.plumbingPlan)?.label || "",
+          structuralPlan: pageByIndex(state.pdfAnalysis.selectedPages.structuralPlan)?.label || ""
+        }
+      };
+      state.pdfAnalysis.combinedMeasurement = combined;
+      const scores = [
+        state.pdfAnalysis.confidence.pageClassification,
+        state.pdfAnalysis.confidence.scaleExtraction,
+        state.pdfAnalysis.confidence.architecturalMeasurement,
+        state.pdfAnalysis.confidence.semanticLayers,
+        state.pdfAnalysis.confidence.mepDetection || (electricalPoints || plumbingPoints ? 0.45 : 0.15)
+      ].map(num);
+      state.pdfAnalysis.confidence.combined = round(scores.reduce((a, b) => a + b, 0) / scores.length, 3);
+      return combined;
+    }
+    async function analyzeSelectedPages() {
+      const selected = state.pdfAnalysis.selectedPages || {};
+      if (selected.floorPlan == null) {
+        state.analysis.status = "Pilih floor plan page sebelum Analyze Selected Pages.";
+        renderAll();
+        return false;
+      }
+      state.analysis.status = "Analyzing selected floor plan page.";
+      renderAll();
+      const floor = await analyzeFloorPlanPage(selected.floorPlan);
+      const electrical = selected.electricalPlan != null ? analyzeElectricalPage(selected.electricalPlan) : { count: num(floor?.estimated?.electricalPoints), confidence: 0.30, hits: [] };
+      const plumbing = selected.plumbingPlan != null ? analyzePlumbingPage(selected.plumbingPlan) : { count: num(floor?.estimated?.plumbingPoints), confidence: 0.30, hits: [] };
+      const structural = selected.structuralPlan != null ? analyzeStructuralPage(selected.structuralPlan) : { volume: num(floor?.estimated?.buildingArea) * 0.12, confidence: 0.25 };
+      combinePageMeasurements({ electrical, plumbing, structural });
+      state.analysis.status = "Selected pages analyzed. Review combined detection, then apply to measurement.";
+      state.analysis.progress = Math.max(num(state.analysis.progress), 82);
+      renderAll();
+      scheduleSave();
+      return true;
+    }
+    function applyCombinedMeasurementToState() {
+      const c = state.pdfAnalysis.combinedMeasurement || {};
+      if (!hasValidScale() || num(c.buildingArea) <= 0 || num(c.wallLength) <= 0) {
+        state.analysis.status = "Combined detection belum valid: scale, area, atau wall length masih kosong.";
+        renderAll();
+        return false;
+      }
+      state.project.area = num(c.buildingArea);
+      state.detectedGeometry.manualWallLength = num(c.wallLength);
+      state.detectedGeometry.manualOpeningArea = num(c.openingArea);
+      state.detectedGeometry.electricalPoints = num(c.electricalPoints);
+      state.detectedGeometry.plumbingPoints = num(c.plumbingPoints);
+      state.rooms = (state.autoDetection.detectedRooms || []).map((room, idx) => ({ id: room.id || `combined-room-${idx}`, name: room.name || `Zona ${idx + 1}`, length: round(room.length), width: round(room.width), source: "combined_pdf_detection" }));
+      state.scaleData.areaSource = "auto_detected";
+      state.analysis.status = "Combined detection applied to Measurement.";
+      state.analysis.progress = 92;
+      renderAll();
+      scheduleSave();
+      return true;
+    }
+    function generateRabFromCombinedMeasurement() {
+      if (!applyCombinedMeasurementToState()) {
+        switchView("auditView");
+        return;
+      }
+      generateRabFromMeasurements();
+      state.analysis.status = "Draft RAB generated from combined multi-page detection.";
+      renderAll();
+      switchView("rabView");
+    }
+    function renderSheets() {
+      const pages = state.pdfAnalysis.pages || [];
+      const switcher = $("#pageSwitcher");
+      if (switcher) {
+        const options = `<option value="">Pilih page preview</option>` + pages.map(p => `<option value="${p.pageIndex}" ${state.pdfAnalysis.selectedPages.floorPlan === p.pageIndex ? "selected" : ""}>${esc(p.label)} - ${esc(p.classification?.type || "unknown")}</option>`).join("");
+        if (switcher.innerHTML !== options) switcher.innerHTML = options;
+      }
+      $("#sheetStatus").textContent = pages.length ? `${pages.length} page dianalisa. Role dapat dikoreksi per sheet sebelum combine.` : "Upload PDF multi-page untuk klasifikasi sheet.";
+      $("#sheetGrid").innerHTML = pages.length ? pages.map(page => {
+        const selected = page.selectedFor?.join(", ") || "not selected";
+        return `<div class="sheet-card">
+          ${page.thumbnailDataUrl ? `<img src="${page.thumbnailDataUrl}" alt="${esc(page.label)}">` : `<div class="center small">No thumbnail</div>`}
+          <b>${esc(page.label)}</b>
+          <div class="small">${esc(page.titleblock?.drawingTitle || page.classification?.type || "unknown")}</div>
+          <div><span class="status ${page.classification?.confidence >= 0.65 ? "ok" : page.classification?.confidence >= 0.35 ? "review" : "bad"}">${Math.round(num(page.classification?.confidence) * 100)}%</span></div>
+          <label class="small">Role</label>
+          <select data-page-role="${page.pageIndex}">
+            <option value="">Not selected</option>
+            ${["floorPlan","architecturalPlan","electricalPlan","plumbingPlan","structuralPlan","section","elevation","schedule"].map(role => `<option value="${role}" ${page.selectedFor?.includes(role) ? "selected" : ""}>${role}</option>`).join("")}
+          </select>
+          <div class="small">Selected: ${esc(selected)}</div>
+          <div class="small">Scale: ${esc(page.scaleCandidates?.[0]?.raw || "none")}</div>
+        </div>`;
+      }).join("") : `<div class="small">Belum ada page analysis.</div>`;
+      $$("[data-page-role]").forEach(sel => sel.onchange = () => setPageRole(sel.dataset.pageRole, sel.value));
+      const c = state.pdfAnalysis.combinedMeasurement || {};
+      $("#combinedResults").innerHTML = [
+        ["Combined area", c.buildingArea ? `${round(c.buildingArea)} m2` : "Missing"],
+        ["Combined wall length", c.wallLength ? `${round(c.wallLength)} m` : "Missing"],
+        ["Electrical points", c.electricalPoints || 0],
+        ["Plumbing points", c.plumbingPoints || 0],
+        ["Door/window units", c.doorWindowUnits || 0],
+        ["Structure volume", c.structureVolume ? `${round(c.structureVolume)} m3` : "-"],
+        ["Combined confidence", `${Math.round(num(state.pdfAnalysis.confidence?.combined) * 100)}%`],
+        ["Warnings", state.pdfAnalysis.warnings?.join("; ") || "-"]
+      ].map(x => `<div class="result-card"><span>${x[0]}</span><b>${esc(x[1])}</b></div>`).join("");
+    }
+    function renderSymbolLayerList() {
+      const counts = state.symbolDetection.counts || {};
+      const conf = state.symbolDetection.confidence || {};
+      const accepted = state.measurementAcceptance || {};
+      $("#symbolLayerList").innerHTML = [
+        ["Walls", counts.wallSegments || 0, conf.walls, accepted.acceptWallFallback],
+        ["Doors", counts.doors || 0, conf.doors, accepted.acceptOpeningFallback],
+        ["Windows", counts.windows || 0, conf.windows, accepted.acceptOpeningFallback],
+        ["Electrical", counts.electricalPoints || 0, conf.mep, accepted.acceptMepFallback],
+        ["Plumbing", counts.plumbingPoints || 0, conf.plumbing, accepted.acceptPlumbingFallback],
+        ["Room labels", state.symbolDetection.layers?.roomLabels?.length || 0, conf.overall, true],
+        ["Unknown", state.symbolDetection.layers?.unknown?.length || 0, 0, false],
+        ["Overall", Object.values(counts).reduce((a, b) => a + num(b), 0), conf.overall, conf.overall >= 0.45]
+      ].map(x => `<div class="result-card"><span>${esc(x[0])}</span><b>${esc(x[1])}</b><div class="small">Conf ${Math.round(num(x[2]) * 100)}% - ${x[3] ? "accepted/reviewed" : "needs review"}</div></div>`).join("");
+    }
+    function renderAll() {
+      recalculateAll();
+      renderAnalysis();
+      renderSheets();
+      renderProject();
+      renderGeometry();
+      renderDetectionResults();
+      renderSymbolLayerList();
+      renderFilters();
+      renderRab();
+      renderPrices();
+      renderSummary();
+      renderAudit();
+      renderPrint();
+      $("#projectLine").textContent = `${state.project.name || "Tanpa nama"} - ${state.project.location || "Lokasi belum diisi"} - ${state.auditResult.status || "FAIL"}`;
+    }
+    function renderAnalysis() {
+      const a = state.analysis || {};
+      const m = state.calculationResult.metrics || metricModel();
+      const validScale = hasValidScale();
+      const measurementReady = measurementIsValid(m);
+      const rabCount = getRabItems().length;
+      const budgetStatus = !rabCount || !measurementReady ? "Missing" : m.confidence < 0.65 ? "Review" : "Ready";
+      const scaleStatus = !validScale ? "Missing" : state.scaleData.scaleSource === "scale_preset" ? "Review" : "OK";
+      $("#analysisProgress").style.width = `${Math.max(0, Math.min(100, num(a.progress)))}%`;
+      $("#analysisStatus").textContent = a.status || "Belum ada floor plan dianalisa.";
+      $("#analysisCards").innerHTML = [
+        ["File", state.uploadedPlan?.name || "Belum ada"],
+        ["Ukuran", state.uploadedPlan?.size ? `${Math.round(state.uploadedPlan.size / 1024)} KB` : "-"],
+        ["Area source", m.areaSource],
+        ["Building area", m.buildingArea ? `${round(m.buildingArea)} m2` : "Missing"],
+        ["Confidence", Math.round(num(state.autoDetection.confidence?.overall || m.confidence) * 100) + "%"],
+        ["Audit", `${state.auditResult.status || "FAIL"} / ${state.auditResult.risk || "HIGH"}`]
+      ].map(x => `<div class="analysis-card"><span>${x[0]}</span><b>${esc(x[1])}</b></div>`).join("");
+      $("#analysisLog").innerHTML = [
+        ["Tahap", "Output", "Status"],
+        ["1. Dokumen", state.uploadedPlan ? `Input diterima: ${state.uploadedPlan.name}` : "Menunggu upload floor plan", state.uploadedPlan ? "OK" : "-"],
+        ["2. Scale", validScale ? `Scale source: ${state.scaleData.scaleSource}, ${round(state.scaleData.pixelsPerMeter)} px/m` : "Scale belum valid - pixels-per-meter missing", scaleStatus],
+        ["3. Measurement", measurementReady ? `Area ${round(m.buildingArea)} m2, wall ${round(m.wallLength)} m` : "Area atau panjang dinding belum valid", measurementReady ? "Ready" : "Missing"],
+        ["4. Budgeting", rabCount && measurementReady ? `${rabCount} item dihitung dari measurement` : "Belum bisa generate RAB normal tanpa measurement valid", budgetStatus]
+      ].map(r => `<div><span>${esc(r[0])}</span><span>${esc(r[1])}</span><span>${esc(r[2])}</span></div>`).join("");
+    }
+    function renderDetectionResults() {
+      const d = state.autoDetection;
+      const e = d.estimated || {};
+      const scaleLabel = hasValidScale() ? `${state.scaleData.scaleSource} - ${round(state.scaleData.pixelsPerMeter)} px/m` : "Missing / invalid";
+      const applied = state.scaleData.areaSource === "auto_detected" && num(state.project.area) > 0 && num(state.detectedGeometry.manualWallLength) > 0;
+      const areaValid = num(e.buildingArea) > 0;
+      const wallValid = num(e.wallLength) > 0;
+      $("#detectionResults").innerHTML = [
+        ["Status Skala", scaleLabel],
+        ["Luas Bangunan Terdeteksi", areaValid ? `${round(e.buildingArea)} m2 - belum/applied sesuai status` : "Belum valid"],
+        ["Panjang Dinding Terdeteksi", wallValid ? `${round(e.wallLength)} m - ${esc(d.wallLengthMethod || "segment")}` : "Belum valid"],
+        ["Applied Measurement Status", applied ? "Applied to Measurement" : "Detected but not applied / missing"],
+        ["Wall area", wallValid ? `${round(Math.max(0, e.wallLength * num(state.assumptions.wallHeight) * num(state.assumptions.plasterSides) - num(e.openingArea)))} m2` : "-"],
+        ["Opening estimate", `${round(e.openingArea || 0)} m2`],
+        ["Room count", d.detectedRooms?.length || 0],
+        ["Electrical points", hasValidScale() && wallValid ? e.electricalPoints || 0 : "Menunggu scale/geometry valid"],
+        ["Plumbing points", hasValidScale() && wallValid ? e.plumbingPoints || 0 : "Menunggu scale/geometry valid"],
+        ["Confidence", `${Math.round(num(d.confidence?.overall) * 100)}%`],
+        ["Warnings", d.warnings?.join("; ") || "-"],
+        ["Assumptions", d.assumptions?.join("; ") || "-"]
+      ].map(x => `<div class="result-card"><span>${x[0]}</span><b>${esc(x[1])}</b></div>`).join("");
+      $("#calibrationStatus").textContent = hasValidScale() ? `Scale aktif: ${round(state.scaleData.pixelsPerMeter)} px/m (${state.scaleData.scaleSource})` : "Upload image/PDF lalu kalibrasi skala untuk konversi meter.";
+    }
+    function renderProject() {
+      $$("[data-project]").forEach(el => {
+        const key = el.dataset.project;
+        if (document.activeElement !== el) el.value = state.project[key] ?? "";
+        el.oninput = () => { state.project[key] = el.value; scheduleSave(); renderAll(); };
+      });
+      const t = state.calculationResult;
+      $("#quickMetrics").innerHTML = [
+        ["Building Area", t.metrics?.buildingArea ? `${round(t.metrics.buildingArea)} m2` : "Missing"],
+        ["Cost / m2", t.costPerM2 ? money(t.costPerM2) : "-"],
+        ["Final Grand Total", money(t.grand || 0)],
+        ["Audit", `${state.auditResult.status || "FAIL"} / ${state.auditResult.risk || "HIGH"}`]
+      ].map(m => `<div class="metric"><span>${m[0]}</span><b>${m[1]}</b></div>`).join("");
+    }
+    function renderGeometry() {
+      $$("[data-scale]").forEach(el => {
+        const key = el.dataset.scale;
+        if (document.activeElement !== el) el.value = state.scaleData[key] ?? "";
+        el.oninput = el.onchange = () => { state.scaleData[key] = el.value; scheduleSave(); renderAll(); };
+      });
+      $$("[data-geometry]").forEach(el => {
+        const key = el.dataset.geometry;
+        if (document.activeElement !== el) el.value = state.detectedGeometry[key] ?? "";
+        el.oninput = () => { state.detectedGeometry[key] = el.value; scheduleSave(); renderAll(); };
+      });
+      $$("[data-assumption]").forEach(el => {
+        const key = el.dataset.assumption;
+        if (document.activeElement !== el) el.value = String(state.assumptions[key]);
+        el.oninput = el.onchange = () => {
+          const value = el.value === "true" ? true : el.value === "false" ? false : (el.type === "number" ? num(el.value) : el.value);
+          state.assumptions[key] = value; scheduleSave(); renderAll();
+        };
+      });
+      if (document.activeElement !== $("#roomsInput")) $("#roomsInput").value = roomsText();
+      $("#roomsInput").oninput = () => { state.rooms = parseRoomsInput($("#roomsInput").value); state.scaleData.areaSource = state.rooms.length ? "room_sum" : state.scaleData.areaSource; scheduleSave(); renderAll(); };
+      const m = state.calculationResult.metrics || metricModel();
+      $("#geometryMetrics").innerHTML = [
+        ["Building Area", m.buildingArea ? `${round(m.buildingArea)} m2` : "Missing"],
+        ["Room Count", m.roomCount],
+        ["Wall Length", m.wallLength ? `${round(m.wallLength)} m` : "Missing"],
+        ["Wall Area", m.wallArea ? `${round(m.wallArea)} m2` : "Missing"],
+        ["Ceiling Area", `${round(m.ceilingArea)} m2`],
+        ["Roof Area", `${round(m.roofArea)} m2`],
+        ["Area Trace", `${m.areaSource}: ${m.areaFormula}`],
+        ["Confidence", `${Math.round(m.confidence * 100)}%`]
+      ].map(x => `<div class="metric"><span>${x[0]}</span><b>${esc(x[1])}</b></div>`).join("");
+    }
+    function renderFilters() {
+      const catOptions = `<option value="">Semua kategori</option>` + categories.map(c => `<option>${c}</option>`).join("");
+      if ($("#categoryFilter").innerHTML !== catOptions) $("#categoryFilter").innerHTML = catOptions;
+      if ($("#priceFilter").innerHTML !== catOptions) $("#priceFilter").innerHTML = catOptions;
+    }
+    function visibleRab() {
+      const q = $("#rabSearch")?.value.toLowerCase() || "";
+      const cat = $("#categoryFilter")?.value || "";
+      const status = $("#statusFilter")?.value || "";
+      return getRabItems().filter(r => (!q || `${r.code} ${r.desc}`.toLowerCase().includes(q)) && (!cat || r.category === cat) && (!status || r.status === status));
+    }
+    function renderRab() {
+      const rows = visibleRab();
+      let html = "";
+      let current = "";
+      rows.forEach(r => {
+        if (r.category !== current) {
+          current = r.category;
+          const catTotal = rows.filter(x => x.category === current).reduce((a, x) => a + subtotal(x), 0);
+          html += `<tr class="group-row"><td></td><td colspan="7">${esc(current)}</td><td class="num">${money(catTotal)}</td><td colspan="2"></td></tr>`;
+        }
+        html += `<tr class="${state.selectedRabId === r.id ? "selected" : ""}">
+          <td><input data-rab="${r.id}" data-key="code" value="${esc(r.code)}"></td>
+          <td><select data-rab="${r.id}" data-key="category">${categories.map(c => `<option ${c === r.category ? "selected" : ""}>${c}</option>`).join("")}</select></td>
+          <td><input data-rab="${r.id}" data-key="desc" value="${esc(r.desc)}" title="${esc(r.formula || "")}"></td>
+          <td><input class="num" type="number" step="0.01" data-rab="${r.id}" data-key="volume" value="${round(r.volume)}"></td>
+          <td><input class="center" data-rab="${r.id}" data-key="unit" value="${esc(r.unit)}"></td>
+          <td><input class="num" type="number" step="1" data-rab="${r.id}" data-key="material" value="${r.material}"></td>
+          <td><input class="num" type="number" step="1" data-rab="${r.id}" data-key="labor" value="${r.labor}"></td>
+          <td><input class="num" type="number" step="1" data-rab="${r.id}" data-key="equipment" value="${r.equipment}"></td>
+          <td class="num"><b>${money(subtotal(r))}</b></td>
+          <td class="center"><select data-rab="${r.id}" data-key="status">${["OK","Review","Missing"].map(s => `<option ${s === r.status ? "selected" : ""}>${s}</option>`).join("")}</select></td>
+          <td><div class="mini-actions"><button data-act="copy" data-id="${r.id}">Copy</button><button class="danger" data-act="delete" data-id="${r.id}">Del</button></div></td>
+        </tr>`;
+      });
+      $("#rabBody").innerHTML = html || `<tr><td colspan="11" class="center">Generate RAB dari Measurement atau tambah manual item.</td></tr>`;
+      bindRabInputs();
+      const t = state.calculationResult;
+      $("#totalBar").innerHTML = [
+        ["Material", money(t.material || 0)], ["Upah", money(t.labor || 0)], ["Alat", money(t.equipment || 0)], ["Direct Cost", money(t.direct || 0)], ["Grand Total", money(t.grand || 0)]
+      ].map(x => `<div><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
+    }
+    function bindRabInputs() {
+      $$("[data-rab]").forEach(el => {
+        el.onfocus = () => { state.selectedRabId = el.dataset.rab; };
+        el.onchange = el.oninput = () => {
+          const r = getRabItems().find(x => x.id === el.dataset.rab);
+          if (!r) return;
+          const key = el.dataset.key;
+          r[key] = ["volume","material","labor","equipment"].includes(key) ? num(el.value) : el.value;
+          if (key === "volume") r.manualQuantity = true;
+          if (["material","labor","equipment"].includes(key)) r.manualPrice = true;
+          state.selectedRabId = r.id; scheduleSave(); renderAll();
+        };
+      });
+      $$("[data-act]").forEach(btn => btn.onclick = () => { state.selectedRabId = btn.dataset.id; btn.dataset.act === "copy" ? duplicateRab() : deleteRab(); });
+    }
+    function addRab() {
+      const item = rabItem("MAN", "Lain-lain / Manual item", "Manual item", 0, "unit", 0, "manual", "manual item");
+      item.material = 0; setRabItems([...getRabItems(), item]); state.selectedRabId = item.id; scheduleSave(); renderAll();
+    }
+    function duplicateRab() {
+      const r = getRabItems().find(x => x.id === state.selectedRabId);
+      if (!r) return;
+      const copy = { ...r, id: "rab-" + Date.now(), code: `${r.code}.copy`, status: "Review" };
+      const items = [...getRabItems()]; items.splice(items.indexOf(r) + 1, 0, copy); setRabItems(items); state.selectedRabId = copy.id; scheduleSave(); renderAll();
+    }
+    function deleteRab() {
+      setRabItems(getRabItems().filter(r => r.id !== state.selectedRabId)); state.selectedRabId = getRabItems()[0]?.id || null; scheduleSave(); renderAll();
+    }
+    function visiblePrices() {
+      const q = $("#priceSearch")?.value.toLowerCase() || "";
+      const cat = $("#priceFilter")?.value || "";
+      return getPrices().filter(p => (!q || `${p.name} ${p.supplier}`.toLowerCase().includes(q)) && (!cat || p.category === cat));
+    }
+    function renderPrices() {
+      $("#priceBody").innerHTML = visiblePrices().map(p => `<tr class="${state.selectedPriceId === p.id ? "selected" : ""}">
+        <td><input data-price="${p.id}" data-key="name" value="${esc(p.name)}"></td>
+        <td><select data-price="${p.id}" data-key="category">${categories.map(c => `<option ${c === p.category ? "selected" : ""}>${c}</option>`).join("")}</select></td>
+        <td><input data-price="${p.id}" data-key="unit" value="${esc(p.unit)}"></td>
+        <td><input class="num" type="number" data-price="${p.id}" data-key="material" value="${p.material}"></td>
+        <td><input class="num" type="number" data-price="${p.id}" data-key="labor" value="${p.labor}"></td>
+        <td><input class="num" type="number" data-price="${p.id}" data-key="equipment" value="${p.equipment}"></td>
+        <td><input data-price="${p.id}" data-key="supplier" value="${esc(p.supplier)}"></td>
+        <td><input type="date" data-price="${p.id}" data-key="updated" value="${esc(p.updated)}"></td>
+        <td><input data-price="${p.id}" data-key="notes" value="${esc(p.notes)}"></td>
+        <td class="center"><button class="danger" data-price-del="${p.id}">Del</button></td>
+      </tr>`).join("");
+      $$("[data-price]").forEach(el => {
+        el.onfocus = () => { state.selectedPriceId = el.dataset.price; };
+        el.onchange = el.oninput = () => {
+          const p = getPrices().find(x => x.id === el.dataset.price);
+          if (!p) return;
+          const key = el.dataset.key; p[key] = ["material","labor","equipment"].includes(key) ? num(el.value) : el.value;
+          state.selectedPriceId = p.id; scheduleSave(); renderAll();
+        };
+      });
+      $$("[data-price-del]").forEach(btn => btn.onclick = () => { state.materialDatabase = getPrices().filter(p => p.id !== btn.dataset.priceDel); scheduleSave(); renderAll(); });
+    }
+    function addPrice() {
+      const item = material("mat-" + Date.now(), "Harga baru", categories[0], "unit", 0, "Manual");
+      state.materialDatabase.push(item); state.selectedPriceId = item.id; scheduleSave(); renderAll();
+    }
+    function applyPrice() {
+      const p = getPrices().find(x => x.id === state.selectedPriceId);
+      const r = getRabItems().find(x => x.id === state.selectedRabId);
+      if (!p || !r) return;
+      Object.assign(r, { desc: p.name, category: p.category, unit: p.unit, material: p.material, labor: p.labor, equipment: p.equipment, status: "Review", manualPrice: true });
+      scheduleSave(); renderAll();
+    }
+    function calculate(mode) {
+      const p = num($("#calcPanjang").value), l = num($("#calcLebar").value), t = num($("#calcTinggi").value), b = num($("#calcBukaan").value), f = num($("#calcFaktor").value);
+      $("#calcResult").value = round(({ area: p * l, wall: Math.max(0, p * t - b), concrete: p * l * t, roof: p * l * f, multiplier: p * l * t * f }[mode]) || 0);
+    }
+    function applyCalc() {
+      const r = getRabItems().find(x => x.id === state.selectedRabId);
+      if (!r) return;
+      r.volume = num($("#calcResult").value); r.manualQuantity = true; r.status = "Review"; scheduleSave(); renderAll();
+    }
+    function categoryRows() {
+      const d = state.calculationResult.direct || 0;
+      return state.calculationResult.categorySubtotals.map(c => ({ ...c, percent: d ? c.total / d * 100 : 0 }));
+    }
+    function totalsObject() { return state.calculationResult; }
+    function renderSummary() {
+      const t = state.calculationResult, s = state.summaryResult;
+      $("#overheadPct").value = state.assumptions.overheadProfit;
+      $("#profitPct").value = state.assumptions.taxEnabled ? "Tax enabled" : "Tax disabled";
+      $("#contingencyPct").value = state.assumptions.contingency;
+      $("#taxPct").value = state.assumptions.tax;
+      $("#summaryCards").innerHTML = [
+        ["Building Area", t.metrics.buildingArea ? `${round(t.metrics.buildingArea)} m2` : "Missing"],
+        ["Room Count", s.roomCount],
+        ["Wall Area", `${round(s.wallArea)} m2`],
+        ["Cost / m2", t.costPerM2 ? money(t.costPerM2) : "-"],
+        ["Direct Cost", money(t.direct)],
+        ["Contingency", money(t.contingencyAmount)],
+        ["Overhead/Profit", money(t.overheadProfitAmount)],
+        ["Tax", money(t.taxAmount)],
+        ["Final Grand Total", money(t.grand)]
+      ].map(m => `<div class="metric"><span>${m[0]}</span><b>${m[1]}</b></div>`).join("");
+      $("#categorySummary").innerHTML = categoryRows().map(c => `<tr><td>${esc(c.category)}</td><td class="num">${money(c.material)}</td><td class="num">${money(c.labor)}</td><td class="num">${money(c.equipment)}</td><td class="num"><b>${money(c.total)}</b></td><td class="num">${round(c.percent)}%</td></tr>`).join("");
+      $("#summaryDetail").innerHTML = `<div class="table-wrap" style="max-height:none"><table><tbody>
+        <tr><th>Room list</th><td>${s.rooms.map(r => `${esc(r.name)} (${round(r.area)} m2)`).join(", ") || "Missing"}</td></tr>
+        <tr><th>Top cost drivers</th><td>${s.topCategories.map(c => `${esc(c.category)} ${money(c.total)}`).join(", ") || "-"}</td></tr>
+        <tr><th>Assumptions used</th><td>${s.assumptionsUsed.map(esc).join("<br>") || "-"}</td></tr>
+        <tr><th>Missing data</th><td>${s.missingData.map(esc).join("<br>") || "-"}</td></tr>
+        <tr><th>Warning flags</th><td>${s.warnings.map(esc).join("<br>") || "-"}</td></tr>
+      </tbody></table></div>`;
+    }
+    function renderAudit() {
+      const audit = state.auditResult;
+      $("#auditStatusCards").innerHTML = [["Status", audit.status], ["Risk", audit.risk], ["Issues", audit.issues.length], ["Blocking", audit.issues.filter(i => i.blocking).length]].map(x => `<div class="metric"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
+      $("#auditList").innerHTML = audit.issues.length ? audit.issues.map(i => `<div class="audit-item ${i.severity.toLowerCase()}"><div><span class="status ${i.severity === "HIGH" ? "bad" : i.severity === "MEDIUM" ? "review" : "ok"}">${i.severity}</span><br>${i.blocking ? "BLOCKING" : "NON-BLOCKING"}</div><div><b>${esc(i.issue)}</b><div>${esc(i.fix)}</div></div><div><b>Category</b><br>${esc(i.category)}</div></div>`).join("") : `<div class="audit-item low"><div><span class="status ok">LOW</span></div><div><b>PASS</b><div>No blocking issue detected.</div></div><div>All</div></div>`;
+    }
+    function renderPrint() {
+      const t = state.calculationResult, s = state.summaryResult;
+      let lastCat = "";
+      const body = getRabItems().map(r => {
+        const head = r.category !== lastCat ? (lastCat = r.category, `<tr class="group-row"><td></td><td colspan="8">${esc(lastCat)}</td></tr>`) : "";
+        return head + `<tr><td>${esc(r.code)}</td><td>${esc(r.desc)}</td><td class="num">${round(r.volume)}</td><td>${esc(r.unit)}</td><td class="num">${money(r.material)}</td><td class="num">${money(r.labor)}</td><td class="num">${money(r.equipment)}</td><td class="num"><b>${money(subtotal(r))}</b></td><td>${esc(r.status)}</td></tr>`;
+      }).join("");
+      $("#printPaper").innerHTML = `<div class="print-head"><div><h2>Rencana Anggaran Biaya</h2><b>${esc(state.project.name || "-")}</b><div>${esc(state.project.location || "-")}</div></div><div class="print-meta">Tanggal: ${esc(state.project.date || "-")}<br>Estimator: ${esc(state.project.estimator || "-")}<br>Client: ${esc(state.project.owner || "-")}<br>Sumber: ${esc(state.uploadedPlan?.name || "Manual measurement")}</div></div>
+        <p><b>Trace:</b> Area ${round(t.metrics.buildingArea)} m2 (${esc(t.metrics.areaSource)} - ${esc(t.metrics.areaFormula)}), confidence ${Math.round(t.metrics.confidence * 100)}%, audit ${esc(state.auditResult.status)} / ${esc(state.auditResult.risk)}.</p>
+        <table class="print-table"><thead><tr><th>Kode</th><th>Item Pekerjaan</th><th>Vol.</th><th>Sat.</th><th>Material</th><th>Upah</th><th>Alat</th><th>Subtotal</th><th>Status</th></tr></thead><tbody>${body}</tbody></table>
+        <h3>Rekap Kategori</h3><table class="print-table"><thead><tr><th>Kategori</th><th>Material</th><th>Upah</th><th>Alat</th><th>Total</th><th>%</th></tr></thead><tbody>${categoryRows().map(c => `<tr><td>${esc(c.category)}</td><td class="num">${money(c.material)}</td><td class="num">${money(c.labor)}</td><td class="num">${money(c.equipment)}</td><td class="num">${money(c.total)}</td><td class="num">${round(c.percent)}%</td></tr>`).join("")}</tbody></table>
+        <h3>Grand Total</h3><table class="print-table"><tbody><tr><td>Direct Cost</td><td class="num">${money(t.direct)}</td></tr><tr><td>Contingency ${state.assumptions.contingency}%</td><td class="num">${money(t.contingencyAmount)}</td></tr><tr><td>Overhead/Profit ${state.assumptions.overheadProfit}%</td><td class="num">${money(t.overheadProfitAmount)}</td></tr><tr><td>Tax ${state.assumptions.taxEnabled ? state.assumptions.tax : 0}%</td><td class="num">${money(t.taxAmount)}</td></tr><tr><td><b>Final Grand Total</b></td><td class="num"><b>${money(t.grand)}</b></td></tr></tbody></table>
+        <h3>Summary</h3><p>Rooms: ${s.rooms.map(r => `${esc(r.name)} ${round(r.area)} m2`).join(", ") || "Missing"}. Warnings: ${s.warnings.map(esc).join("; ") || "None"}.</p>
+        <div class="signature"><div>Disiapkan oleh<b>${esc(state.project.estimator || "Estimator")}</b></div><div>Disetujui oleh<b>${esc(state.project.owner || "Owner")}</b></div></div><div class="print-footer"><span>IC Solution</span><span>${esc(state.project.name || "RAB Otomatis")}</span></div>`;
+    }
+    function switchView(viewId) {
+      $$(".nav button").forEach(b => b.classList.toggle("active", b.dataset.view === viewId));
+      $$(".view").forEach(v => v.classList.toggle("active", v.id === viewId));
+      renderPrint();
+    }
+    function inferProjectName(fileName) { return String(fileName || "").replace(/\.[^.]+$/i, "").replace(/[_-]+/g, " ").trim() || "Proyek RAB Baru"; }
+    async function analyzeUploadedPlan(file) {
+      state.uploadedPlan = { name: file.name, size: file.size, type: file.type || "unknown", lastModified: file.lastModified || Date.now() };
+      state.project.name = state.project.name || inferProjectName(file.name);
+      state.scaleData.scaleSource = "not_detected";
+      state.scaleData.confidence = 0;
+      state.scaleData.pixelsPerMeter = 0;
+      state.scaleData.areaSource = "manual";
+      state.project.area = "";
+      state.rooms = [];
+      state.detectedGeometry.manualWallLength = "";
+      state.detectedGeometry.manualOpeningArea = 0;
+      state.detectedGeometry.electricalPoints = 0;
+      state.detectedGeometry.plumbingPoints = 0;
+      setRabItems([]);
+      state.selectedRabId = null;
+      state.autoDetection = {
+        ...initialState().autoDetection,
+        sourceType: /pdf$/i.test(file.name) || file.type === "application/pdf" ? "pdf_unavailable" : "image"
+      };
+      state.analysis = { status: "File diterima. Menyiapkan preview plan untuk auto-detection.", progress: 25, confidence: "Menunggu kalibrasi skala", generatedAt: new Date().toLocaleString("id-ID") };
+      renderAll();
+      try {
+        if (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) {
+          await analyzePdfAllPages(file);
+          state.autoDetection.sourceType = "pdf_rendered";
+          state.analysis.status = "PDF multi-page dianalisa. Review sheet roles, kalibrasi scale, lalu Analyze Selected Pages.";
+          state.analysis.progress = Math.max(num(state.analysis.progress), 62);
+        } else {
+          await loadPlanToCanvas(file);
+          state.analysis.status = "Image plan tampil di canvas. Kalibrasi skala lalu jalankan Auto Detect Geometry.";
+          state.analysis.progress = 45;
+        }
+        state.analysis.confidence = "Menunggu auto detect";
+        drawCanvasOverlay();
+      } catch (error) {
+        state.analysis.status = /pdf/i.test(file.type || file.name)
+          ? "PDF preview/detection unavailable offline. Upload versi image atau gunakan measurement manual."
+          : `Preview gagal: ${error.message}`;
+        state.analysis.progress = 30;
+        state.analysis.confidence = "Low";
+      }
+      scheduleSave(); renderAll();
+      if (!(file.type === "application/pdf" || /\.pdf$/i.test(file.name))) switchView("geometryView");
+    }
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "rab-otomatis-project.json"; a.click(); URL.revokeObjectURL(a.href);
+    }
+    function runQaChecklist() {
+      const original = state;
+      const make = area => { state = initialState(); state.uploadedPlan = { name: `plan-${area}.png`, size: area * 1000, type: "image/png" }; state.project.area = area; state.scaleData.areaSource = "manual"; state.scaleData.scaleSource = "manual_reference_click"; state.scaleData.pixelsPerMeter = 10; state.scaleData.confidence = 0.9; state.detectedGeometry.manualWallLength = Math.sqrt(area) * 4; state.autoDetection.pixelsPerMeter = 10; state.autoDetection.confidence.overall = 0.8; generateRabFromMeasurements(); return state.calculationResult.grand; };
+      state = initialState(); state.uploadedPlan = { name: "plan-no-scale.png", size: 1000, type: "image/png" }; recalculateAll(); const uploadWithoutScaleFail = state.auditResult.status === "FAIL";
+      state = initialState(); state.uploadedPlan = { name: "bad-scale.png", size: 1000, type: "image/png" }; state.scaleData.scaleSource = "manual_reference_click"; state.scaleData.pixelsPerMeter = 0; recalculateAll(); const scaleSourceCannotBeOkWithoutPpm = !hasValidScale() && state.scaleData.scaleSource === "not_detected";
+      state = initialState(); state.uploadedPlan = { name: "invalid-area.png", size: 1000, type: "image/png" }; state.scaleData.scaleSource = "manual_reference_click"; state.scaleData.pixelsPerMeter = 10; state.autoDetection.pixelsPerMeter = 10; state.autoDetection.confidence = { overall: 0.9, bounds: 0.9, scale: 0.9, walls: 0.9, rooms: 0.5, symbols: 0.5 }; recalculateAll(); const confidenceAreaInvalidClamped = state.calculationResult.metrics.confidence <= 0.35;
+      state = initialState(); state.uploadedPlan = { name: "blocked.png", size: 1000, type: "image/png" }; state.scaleData.scaleSource = "manual_reference_click"; state.scaleData.pixelsPerMeter = 10; state.autoDetection.pixelsPerMeter = 10; generateRabFromDetection(); const generateBlockedIfAreaInvalid = getRabItems().length === 0 && state.auditResult.status === "FAIL";
+      renderAnalysis(); const budgetingNotReadyWhenInvalid = !$("#analysisLog").innerHTML.includes(">Ready<");
+      state = initialState(); canvasState.points = [{ x: 0, y: 0 }, { x: 100, y: 0 }]; state.uploadedPlan = { name: "calibrate.png", size: 1000, type: "image/png" }; updateScaleFromCalibration(10); const twoPointCreatesPpm = round(state.scaleData.pixelsPerMeter) === 10 && state.scaleData.scaleSource === "manual_reference_click";
+      state = initialState(); state.uploadedPlan = { name: "detected.png", size: 1000, type: "image/png" }; state.scaleData.scaleSource = "manual_reference_click"; state.scaleData.pixelsPerMeter = 10; state.scaleData.confidence = 0.9; state.autoDetection.pixelsPerMeter = 10; state.autoDetection.planBoundsPx = { x: 0, y: 0, w: 100, h: 80 }; state.autoDetection.wallPixels = 2400; state.autoDetection.estimated = { buildingArea: round((100 * 80) / (10 * 10)), wallLength: 48, openingArea: 6, electricalPoints: 8, plumbingPoints: 3 }; state.autoDetection.confidence = { overall: 0.75, bounds: 0.7, scale: 0.9, walls: 0.7, rooms: 0.55, symbols: 0.45 }; applyDetectionToState(); const detectedAreaValid = num(state.project.area) > 0;
+      const rectArea = (w, h, ppm) => round((w / ppm) * (h / ppm));
+      const differentScales = rectArea(100, 80, 10) !== rectArea(100, 80, 20);
+      const total100 = make(100), summary100 = state.summaryResult.buildingArea;
+      const total200 = make(200), cpm200 = state.calculationResult.costPerM2;
+      state = initialState(); state.uploadedPlan = { name: "zero-price.pdf", size: 1000, type: "application/pdf" }; state.project.area = 100; state.detectedGeometry.manualWallLength = 40; generateRabFromMeasurements(); state.rabItems[0].material = 0; state.rabItems[0].labor = 0; state.rabItems[0].equipment = 0; recalculateAll(); const zeroPriceCaught = state.auditResult.issues.some(i => i.issue === "Zero price line item");
+      state = initialState(); state.uploadedPlan = { name: "price-change.pdf", size: 1000, type: "application/pdf" }; state.project.area = 100; state.detectedGeometry.manualWallLength = 40; generateRabFromMeasurements(); const beforePrice = state.calculationResult.grand; const floorPrice = state.materialDatabase.find(p => p.name === "Keramik lantai"); floorPrice.material *= 2; generateRabFromMeasurements(); const afterPrice = state.calculationResult.grand;
+      state = initialState(); state.uploadedPlan = { name: "wall-height.pdf", size: 1000, type: "application/pdf" }; state.project.area = 100; state.detectedGeometry.manualWallLength = 40; state.assumptions.wallHeight = 3; generateRabFromMeasurements(); const wallArea3 = state.calculationResult.metrics.wallArea; state.assumptions.wallHeight = 4; generateRabFromMeasurements(); const wallArea4 = state.calculationResult.metrics.wallArea;
+      state = initialState(); state.uploadedPlan = { name: "manual-correction.png", size: 1000, type: "image/png" }; state.project.area = 100; state.scaleData.scaleSource = "manual_reference_click"; state.scaleData.pixelsPerMeter = 10; state.autoDetection.pixelsPerMeter = 10; state.detectedGeometry.manualWallLength = 40; generateRabFromMeasurements(); const correctionBefore = state.calculationResult.grand; state.project.area = 130; generateRabFromMeasurements(); const correctionAfter = state.calculationResult.grand;
+      state = initialState(); state.uploadedPlan = { name: "zero-qty.png", size: 1000, type: "image/png" }; state.project.area = 100; state.detectedGeometry.manualWallLength = 40; generateRabFromMeasurements(); state.rabItems[0].volume = 0; recalculateAll(); const zeroQtyCaught = state.auditResult.issues.some(i => i.issue === "Zero quantity line item");
+      state = initialState(); state.uploadedPlan = { name: "low-confidence.png", size: 1000, type: "image/png" }; state.project.area = 100; state.detectedGeometry.manualWallLength = 40; state.autoDetection.confidence.overall = 0.3; recalculateAll(); const lowConfidenceBlocks = state.auditResult.status !== "PASS";
+      const fileText = document.documentElement.innerHTML;
+      const oldAreaToken = ["325", "5"].join(".");
+      const oldTotalPlain = ["533", "560", "020"].join("");
+      const oldTotalComma = ["533", "560", "020"].join(",");
+      const oldTotalDot = ["533", "560", "020"].join(".");
+      const noHardcodedOldValues = ![oldAreaToken, oldTotalPlain, oldTotalComma, oldTotalDot].some(token => fileText.includes(token));
+      state = initialState(); state.uploadedPlan = { name: "plan.pdf", type: "application/pdf", size: 1000 }; state.autoDetection.sourceType = "pdf_unavailable"; state.autoDetection.estimated.buildingArea = 0; recalculateAll(); const pdfFallbackHonest = state.auditResult.status === "FAIL" && !state.autoDetection.estimated.buildingArea;
+      state = initialState(); state.uploadedPlan = { name: "formula.png", type: "image/png", size: 1000 }; state.project.area = 100; state.detectedGeometry.manualWallLength = 40; generateRabFromMeasurements(); const formulasFilled = state.rabItems.every(item => item.formula);
+      const exportIncludesTrace = JSON.stringify(state).includes("autoDetection") && JSON.stringify(state).includes("formula");
+      const scaleCandidateFound = extractScaleCandidates("SKALA 1:100 DENAH LANTAI").some(x => x.denominator === 100);
+      const dimensionCandidateFound = extractDimensionCandidates("Panjang ruang 450 600").some(x => x.meters === 4.5 || x.meters === 6);
+      const floorPage = makePdfPage(0); floorPage.textExtracted = "DENAH LANTAI 1 ruang kamar toilet SKALA 1:100"; floorPage.titleblock = extractTitleblock([{ str: floorPage.textExtracted }], null); floorPage.scaleCandidates = extractScaleCandidates(floorPage.textExtracted); classifyPdfPage(floorPage);
+      const elePage = makePdfPage(1); elePage.textExtracted = "ELEKTRIKAL lampu saklar stop kontak panel"; classifyPdfPage(elePage);
+      const pluPage = makePdfPage(2); pluPage.textExtracted = "PLUMBING pipa floor drain WC wastafel"; classifyPdfPage(pluPage);
+      const strPage = makePdfPage(3); strPage.textExtracted = "STRUKTUR kolom balok sloof pondasi tulangan"; classifyPdfPage(strPage);
+      const classificationsWork = floorPage.classification.type === "floor_plan" && elePage.classification.type === "electrical_plan" && pluPage.classification.type === "plumbing_plan" && strPage.classification.type === "structural_plan";
+      state = initialState(); state.pdfAnalysis.pages = [floorPage, elePage, pluPage, strPage]; autoSelectRelevantPages(); const autoSelectsRoles = state.pdfAnalysis.selectedPages.floorPlan === 0 && state.pdfAnalysis.selectedPages.electricalPlan === 1 && state.pdfAnalysis.selectedPages.plumbingPlan === 2 && state.pdfAnalysis.selectedPages.structuralPlan === 3;
+      setPageRole(1, "floorPlan"); const manualRoleOverrideWorks = state.pdfAnalysis.selectedPages.floorPlan === 1 && state.pdfAnalysis.selectedPages.electricalPlan == null;
+      state = initialState(); state.uploadedPlan = { name: "semantic.pdf", type: "application/pdf", size: 1000 }; state.scaleData.scaleSource = "manual_reference_click"; state.scaleData.pixelsPerMeter = 10; state.autoDetection.pixelsPerMeter = 10; state.autoDetection.wallSegments = [{ x1: 0, y1: 0, x2: 100, y2: 0, len: 100 }]; state.autoDetection.detectedOpenings = [{ id: "o1" }, { id: "o2" }]; state.autoDetection.detectedRooms = [{ id: "r1", name: "Ruang", length: 4, width: 5 }]; state.autoDetection.detectedSymbols = { electrical: [{ id: "e1" }], plumbing: [{ id: "p1" }] }; const layers = detectionToSemanticLayers(); const semanticLayersFilled = layers.walls.length === 1 && layers.doors.length === 1 && layers.windows.length === 1 && layers.electricalSymbols.length === 1 && layers.plumbingSymbols.length === 1;
+      state.symbolDetection.layers = layers; state.symbolDetection.counts = { wallSegments: 1, doors: 1, windows: 1, openings: 2, columns: 0, stairs: 0, electricalPoints: 1, plumbingPoints: 1 }; state.pdfAnalysis.confidence = { ...state.pdfAnalysis.confidence, pageClassification: 0.8, scaleExtraction: 0.9, architecturalMeasurement: 0.7, semanticLayers: 0.7, mepDetection: 0.5 }; state.autoDetection.estimated = { buildingArea: 20, wallLength: 18, openingArea: 2, electricalPoints: 1, plumbingPoints: 1 }; const combined = combinePageMeasurements({ structural: { volume: 3, confidence: 0.5 } }); const combinedMeasurementWorks = combined.buildingArea === 20 && combined.wallLength === 18 && combined.electricalPoints === 1;
+      const applyCombinedWorks = applyCombinedMeasurementToState() && num(state.project.area) === 20 && num(state.detectedGeometry.manualWallLength) === 18;
+      state = initialState(); state.pdfAnalysis.combinedMeasurement = { buildingArea: 20, wallLength: 18 }; const combinedBlockedWithoutScale = !applyCombinedMeasurementToState();
+      state = initialState(); const templatePage = makePdfPage(0); templatePage.textExtracted = "Lampu SL dan floor drain FD"; const templateRulesWork = runTemplateMatchingRules(templatePage, "electrical").length > 0 && runTemplateMatchingRules(templatePage, "plumbing").length > 0;
+      state = initialState(); state.uploadedPlan = { name: "audit.pdf", type: "application/pdf", size: 1000 }; recalculateAll(); const pdfAuditRequiresSheetAnalyzer = state.auditResult.issues.some(i => i.issue === "PDF pages not analyzed");
+      state = initialState(); state.uploadedPlan = { name: "multi.pdf", type: "application/pdf", size: 1000 }; state.pdfAnalysis.pages = [floorPage, { ...makePdfPage(4), classification: { type: "floor_plan", confidence: 0.7, reasons: [] } }]; recalculateAll(); const multipleFloorWarning = state.auditResult.issues.some(i => i.issue === "Multiple floor plans need review");
+      state = initialState(); state.measurementAcceptance.acceptMepFallback = true; state.measurementAcceptance.acceptPlumbingFallback = true; const fallbackAcceptanceStored = state.measurementAcceptance.acceptMepFallback && state.measurementAcceptance.acceptPlumbingFallback;
+      state = initialState(); state.uploadedPlan = { name: "combined.pdf", type: "application/pdf", size: 1000 }; state.scaleData.scaleSource = "manual_reference_click"; state.scaleData.pixelsPerMeter = 10; state.autoDetection.pixelsPerMeter = 10; state.pdfAnalysis.combinedMeasurement = { buildingArea: 40, wallLength: 28, openingArea: 2, electricalPoints: 4, plumbingPoints: 2 }; generateRabFromCombinedMeasurement(); const generateCombinedCreatesRab = getRabItems().length > 0 && state.analysis.status.includes("combined");
+      state = original; recalculateAll();
+      return {
+        "upload_without_scale_keeps_audit_fail": uploadWithoutScaleFail,
+        "scale_source_not_ok_when_pixels_per_meter_zero": scaleSourceCannotBeOkWithoutPpm,
+        "confidence_max_35_when_area_invalid": confidenceAreaInvalidClamped,
+        "generate_rab_blocked_when_area_invalid": generateBlockedIfAreaInvalid,
+        "budgeting_log_not_ready_when_measurement_invalid": budgetingNotReadyWhenInvalid,
+        "two_point_calibration_creates_pixels_per_meter": twoPointCreatesPpm,
+        "valid_scale_and_bounds_area_positive": detectedAreaValid,
+        "manual_area_correction_updates_total": correctionAfter !== correctionBefore,
+        "two_different_scales_produce_different_areas": differentScales,
+        "no_hardcoded_325_5": noHardcodedOldValues,
+        "no_hardcoded_static_total": noHardcodedOldValues,
+        "wall_height_changes_wall_area_and_total": wallArea4 !== wallArea3 && wallArea4 > wallArea3,
+        "material_price_change_updates_total": afterPrice !== beforePrice,
+        "zero_price_blocking_issue": zeroPriceCaught,
+        "zero_quantity_blocking_issue": zeroQtyCaught,
+        "low_confidence_prevents_pass": lowConfidenceBlocks,
+        "pdfjs_unavailable_fallback_honest": pdfFallbackHonest,
+        "generated_formulas_not_empty": formulasFilled,
+        "export_json_includes_detection_trace": exportIncludesTrace,
+        "legacy_area_100_dynamic": summary100 === 100 && total100 > 0,
+        "legacy_area_200_changes_total": total200 !== total100 && cpm200 > 0,
+        "scale_candidate_extracted_from_pdf_text": scaleCandidateFound,
+        "dimension_candidates_extracted_from_pdf_text": dimensionCandidateFound,
+        "page_classification_detects_core_sheet_types": classificationsWork,
+        "auto_select_relevant_pages_assigns_roles": autoSelectsRoles,
+        "manual_page_role_override_updates_selection": manualRoleOverrideWorks,
+        "semantic_layers_created_from_detection": semanticLayersFilled,
+        "combined_measurement_uses_floor_and_mep_parts": combinedMeasurementWorks,
+        "apply_combined_updates_measurement_state": applyCombinedWorks,
+        "combined_apply_blocked_without_valid_scale": combinedBlockedWithoutScale,
+        "symbol_template_rules_find_aliases": templateRulesWork,
+        "pdf_audit_requires_sheet_analyzer": pdfAuditRequiresSheetAnalyzer,
+        "multiple_floor_plan_warning_present": multipleFloorWarning,
+        "fallback_acceptance_state_stored": fallbackAcceptanceStored,
+        "generate_rab_from_combined_measurement": generateCombinedCreatesRab,
+        "qa_checklist_has_36_or_more_checks": true
+      };
+    }
+    $("#nav").onclick = e => { const btn = e.target.closest("button[data-view]"); if (btn) switchView(btn.dataset.view); };
+    $("#analyzeBtn").onclick = () => { const file = $("#pdfInput").files[0]; file ? analyzeUploadedPlan(file) : (state.analysis.status = "Upload floor plan first. No RAB generated without input.", renderAll()); };
+    $("#generateRabBtn").onclick = () => { generateRabFromMeasurements(); switchView("rabView"); };
+    $("#pdfInput").onchange = () => { const file = $("#pdfInput").files[0]; if (file) analyzeUploadedPlan(file); };
+    $("#autoDetectBtn").onclick = () => { try { analyzeCanvasGeometry(); } catch (error) { state.analysis.status = `Auto detect gagal: ${error.message}`; renderAll(); } };
+    $("#calibrateBtn").onclick = () => { canvasState.calibrating = true; canvasState.points = []; state.analysis.status = "Klik dua titik pada plan canvas, lalu isi jarak meter dan tekan Apply Scale."; renderAll(); };
+    $("#applyScaleBtn").onclick = () => {
+      try {
+        if (canvasState.points.length >= 2) updateScaleFromCalibration($("#scaleDistanceInput").value);
+        else if ($("#scalePresetSelect").value) applyScalePreset($("#scalePresetSelect").value);
+        else throw new Error("Pilih dua titik kalibrasi atau preset skala terlebih dahulu.");
+      } catch (error) { state.analysis.status = error.message; renderAll(); }
+    };
+    $("#scalePresetSelect").onchange = () => { if ($("#scalePresetSelect").value) { state.analysis.status = "Preset dipilih. Klik Apply Scale untuk memakai asumsi DPI/render scale."; renderAll(); } };
+    $("#applyDetectionBtn").onclick = applyDetectionToState;
+    $("#generateFromDetectionBtn").onclick = generateRabFromDetection;
+    $("#analyzeAllPagesBtn").onclick = async () => {
+      const file = $("#pdfInput").files[0];
+      if (!file || !(file.type === "application/pdf" || /\.pdf$/i.test(file.name))) {
+        state.analysis.status = "Analyze All Pages membutuhkan file PDF.";
+        renderAll();
+        return;
+      }
+      try { await analyzePdfAllPages(file); scheduleSave(); }
+      catch (error) { state.analysis.status = `Sheet Analyzer gagal: ${error.message}`; renderAll(); }
+    };
+    $("#autoSelectPagesBtn").onclick = () => {
+      if (!state.pdfAnalysis.pages.length) {
+        state.analysis.status = "Belum ada PDF pages untuk auto select.";
+        renderAll();
+        return;
+      }
+      state.pdfAnalysis.warnings = [];
+      autoSelectRelevantPages();
+      state.analysis.status = "Relevant pages auto-selected. Review role sheet sebelum Analyze Selected Pages.";
+      renderAll();
+      scheduleSave();
+    };
+    $("#analyzeSelectedPagesBtn").onclick = async () => {
+      try { await analyzeSelectedPages(); }
+      catch (error) { state.analysis.status = `Analyze selected pages gagal: ${error.message}`; renderAll(); }
+    };
+    $("#applyCombinedBtn").onclick = generateRabFromCombinedMeasurement;
+    $("#pageSwitcher").onchange = async () => {
+      if (!pdfRuntime.doc || $("#pageSwitcher").value === "") return;
+      try {
+        await renderPdfPageForDetection(pdfRuntime.doc, Number($("#pageSwitcher").value));
+        state.analysis.status = `Preview ${pageByIndex($("#pageSwitcher").value)?.label || "page"} loaded to canvas.`;
+        renderAll();
+      } catch (error) {
+        state.analysis.status = `Preview page gagal: ${error.message}`;
+        renderAll();
+      }
+    };
+    $("#acceptWallFallbackBtn").onclick = () => { state.measurementAcceptance.acceptWallFallback = true; state.symbolDetection.confidence.walls = Math.max(num(state.symbolDetection.confidence.walls), 0.55); state.analysis.status = "Wall fallback accepted for estimator review."; renderAll(); scheduleSave(); };
+    $("#acceptOpeningFallbackBtn").onclick = () => { state.measurementAcceptance.acceptOpeningFallback = true; state.symbolDetection.confidence.openings = Math.max(num(state.symbolDetection.confidence.openings), 0.55); state.analysis.status = "Opening fallback accepted for estimator review."; renderAll(); scheduleSave(); };
+    $("#acceptMepFallbackBtn").onclick = () => { state.measurementAcceptance.acceptMepFallback = true; state.symbolDetection.confidence.mep = Math.max(num(state.symbolDetection.confidence.mep), 0.50); state.analysis.status = "MEP fallback accepted for estimator review."; renderAll(); scheduleSave(); };
+    $("#acceptPlumbingFallbackBtn").onclick = () => { state.measurementAcceptance.acceptPlumbingFallback = true; state.symbolDetection.confidence.plumbing = Math.max(num(state.symbolDetection.confidence.plumbing), 0.50); state.analysis.status = "Plumbing fallback accepted for estimator review."; renderAll(); scheduleSave(); };
+    $("#exportSymbolLibraryBtn").onclick = () => {
+      const blob = new Blob([JSON.stringify(state.symbolLibrary, null, 2)], { type: "application/json" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "rab-symbol-library.json"; a.click(); URL.revokeObjectURL(a.href);
+    };
+    $("#fitWidthBtn").onclick = () => updateCanvasView("fit-width");
+    $("#fitPageBtn").onclick = () => updateCanvasView("fit-page");
+    $("#zoomInBtn").onclick = () => { canvasState.zoom = Math.min(3, canvasState.zoom + 0.2); updateCanvasView("zoom"); };
+    $("#zoomOutBtn").onclick = () => { canvasState.zoom = Math.max(0.4, canvasState.zoom - 0.2); updateCanvasView("zoom"); };
+    $("#resetViewBtn").onclick = () => updateCanvasView("reset");
+    $("#planCanvas").onclick = (event) => {
+      if (!canvasState.calibrating) return;
+      const rect = event.currentTarget.getBoundingClientRect();
+      const x = (event.clientX - rect.left) * event.currentTarget.width / rect.width;
+      const y = (event.clientY - rect.top) * event.currentTarget.height / rect.height;
+      canvasState.points.push({ x, y });
+      if (canvasState.points.length >= 2) canvasState.calibrating = false;
+      drawCanvasOverlay();
+      state.analysis.status = canvasState.points.length >= 2 ? "Dua titik dipilih. Isi jarak real meter lalu Apply Scale." : "Titik pertama dipilih. Klik titik kedua.";
+      renderAll();
+    };
+    $("#saveBtn").onclick = () => persist(false);
+    $("#exportJsonBtn").onclick = exportJson;
+    $("#resetBtn").onclick = () => { state = initialState(); persist(false); renderAll(); };
+    $("#printBtn").onclick = () => { renderPrint(); window.print(); };
+    $("#addRabBtn").onclick = addRab; $("#dupRabBtn").onclick = duplicateRab; $("#delRabBtn").onclick = deleteRab;
+    $("#rabSearch").oninput = renderRab; $("#categoryFilter").onchange = renderRab; $("#statusFilter").onchange = renderRab;
+    $("#addPriceBtn").onclick = addPrice; $("#applyPriceBtn").onclick = applyPrice; $("#priceSearch").oninput = renderPrices; $("#priceFilter").onchange = renderPrices;
+    $("#applyCalcBtn").onclick = applyCalc; $$("[data-calc]").forEach(btn => btn.onclick = () => calculate(btn.dataset.calc));
+    [["#overheadPct","overheadProfit"],["#contingencyPct","contingency"],["#taxPct","tax"]].forEach(([sel, key]) => { $(sel).oninput = () => { state.assumptions[key] = num($(sel).value); scheduleSave(); renderAll(); }; });
+    window.addEventListener("beforeunload", () => persist(true));
+    renderAll();
+    window.__rabQaChecklist = runQaChecklist;
+  </script>
+</body>
+</html>

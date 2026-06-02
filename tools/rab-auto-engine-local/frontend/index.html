@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RAB Otomatis</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="app">
+  <aside class="nav">
+    <div class="brand">
+      <b>RAB Otomatis</b>
+      <span>Local Engine</span>
+    </div>
+    <button data-view="dashboard" class="active">Dashboard</button>
+    <button data-view="projects">Proyek</button>
+    <button data-view="upload">Upload Denah</button>
+    <button data-view="viewer">Viewer Denah</button>
+    <button data-view="scale">Kalibrasi Skala</button>
+    <button data-view="walls">Deteksi Dinding</button>
+    <button data-view="rooms">Deteksi Ruang</button>
+    <button data-view="ocr">OCR Keterangan</button>
+    <button data-view="mep">Tagging MEP</button>
+    <button data-view="routes">Pengukuran Jalur</button>
+    <button data-view="structure">Input Struktur</button>
+    <button data-view="formula">Formula</button>
+    <button data-view="prices">Database Harga</button>
+    <button data-view="generate">Generate RAB</button>
+    <button data-view="rab">Edit RAB</button>
+    <button data-view="audit">Audit</button>
+    <button data-view="export">Export</button>
+    <button data-view="diagnostics">Diagnostik</button>
+  </aside>
+  <main>
+    <header class="topbar">
+      <div>
+        <h1 id="viewTitle">Dashboard</h1>
+        <p id="viewHint">Sistem lokal untuk takeoff gambar, formula, harga, audit, dan draft RAB.</p>
+      </div>
+      <div class="project-picker">
+        <select id="projectSelect"></select>
+        <button id="newProjectBtn">Proyek Baru</button>
+      </div>
+    </header>
+
+    <section id="dashboard" class="view active">
+      <div class="metrics" id="metrics"></div>
+      <div class="panel">
+        <h2>Alur Kerja</h2>
+        <div class="steps">
+          <button data-view-link="projects">1. Buat Proyek</button>
+          <button data-view-link="upload">2. Upload PDF</button>
+          <button data-view-link="scale">3. Kalibrasi</button>
+          <button data-view-link="walls">4. Deteksi</button>
+          <button data-view-link="rab">5. Review RAB</button>
+          <button data-view-link="export">6. Export</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Status Draft</h2>
+        <div id="dashboardAudit" class="issue-list"></div>
+      </div>
+    </section>
+
+    <section id="projects" class="view">
+      <div class="grid two">
+        <div class="panel">
+          <h2>Project Manager</h2>
+          <label>Nama Proyek<input id="projectName" value="Proyek RAB Baru"></label>
+          <label>Tipe<input id="projectType" value="Bangunan"></label>
+          <label>Lokasi<input id="projectLocation" placeholder="Lokasi proyek"></label>
+          <button id="saveProjectBtn">Simpan Proyek</button>
+        </div>
+        <div class="panel">
+          <h2>Daftar Proyek</h2>
+          <div id="projectList" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="upload" class="view">
+      <div class="panel">
+        <h2>PDF Upload Manager</h2>
+        <div class="drop">
+          <input id="pdfInput" type="file" accept="application/pdf">
+          <button id="uploadPdfBtn">Upload PDF</button>
+          <button id="rasterizeBtn">Rasterize PDF</button>
+        </div>
+        <div id="fileList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="viewer" class="view">
+      <div class="viewer-shell">
+        <aside class="thumbs" id="thumbs"></aside>
+        <section class="canvas-wrap">
+          <div class="toolbar">
+            <button id="zoomOutBtn">-</button>
+            <span id="zoomLabel">100%</span>
+            <button id="zoomInBtn">+</button>
+            <button id="rotateBtn">Rotate</button>
+            <label><input type="checkbox" data-layer="walls" checked> Dinding</label>
+            <label><input type="checkbox" data-layer="rooms" checked> Ruang</label>
+            <label><input type="checkbox" data-layer="ocr" checked> OCR</label>
+            <label><input type="checkbox" data-layer="mep" checked> Simbol MEP</label>
+            <label><input type="checkbox" data-layer="routes" checked> Jalur</label>
+            <label><input type="checkbox" data-layer="openings" checked> Bukaan</label>
+          </div>
+          <div class="stage" id="stage">
+            <img id="pageImage" alt="Halaman denah">
+            <svg id="overlay"></svg>
+          </div>
+        </section>
+        <aside class="props">
+          <h2>Properti Halaman</h2>
+          <label>Kategori<select id="pageCategory"></select></label>
+          <button id="saveCategoryBtn">Simpan Kategori</button>
+          <div id="pageInfo" class="small"></div>
+          <div id="selectedInfo" class="small"></div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="scale" class="view">
+      <div class="grid two">
+        <div class="panel">
+          <h2>Kalibrasi Skala</h2>
+          <label>Metode<select id="calMethod"><option>MANUAL_SCALE</option><option>TWO_POINT</option><option>OCR_ASSISTED</option></select></label>
+          <label>Skala Gambar<select id="drawingScale"><option>1:50</option><option>1:75</option><option selected>1:100</option><option>1:150</option><option>1:200</option></select></label>
+          <label>Point A x,y<input id="pointA" placeholder="100,100"></label>
+          <label>Point B x,y<input id="pointB" placeholder="500,100"></label>
+          <label>Jarak Nyata Meter<input id="realDistance" type="number" step="0.01" value="1"></label>
+          <label>Pixel to Meter Ratio<input id="pixelRatio" type="number" step="0.000001" placeholder="opsional"></label>
+          <button id="saveCalibrationBtn">Simpan Kalibrasi</button>
+        </div>
+        <div class="panel"><h2>Saran OCR Skala</h2><div id="scaleOcrHints" class="list"></div></div>
+      </div>
+    </section>
+
+    <section id="walls" class="view">
+      <div class="panel">
+        <h2>OpenCV Wall Detection</h2>
+        <button id="detectWallsBtn">Deteksi Dinding</button>
+        <button id="confirmWallsBtn">Confirm Semua Dinding</button>
+        <div id="wallList" class="table-host"></div>
+      </div>
+    </section>
+
+    <section id="rooms" class="view">
+      <div class="panel">
+        <h2>OpenCV Room Detection</h2>
+        <button id="detectRoomsBtn">Deteksi Ruang</button>
+        <button id="confirmRoomsBtn">Confirm Semua Ruang</button>
+        <div id="roomList" class="table-host"></div>
+      </div>
+    </section>
+
+    <section id="ocr" class="view">
+      <div class="panel">
+        <h2>Tesseract OCR Annotation Reader</h2>
+        <button id="runOcrBtn">Run OCR</button>
+        <div id="ocrList" class="table-host"></div>
+      </div>
+    </section>
+
+    <section id="mep" class="view">
+      <div class="grid two">
+        <div class="panel">
+          <h2>MEP Manual Tagging</h2>
+          <label>Kelas Simbol<select id="mepClass"></select></label>
+          <label>Bounding Box x,y,w,h<input id="mepBox" placeholder="100,100,32,32"></label>
+          <button id="addMepBtn">Tambah Tag Manual</button>
+          <button id="runYoloBtn">Run YOLO Lokal</button>
+          <button id="exportDatasetBtn">Export Dataset MEP</button>
+        </div>
+        <div class="panel"><h2>Simbol MEP</h2><div id="mepList" class="table-host"></div></div>
+      </div>
+    </section>
+
+    <section id="routes" class="view">
+      <div class="grid two">
+        <div class="panel">
+          <h2>Route Measurement Tool</h2>
+          <label>Tipe Jalur<select id="routeType"></select></label>
+          <label>Polyline x,y; x,y; ...<textarea id="routePolyline" placeholder="100,100;200,120;300,150"></textarea></label>
+          <label>Diameter/Spec<input id="routeSpec" placeholder="PVC 3 inch / Conduit 20mm"></label>
+          <button id="addRouteBtn">Simpan Jalur</button>
+        </div>
+        <div class="panel"><h2>Daftar Jalur</h2><div id="routeList" class="table-host"></div></div>
+      </div>
+    </section>
+
+    <section id="structure" class="view">
+      <div class="grid two">
+        <div class="panel">
+          <h2>Structural Quantity Input</h2>
+          <label>Item<input id="structName" placeholder="Sloof / Kolom / Balok"></label>
+          <label>Kategori<input id="structCategory" value="STRUKTUR"></label>
+          <div class="form-row"><input id="structL" type="number" step="0.01" placeholder="Panjang m"><input id="structW" type="number" step="0.01" placeholder="Lebar m"><input id="structH" type="number" step="0.01" placeholder="Tinggi/Tebal m"><input id="structCount" type="number" step="1" placeholder="Jumlah"></div>
+          <label>Catatan<textarea id="structNotes"></textarea></label>
+          <button id="addStructBtn">Tambah Input Struktur</button>
+        </div>
+        <div class="panel"><h2>Input Struktur</h2><div id="structList" class="table-host"></div></div>
+      </div>
+    </section>
+
+    <section id="formula" class="view">
+      <div class="grid two">
+        <div class="panel">
+          <h2>Formula Library</h2>
+          <label>Nama<input id="formulaName"></label>
+          <label>Kategori<input id="formulaCategory"></label>
+          <label>Satuan<input id="formulaUnit"></label>
+          <label>Expression<textarea id="formulaExpression" placeholder="floor_area * waste_factor"></textarea></label>
+          <button id="addFormulaBtn">Tambah Formula</button>
+        </div>
+        <div class="panel"><h2>Daftar Formula</h2><div id="formulaList" class="table-host"></div></div>
+      </div>
+    </section>
+
+    <section id="prices" class="view">
+      <div class="grid two">
+        <div class="panel">
+          <h2>Local Price Database</h2>
+          <label>Nama Item<input id="priceName"></label>
+          <label>Kategori<input id="priceCategory"></label>
+          <label>Satuan<input id="priceUnit"></label>
+          <label>Harga Approved<input id="priceApproved" type="number" step="1"></label>
+          <label>Supplier<input id="priceSupplier"></label>
+          <button id="addPriceBtn">Simpan Harga</button>
+          <input id="priceCsvInput" type="file" accept=".csv">
+          <button id="importPriceBtn">Import CSV</button>
+          <a class="button" href="/api/prices/export-csv" target="_blank">Export CSV Harga</a>
+        </div>
+        <div class="panel"><h2>Daftar Harga</h2><div id="priceList" class="table-host"></div></div>
+      </div>
+    </section>
+
+    <section id="generate" class="view">
+      <div class="panel">
+        <h2>Quantity Takeoff Engine</h2>
+        <button id="generateRabBtn">Generate Draft RAB</button>
+        <pre id="takeoffParams"></pre>
+      </div>
+    </section>
+
+    <section id="rab" class="view">
+      <div class="panel">
+        <h2>Editable RAB Table</h2>
+        <button id="refreshRabBtn">Refresh</button>
+        <div id="rabTable" class="table-host wide"></div>
+      </div>
+    </section>
+
+    <section id="audit" class="view">
+      <div class="panel">
+        <h2>Audit & Validation Panel</h2>
+        <button id="runAuditBtn">Run Audit</button>
+        <div id="auditList" class="table-host"></div>
+      </div>
+    </section>
+
+    <section id="export" class="view">
+      <div class="panel">
+        <h2>Export Manager</h2>
+        <div class="exports">
+          <a id="exportRabCsv" class="button" target="_blank">RAB CSV</a>
+          <a id="exportRabJson" class="button" target="_blank">RAB JSON</a>
+          <a id="exportPrintable" class="button" target="_blank">Printable HTML</a>
+          <a id="exportAudit" class="button" target="_blank">Audit JSON</a>
+          <button id="exportDatasetBtn2">MEP Training Dataset</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="diagnostics" class="view">
+      <div class="panel">
+        <h2>Technical Diagnostics Page</h2>
+        <button id="runDiagBtn">Cek Dependency Lokal</button>
+        <div id="diagList" class="table-host"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="toast"></div>
+<script src="./app.js"></script>
+</body>
+</html>
