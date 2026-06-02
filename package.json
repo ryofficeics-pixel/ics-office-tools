@@ -1,8 +1,12 @@
 {
   "private": true,
   "scripts": {
-    "vercel-build": "node -e \"console.log('Static HTML deployment ready')\"",
+    "vercel-build": "node scripts/generate-supabase-env.mjs",
     "rab:install": "cd \"tools/rab-auto-engine-local\" && python -m pip install -r requirements.txt",
     "rab:start": "cd \"tools/rab-auto-engine-local\" && python -m uvicorn backend.app:app --host 127.0.0.1 --port 8787 --reload"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.106.2"
   }
 }

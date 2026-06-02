@@ -45,7 +45,15 @@ Notes:
 The connected Vercel project is `ics-office-tools-deploy`.
 
 - No install step required
-- No build step required
+- Build step: `npm run vercel-build`
 - Output directory: project root (`.`)
 
 Deployment behavior is defined in `vercel.json`.
+
+## Supabase
+
+Supabase is wired through static browser helpers:
+- `assets/supabase-env.js`: generated config for the browser
+- `assets/supabase-client.js`: reusable Supabase browser client
+
+The linked Supabase project is `crrtfddcnnqstxyoeoek`. Keep `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in local/Vercel/GitHub environment variables.
