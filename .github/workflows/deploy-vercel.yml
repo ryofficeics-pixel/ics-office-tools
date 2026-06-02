@@ -30,6 +30,19 @@ jobs:
       - name: Generate Supabase static env
         run: npm run vercel-build
 
+      - name: Validate deployment secrets
+        run: |
+          missing=0
+          for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub secret: $name"
+              missing=1
+            fi
+          done
+          exit "$missing"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
